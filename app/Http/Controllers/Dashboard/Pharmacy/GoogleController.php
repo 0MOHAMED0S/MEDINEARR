@@ -84,9 +84,9 @@ class GoogleController extends Controller
 
             if ($user) {
                 if ($user->role === 'admin') {
-                    $redirectPath = '/admin/login'; // Redirect admins back to their specific login door
+                    $redirectPath = '/'; // Redirect admins back to their specific login door
                 } elseif ($user->role === 'pharmacy') {
-                    $redirectPath = '/login'; // Adjust if you have a specific pharmacy login page
+                    $redirectPath = '/'; // Adjust if you have a specific pharmacy login page
                 } else {
                     $redirectPath = '/'; // Standard users go to the homepage
                 }
