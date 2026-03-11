@@ -1,0 +1,143 @@
+:root {
+    --grad-start: #0d9488;
+    --grad-end: #84cc16;
+}
+
+body {
+    font-family: 'Tajawal', sans-serif;
+    background: linear-gradient(135deg, #f0fdfa 0%, #f8fafc 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* --- Creative Floating Capsules --- */
+.kabsola {
+    position: absolute;
+    border-radius: 50px;
+    box-shadow: inset -5px -5px 15px rgba(0, 0, 0, 0.1), 10px 15px 25px rgba(13, 148, 136, 0.15);
+    z-index: 0;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.kabsola::after {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 20%;
+    width: 20%;
+    height: 30%;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50px;
+    transform: rotate(-15deg);
+}
+
+.k-teal {
+    background: linear-gradient(to bottom, #0d9488 50%, #ffffff 50%);
+}
+
+.k-lime {
+    background: linear-gradient(to bottom, #84cc16 50%, #ffffff 50%);
+}
+
+.k-blue {
+    background: linear-gradient(to bottom, #0ea5e9 50%, #ffffff 50%);
+}
+
+/* Hide some decorative elements on very small screens to keep it clean */
+@media (max-width: 640px) {
+    .kabsola {
+        opacity: 0.4;
+        transform: scale(0.7);
+    }
+
+    .med-cross {
+        display: none;
+    }
+}
+
+/* Animations */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-20px) rotate(10deg);
+    }
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-8px);
+    }
+
+    75% {
+        transform: translateX(8px);
+    }
+}
+
+.animate-shake {
+    animation: shake 0.4s ease-in-out;
+}
+
+.anim-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+/* Glassmorphism */
+.glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Input Fixes */
+.admin-input {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-magic {
+    background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+    background-size: 200% auto;
+    transition: 0.5s;
+}
+
+.btn-magic:hover {
+    background-position: right center;
+    box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3);
+}
+
+.loading-spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.btn-loading .loading-spinner {
+    display: block;
+}
+
+.btn-loading .btn-text {
+    display: none;
+}
