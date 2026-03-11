@@ -22,6 +22,6 @@ class AdminPharmacyController extends Controller
         ];
 
         // 3. إرسال البيانات إلى الـ View
-        return view('Dashboard.pharmacies.index', compact('pharmacies', 'stats'));
+        return view('dashboard.pharmacies.index', compact('pharmacies', 'stats'));
     }
 }
