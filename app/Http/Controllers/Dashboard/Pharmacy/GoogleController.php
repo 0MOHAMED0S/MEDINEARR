@@ -80,7 +80,7 @@ class GoogleController extends Controller
         try {
             // 1. Capture the user's role BEFORE logging them out to determine the redirect path
             $user = Auth::user();
-            $redirectPath = '/login'; // Default fallback route
+            $redirectPath = '/'; // Default fallback route
 
             if ($user) {
                 if ($user->role === 'admin') {
