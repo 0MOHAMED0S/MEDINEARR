@@ -170,7 +170,7 @@
                 width: 80px;
                 height: 80px;
             }
-            
+
             .loader-text-wrapper {
                 margin-top: 1.5rem;
                 padding: 0.75rem 1.5rem;
@@ -606,10 +606,91 @@
             background-size: 20px 20px;
         }
     </style>
+    <style>
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px) scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        .animate-toast {
+            animation: toastIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
 </head>
 
 <body class="text-darkText antialiased flex flex-col min-h-screen relative overflow-hidden">
+    <div id="authRequiredModal"
+        class="fixed inset-0 z-[10002] hidden flex-col items-center justify-center p-4 sm:p-0 text-center">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+            onclick="toggleModal('authRequiredModal')"></div>
+        <div
+            class="relative bg-white rounded-[2.5rem] w-full max-w-sm shadow-2xl overflow-hidden animate-scale-up p-8 md:p-10">
+            <div
+                class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-primary text-3xl shadow-inner border-[6px] border-blue-100">
+                <i class="fa-solid fa-user-lock animate-bounce-short"></i>
+            </div>
+            <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-2" data-i18n="authModalTitle">تسجيل الدخول مطلوب
+            </h3>
+            <p class="text-sm text-gray-500 font-medium mb-8 leading-relaxed" data-i18n="authModalDesc">يجب عليك تسجيل
+                الدخول أولاً لتتمكن من الوصول إلى خدمات الصيدليات والتقديم على طلب انضمام.</p>
 
+            <div class="flex flex-col gap-3">
+                <button onclick="window.location.href='{{ route('google.login') }}'"
+                    class="w-full bg-gradient-custom text-white px-6 py-4 rounded-2xl font-bold shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-3 group">
+                    <i class="fa-brands fa-google text-xl group-hover:rotate-12 transition-transform"></i>
+                    <span data-i18n="btnGoogleLogin">تسجيل الدخول عبر جوجل</span>
+                </button>
+                <button type="button" onclick="toggleModal('authRequiredModal')"
+                    class="w-full px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors text-sm"
+                    data-i18n="navCancel">إلغاء</button>
+            </div>
+        </div>
+    </div>
+    <div
+        class="fixed top-4 left-4 right-4 md:left-auto md:right-6 md:top-6 z-[1000001] flex flex-col gap-3 pointer-events-none w-full max-w-sm">
+        @if (session('success'))
+            <div
+                class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-2xl rounded-2xl p-4 flex items-center gap-4">
+                <div class="bg-emerald-100 p-2 rounded-xl text-emerald-600 shrink-0">
+                    <i class="fa-solid fa-circle-check text-xl"></i>
+                </div>
+                <div class="flex-1 text-right">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">تمت العملية</p>
+                    <p class="text-sm font-black text-slate-800 leading-tight">{{ session('success') }}</p>
+                </div>
+                <button onclick="this.parentElement.remove()"
+                    class="text-slate-300 hover:text-slate-500 transition-colors shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        @endif
+
+        @if (session('error') || $errors->any())
+            <div
+                class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-2xl rounded-2xl p-4 flex items-center gap-4">
+                <div class="bg-rose-100 p-2 rounded-xl text-rose-600 shrink-0">
+                    <i class="fa-solid fa-circle-exclamation text-xl"></i>
+                </div>
+                <div class="flex-1 text-right">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">تنبيه من النظام</p>
+                    <p class="text-sm font-black text-slate-800 leading-tight">
+                        {{ session('error') ?? $errors->first() }}
+                    </p>
+                </div>
+                <button onclick="this.parentElement.remove()"
+                    class="text-slate-300 hover:text-slate-500 transition-colors shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        @endif
+    </div>
     <div id="page-loader">
         <div class="relative flex justify-center items-center h-40 w-40">
             <div class="logo-pulse-ring" style="animation-delay: 0s;"></div>
@@ -703,10 +784,26 @@
                             onclick="navigateTo('home'); setTimeout(()=>document.getElementById('contact').scrollIntoView({behavior: 'smooth'}), 100);"
                             class="text-gray-500 hover:text-primary transition nav-link desktop-nav-link relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
                             data-section="contact" data-i18n="navContact">اتصل بنا</button>
-                        <a href="{{ route('pharmacy.Application.index') }}"
-                            class="text-gray-500 hover:text-primary transition nav-link desktop-nav-link relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
-                            id="nav-pharmacies" data-section="pharmacies"
-                            data-i18n="navPharmacies">للصيدليات</a>
+
+                        @if (Auth::check() && Auth::user()->role === 'admin')
+                            <a href="{{ route('admin.dashboard') }}" data-i18n="navDashboard"
+                                class="text-gray-500 hover:text-primary transition nav-link desktop-nav-link relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
+                                id="nav-dashboard">لوحة التحكم</a>
+                        @else
+                            @guest
+                                {{-- للزوار: يفتح مودال تسجيل الدخول --}}
+                                <button onclick="toggleModal('authRequiredModal')"
+                                    class="text-gray-500 hover:text-primary transition nav-link desktop-nav-link relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
+                                    id="nav-pharmacies" data-section="pharmacies">
+                                    <span data-i18n="navPharmacies">للصيدليات</span>
+                                </button>
+                            @else
+                                {{-- للمسجلين: يذهب لصفحة التقديم مباشرة --}}
+                                <a href="{{ route('pharmacy.Application.index') }}"
+                                    class="text-gray-500 hover:text-primary transition nav-link desktop-nav-link relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
+                                    id="nav-pharmacies" data-section="pharmacies" data-i18n="navPharmacies">للصيدليات</a>
+                            @endguest
+                        @endif
                     </nav>
 
                     <div class="hidden lg:flex items-center gap-6">
@@ -715,28 +812,43 @@
                             <i class="fa-solid fa-globe animate-spin-slow text-primary/80"></i>
                             <span id="lang-text-desktop">English</span>
                         </button>
+
                         @auth
                             <div class="relative group">
-                                <button class="flex items-center gap-3 bg-gray-50 hover:bg-white px-3 py-1.5 rounded-lg border border-gray-100 transition-colors shadow-sm focus:outline-none">
-                                    <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=0d9488&color=fff' }}" alt="Profile" class="w-8 h-8 rounded-full border border-gray-200">
+                                <button
+                                    class="flex items-center gap-3 bg-gray-50 hover:bg-white px-3 py-1.5 rounded-lg border border-gray-100 transition-colors shadow-sm focus:outline-none">
+                                    <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=0d9488&color=fff' }}"
+                                        alt="Profile" class="w-8 h-8 rounded-full border border-gray-200">
                                     <div class="text-start hidden md:block">
-                                        <div class="font-bold text-sm text-darkText leading-none">{{ auth()->user()->name }}</div>
-                                        <div class="text-[10px] text-gray-500 mt-1">{{ auth()->user()->email }}</div>
-                                    </div>
-                                    <i class="fa-solid fa-chevron-down text-gray-400 text-xs ml-1 transition-transform group-hover:rotate-180"></i>
-                                </button>
-                                
-                                <div class="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left -translate-y-2 group-hover:translate-y-0 z-50">
-                                    <div class="p-2">
-                                        <div class="px-3 py-2 text-xs text-gray-500 border-b border-gray-50 mb-1 md:hidden">
-                                            <div class="font-bold text-darkText mb-0.5">{{ auth()->user()->name }}</div>
-                                            <div>{{ auth()->user()->email }}</div>
+                                        <div class="font-bold text-sm text-darkText leading-none">
+                                            {{ auth()->user()->name }}</div>
+                                        <div class="text-[10px] text-gray-500 mt-1">
+                                            {{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}
                                         </div>
+                                    </div>
+                                    <i
+                                        class="fa-solid fa-chevron-down text-gray-400 text-xs ml-1 transition-transform group-hover:rotate-180"></i>
+                                </button>
+
+                                <div
+                                    class="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left -translate-y-2 group-hover:translate-y-0 z-50">
+                                    <div class="p-2 text-right">
+                                        @if (Auth::user()->role === 'admin')
+                                            <a href="{{ route('admin.dashboard') }}"
+                                                class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                                <i class="fa-solid fa-gauge w-4"></i>
+                                                <span data-i18n="navDashboard">لوحة التحكم</span>
+                                            </a>
+                                        @endif
                                         <hr class="my-1 border-gray-50">
-                                        <form action="{{ route('pharmacy.logout') }}" method="POST" class="w-full">
+                                        <form
+                                            action="{{ auth()->user()->role === 'admin' ? route('admin.logout') : route('pharmacy.logout') }}"
+                                            method="POST" class="w-full">
                                             @csrf
-                                            <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                                <i class="fa-solid fa-arrow-right-from-bracket w-4"></i> تسجيل الخروج
+                                            <button type="submit"
+                                                class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                                <i class="fa-solid fa-arrow-right-from-bracket w-4"></i>
+                                                <span data-i18n="navLogout">تسجيل الخروج</span>
                                             </button>
                                         </form>
                                     </div>
@@ -756,7 +868,8 @@
                             class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 text-gray-500 hover:text-primary font-bold text-sm transition-colors focus:outline-none">
                             <span class="text-xs uppercase font-black" id="lang-text-mobile-inner">EN</span>
                         </button>
-                        <button id="mobile-menu-btn" class="w-10 h-10 flex items-center justify-center bg-gray-50 hover:bg-gray-100 rounded-full text-darkText hover:text-primary transition-all duration-300 focus:outline-none">
+                        <button id="mobile-menu-btn"
+                            class="w-10 h-10 flex items-center justify-center bg-gray-50 hover:bg-gray-100 rounded-full text-darkText hover:text-primary transition-all duration-300 focus:outline-none">
                             <i class="fa-solid fa-bars text-xl transition-transform duration-300"></i>
                         </button>
                     </div>
@@ -766,50 +879,48 @@
             <div id="mobile-menu"
                 class="hidden lg:hidden bg-white/95 backdrop-blur-2xl border-x border-b border-gray-100/50 absolute w-full shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all origin-top rounded-b-[2rem] overflow-y-auto overscroll-contain max-h-[85vh] z-[49]">
                 <div class="px-5 pt-5 pb-8 space-y-2 flex flex-col text-center">
-                    <button
-                        onclick="navigateTo('home'); closeMobileMenu();"
-                        class="block w-full px-4 py-3 text-primary font-bold bg-secondary rounded-xl transition-colors hover:bg-teal-100 nav-link mobile-nav-link"
-                        data-section="home" data-i18n="navHome">الرئيسية</button>
+                    <button onclick="navigateTo('home'); closeMobileMenu();"
+                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">الرئيسية</button>
                     <button
                         onclick="navigateTo('home'); setTimeout(()=>document.getElementById('features').scrollIntoView({behavior: 'smooth'}), 100); closeMobileMenu();"
-                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors nav-link mobile-nav-link"
-                        data-section="features" data-i18n="navFeatures">المميزات</button>
-                    <button
-                        onclick="navigateTo('home'); setTimeout(()=>document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'}), 100); closeMobileMenu();"
-                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors nav-link mobile-nav-link"
-                        data-section="how-it-works" data-i18n="navHow">كيف يعمل</button>
-                    <button
-                        onclick="navigateTo('home'); setTimeout(()=>document.getElementById('reviews').scrollIntoView({behavior: 'smooth'}), 100); closeMobileMenu();"
-                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors nav-link mobile-nav-link"
-                        data-section="reviews" data-i18n="navReviews">آراء العملاء</button>
-                    <button
-                        onclick="navigateTo('home'); setTimeout(()=>document.getElementById('contact').scrollIntoView({behavior: 'smooth'}), 100); closeMobileMenu();"
-                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors nav-link mobile-nav-link"
-                        data-section="contact" data-i18n="navContact">اتصل بنا</button>
-                    <button onclick="window.location.href='{{ route('pharmacy.Application.index') }}'; closeMobileMenu();"
-                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors nav-link mobile-nav-link"
-                        data-section="pharmacies" data-i18n="navPharmacies">للصيدليات</button>
-                    <hr class="my-4 border-gray-100">
+                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">المميزات</button>
+
                     @auth
-                        <div class="flex flex-col items-center gap-2 py-4 bg-gray-50/80 rounded-2xl border border-gray-100 shadow-sm">
-                            <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=0d9488&color=fff' }}" alt="Profile" class="w-14 h-14 rounded-full border-2 border-primary shadow-md">
+                        @if (Auth::user()->role === 'admin')
+                            <a href="{{ route('admin.dashboard') }}" data-i18n="navDashboard"
+                                class="block w-full px-4 py-3 text-primary font-bold bg-teal-50 rounded-xl transition-colors">لوحة
+                                التحكم</a>
+                        @else
+                            <a href="{{ route('pharmacy.Application.index') }}"
+                                class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">للصيدليات</a>
+                        @endif
+
+                        <div
+                            class="mt-6 flex flex-col items-center gap-2 py-4 bg-gray-50/80 rounded-2xl border border-gray-100 shadow-sm">
+                            <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=0d9488&color=fff' }}"
+                                alt="Profile" class="w-14 h-14 rounded-full border-2 border-primary shadow-md">
                             <div class="text-center mt-2">
                                 <div class="font-bold text-lg text-darkText">{{ auth()->user()->name }}</div>
-                                <div class="text-xs text-gray-500">{{ auth()->user()->email }}</div>
+                                <div class="text-xs text-gray-500">
+                                    {{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}</div>
                             </div>
-                            <div class="w-full px-4 mt-4 text-center">
-                                <form action="{{ route('pharmacy.logout') }}" method="POST" class="w-full">
+                            <div class="w-full px-4 mt-4">
+                                <form
+                                    action="{{ auth()->user()->role === 'admin' ? route('admin.logout') : route('pharmacy.logout') }}"
+                                    method="POST" class="w-full">
                                     @csrf
-                                    <button type="submit" class="w-full text-red-500 bg-red-50 hover:bg-red-100 px-4 py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+                                    <button type="submit"
+                                        class="w-full text-red-500 bg-red-50 hover:bg-red-100 px-4 py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
                                         <i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل الخروج
                                     </button>
                                 </form>
                             </div>
                         </div>
                     @else
+                        <a href="{{ route('pharmacy.Application.index') }}"
+                            class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">للصيدليات</a>
                         <button onclick="window.location.href='{{ route('google.login') }}'"
-                            class="w-full bg-gradient-custom text-white px-6 py-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-shadow flex items-center justify-center gap-2 hover:-translate-y-0.5"
-                            data-i18n="btnRegPharmacy">
+                            class="w-full bg-gradient-custom text-white px-6 py-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-shadow flex items-center justify-center gap-2 hover:-translate-y-0.5">
                             <i class="fa-brands fa-google text-xl -mt-0.5"></i>
                             <span>تسجيل الدخول</span>
                         </button>
@@ -851,13 +962,25 @@
                                     data-i18n="btnGooglePlay">Google Play</span>
                             </div>
                         </button>
-
-                        <button onclick="window.location.href='{{ route('pharmacy.Application.index') }}'"
-                            class="w-full sm:w-auto bg-white border-2 border-gray-100 hover:border-primary text-primary px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 group">
-                            <span data-i18n="btnRegPharmacyAndIcon">سجل كصيدلية شريكة</span>
-                            <i
-                                class="fa-solid fa-arrow-left rtl:rotate-0 ltr:rotate-180 transition-transform duration-300 group-hover:-translate-x-1 rtl:group-hover:-translate-x-1 ltr:group-hover:translate-x-1"></i>
-                        </button>
+                        @guest
+                            {{-- تم تغيير window.location إلى toggleModal لفتح المودال --}}
+                            <button onclick="toggleModal('authRequiredModal')"
+                                class="w-full sm:w-auto bg-white border-2 border-gray-100 hover:border-primary text-primary px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 group">
+                                <span data-i18n="btnRegPharmacyAndIcon">سجل كصيدلية شريكة</span>
+                                <i
+                                    class="fa-solid fa-arrow-left rtl:rotate-0 ltr:rotate-180 transition-transform duration-300 group-hover:-translate-x-1 rtl:group-hover:-translate-x-1 ltr:group-hover:translate-x-1"></i>
+                            </button>
+                        @endguest
+                        @auth
+                            @if (Auth::user()->role != 'admin')
+                                <button onclick="window.location.href='{{ route('pharmacy.Application.index') }}'"
+                                    class="w-full sm:w-auto bg-white border-2 border-gray-100 hover:border-primary text-primary px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 group">
+                                    <span data-i18n="btnRegPharmacyAndIcon">سجل كصيدلية شريكة</span>
+                                    <i
+                                        class="fa-solid fa-arrow-left rtl:rotate-0 ltr:rotate-180 transition-transform duration-300 group-hover:-translate-x-1 rtl:group-hover:-translate-x-1 ltr:group-hover:translate-x-1"></i>
+                                </button>
+                            @endif
+                        @endauth
                     </div>
                 </div>
 
@@ -1236,15 +1359,15 @@
                     </h2>
                 </div>
 
-                <div class="grid grid-cols-4 items-start gap-2 sm:gap-4 md:gap-8 mt-10 md:mt-16 relative max-w-5xl mx-auto">
+                <div
+                    class="grid grid-cols-4 items-start gap-2 sm:gap-4 md:gap-8 mt-10 md:mt-16 relative max-w-5xl mx-auto">
                     <div
                         class="absolute top-8 sm:top-10 md:top-12 start-[10%] w-[80%] h-[2px] border-t-2 border-dashed border-gray-200 z-0">
                     </div>
                     <div class="absolute top-8 sm:top-10 md:top-12 start-[10%] w-[80%] h-[2px] bg-gradient-custom z-0 rtl:origin-right ltr:origin-left scale-x-0 transition-transform duration-[1.5s] ease-out shadow-[0_0_10px_rgba(13,148,136,0.8)]"
                         id="progress-line"></div>
 
-                    <div
-                        class="relative z-10 flex flex-col items-center text-center w-full reveal reveal-scale group">
+                    <div class="relative z-10 flex flex-col items-center text-center w-full reveal reveal-scale group">
                         <div
                             class="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 bg-white border-2 md:border-4 border-gray-50 group-hover:border-primary transition-colors duration-500 rounded-full flex items-center justify-center mb-3 md:mb-6 relative shadow-md md:shadow-lg group-hover:shadow-[0_0_15px_rgba(13,148,136,0.3)] md:group-hover:shadow-[0_0_25px_rgba(13,148,136,0.3)]">
                             <span
@@ -1252,8 +1375,10 @@
                             <i
                                 class="fa-solid fa-magnifying-glass text-lg sm:text-xl md:text-3xl text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all duration-500"></i>
                         </div>
-                        <h3 class="font-bold text-[10px] sm:text-sm md:text-lg text-darkText leading-tight hidden sm:block" data-i18n="how1Title">ابحث عن دوائك</h3>
-                        <h3 class="font-bold text-[10px] text-darkText leading-tight sm:hidden" data-i18n="how1TitleShort">ابحث</h3>
+                        <h3 class="font-bold text-[10px] sm:text-sm md:text-lg text-darkText leading-tight hidden sm:block"
+                            data-i18n="how1Title">ابحث عن دوائك</h3>
+                        <h3 class="font-bold text-[10px] text-darkText leading-tight sm:hidden"
+                            data-i18n="how1TitleShort">ابحث</h3>
                     </div>
 
                     <div class="relative z-10 flex flex-col items-center text-center w-full reveal reveal-scale group"
@@ -1266,8 +1391,10 @@
                             <i
                                 class="fa-solid fa-store text-lg sm:text-xl md:text-3xl text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all duration-500"></i>
                         </div>
-                        <h3 class="font-bold text-[10px] sm:text-sm md:text-lg text-darkText leading-tight hidden sm:block" data-i18n="how2Title">اختر أقرب صيدلية</h3>
-                        <h3 class="font-bold text-[10px] text-darkText leading-tight sm:hidden" data-i18n="how2TitleShort">اختر</h3>
+                        <h3 class="font-bold text-[10px] sm:text-sm md:text-lg text-darkText leading-tight hidden sm:block"
+                            data-i18n="how2Title">اختر أقرب صيدلية</h3>
+                        <h3 class="font-bold text-[10px] text-darkText leading-tight sm:hidden"
+                            data-i18n="how2TitleShort">اختر</h3>
                     </div>
 
                     <div class="relative z-10 flex flex-col items-center text-center w-full reveal reveal-scale group"
@@ -1280,8 +1407,10 @@
                             <i
                                 class="fa-solid fa-wallet text-lg sm:text-xl md:text-3xl text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all duration-500"></i>
                         </div>
-                        <h3 class="font-bold text-[10px] sm:text-sm md:text-lg text-darkText leading-tight hidden sm:block" data-i18n="how3Title">اختر طريقة الدفع</h3>
-                        <h3 class="font-bold text-[10px] text-darkText leading-tight sm:hidden" data-i18n="how3TitleShort">ادفع</h3>
+                        <h3 class="font-bold text-[10px] sm:text-sm md:text-lg text-darkText leading-tight hidden sm:block"
+                            data-i18n="how3Title">اختر طريقة الدفع</h3>
+                        <h3 class="font-bold text-[10px] text-darkText leading-tight sm:hidden"
+                            data-i18n="how3TitleShort">ادفع</h3>
                     </div>
 
                     <div class="relative z-10 flex flex-col items-center text-center w-full reveal reveal-scale group"
@@ -1294,8 +1423,10 @@
                             <i
                                 class="fa-solid fa-box-open text-lg sm:text-xl md:text-3xl text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all duration-500"></i>
                         </div>
-                        <h3 class="font-bold text-[10px] sm:text-sm md:text-lg text-darkText leading-tight hidden sm:block" data-i18n="how4Title">استلم طلبك</h3>
-                        <h3 class="font-bold text-[10px] text-darkText leading-tight sm:hidden" data-i18n="how4TitleShort">استلم</h3>
+                        <h3 class="font-bold text-[10px] sm:text-sm md:text-lg text-darkText leading-tight hidden sm:block"
+                            data-i18n="how4Title">استلم طلبك</h3>
+                        <h3 class="font-bold text-[10px] text-darkText leading-tight sm:hidden"
+                            data-i18n="how4TitleShort">استلم</h3>
                     </div>
                 </div>
             </div>
@@ -1306,59 +1437,87 @@
             <div class="absolute inset-0 opacity-20"
                 style="background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0); background-size: 32px 32px;">
             </div>
-            
+
             <!-- Glowing Orbs -->
-            <div class="absolute top-0 right-1/4 w-[500px] h-[500px] bg-primary/30 rounded-full blur-[120px] mix-blend-screen pointer-events-none group-hover/stats:scale-110 transition-transform duration-[3s]"></div>
-            <div class="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-accent/20 rounded-full blur-[100px] mix-blend-screen pointer-events-none group-hover/stats:scale-110 transition-transform duration-[3s] delay-300"></div>
+            <div
+                class="absolute top-0 right-1/4 w-[500px] h-[500px] bg-primary/30 rounded-full blur-[120px] mix-blend-screen pointer-events-none group-hover/stats:scale-110 transition-transform duration-[3s]">
+            </div>
+            <div
+                class="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-accent/20 rounded-full blur-[100px] mix-blend-screen pointer-events-none group-hover/stats:scale-110 transition-transform duration-[3s] delay-300">
+            </div>
 
             <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div class="text-center reveal reveal-bottom mb-14 md:mb-20">
-                    <h2 class="inline-block text-sm md:text-base font-bold text-accent tracking-widest uppercase mb-4 px-4 py-1.5 rounded-full border border-accent/30 bg-accent/10">أرقام نفخر بها</h2>
+                    <h2
+                        class="inline-block text-sm md:text-base font-bold text-accent tracking-widest uppercase mb-4 px-4 py-1.5 rounded-full border border-accent/30 bg-accent/10">
+                        أرقام نفخر بها</h2>
                     <h3 class="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight">
-                        ثقتكم هي <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary">سر نجاحنا</span>
+                        ثقتكم هي <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary">سر
+                            نجاحنا</span>
                     </h3>
                 </div>
 
                 <div class="grid grid-cols-3 gap-2 md:gap-8 max-w-6xl mx-auto">
                     <!-- Stat Card 1 -->
-                    <div class="relative p-[1px] rounded-2xl md:rounded-3xl overflow-hidden reveal reveal-bottom bg-gradient-to-br from-white/20 to-white/0 group">
-                        <div class="absolute inset-0 bg-gradient-to-br from-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <div class="h-full w-full bg-[#1e293b]/80 backdrop-blur-xl p-3 sm:p-5 md:p-10 rounded-[15px] md:rounded-[23px] text-center border border-white/5 relative z-10 flex flex-col items-center justify-center transform group-hover:-translate-y-1 transition-transform duration-300">
-                            <div class="w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl md:rounded-2xl border border-primary/20 flex items-center justify-center text-primary text-xl sm:text-2xl md:text-4xl mb-3 md:mb-6 shadow-[0_0_30px_rgba(13,148,136,0.15)] group-hover:scale-110 transition-transform duration-500">
+                    <div
+                        class="relative p-[1px] rounded-2xl md:rounded-3xl overflow-hidden reveal reveal-bottom bg-gradient-to-br from-white/20 to-white/0 group">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        </div>
+                        <div
+                            class="h-full w-full bg-[#1e293b]/80 backdrop-blur-xl p-3 sm:p-5 md:p-10 rounded-[15px] md:rounded-[23px] text-center border border-white/5 relative z-10 flex flex-col items-center justify-center transform group-hover:-translate-y-1 transition-transform duration-300">
+                            <div
+                                class="w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl md:rounded-2xl border border-primary/20 flex items-center justify-center text-primary text-xl sm:text-2xl md:text-4xl mb-3 md:mb-6 shadow-[0_0_30px_rgba(13,148,136,0.15)] group-hover:scale-110 transition-transform duration-500">
                                 <i class="fa-solid fa-users"></i>
                             </div>
-                            <h3 class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-1.5 md:mb-3 tracking-tight flex items-baseline justify-center gap-1">
+                            <h3
+                                class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-1.5 md:mb-3 tracking-tight flex items-baseline justify-center gap-1">
                                 <span class="stat-number" data-target="100" data-suffix="K">+0K</span>
                             </h3>
-                            <p class="text-gray-400 font-medium text-[9px] sm:text-xs md:text-base uppercase tracking-wider" data-i18n="stat1">مستخدم نشط</p>
+                            <p class="text-gray-400 font-medium text-[9px] sm:text-xs md:text-base uppercase tracking-wider"
+                                data-i18n="stat1">مستخدم نشط</p>
                         </div>
                     </div>
 
                     <!-- Stat Card 2 -->
-                    <div class="relative p-[1px] rounded-2xl md:rounded-3xl overflow-hidden reveal reveal-bottom bg-gradient-to-br from-white/20 to-white/0 group" style="transition-delay: 0.1s;">
-                        <div class="absolute inset-0 bg-gradient-to-br from-accent/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <div class="h-full w-full bg-[#1e293b]/80 backdrop-blur-xl p-3 sm:p-5 md:p-10 rounded-[15px] md:rounded-[23px] text-center border border-white/5 relative z-10 flex flex-col items-center justify-center transform group-hover:-translate-y-1 transition-transform duration-300">
-                            <div class="w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 bg-gradient-to-br from-accent/20 to-accent/5 rounded-xl md:rounded-2xl border border-accent/20 flex items-center justify-center text-accent text-xl sm:text-2xl md:text-4xl mb-3 md:mb-6 shadow-[0_0_30px_rgba(132,204,22,0.15)] group-hover:scale-110 transition-transform duration-500">
+                    <div class="relative p-[1px] rounded-2xl md:rounded-3xl overflow-hidden reveal reveal-bottom bg-gradient-to-br from-white/20 to-white/0 group"
+                        style="transition-delay: 0.1s;">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-accent/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        </div>
+                        <div
+                            class="h-full w-full bg-[#1e293b]/80 backdrop-blur-xl p-3 sm:p-5 md:p-10 rounded-[15px] md:rounded-[23px] text-center border border-white/5 relative z-10 flex flex-col items-center justify-center transform group-hover:-translate-y-1 transition-transform duration-300">
+                            <div
+                                class="w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 bg-gradient-to-br from-accent/20 to-accent/5 rounded-xl md:rounded-2xl border border-accent/20 flex items-center justify-center text-accent text-xl sm:text-2xl md:text-4xl mb-3 md:mb-6 shadow-[0_0_30px_rgba(132,204,22,0.15)] group-hover:scale-110 transition-transform duration-500">
                                 <i class="fa-solid fa-house-medical"></i>
                             </div>
-                            <h3 class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-1.5 md:mb-3 tracking-tight flex items-baseline justify-center gap-1">
+                            <h3
+                                class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-1.5 md:mb-3 tracking-tight flex items-baseline justify-center gap-1">
                                 <span class="stat-number" data-target="1200" data-suffix="">+0</span>
                             </h3>
-                            <p class="text-gray-400 font-medium text-[9px] sm:text-xs md:text-base uppercase tracking-wider" data-i18n="stat2">صيدلية شريكة</p>
+                            <p class="text-gray-400 font-medium text-[9px] sm:text-xs md:text-base uppercase tracking-wider"
+                                data-i18n="stat2">صيدلية شريكة</p>
                         </div>
                     </div>
 
                     <!-- Stat Card 3 -->
-                    <div class="relative p-[1px] rounded-2xl md:rounded-3xl overflow-hidden reveal reveal-bottom bg-gradient-to-br from-white/20 to-white/0 group" style="transition-delay: 0.2s;">
-                        <div class="absolute inset-0 bg-gradient-to-br from-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <div class="h-full w-full bg-[#1e293b]/80 backdrop-blur-xl p-3 sm:p-5 md:p-10 rounded-[15px] md:rounded-[23px] text-center border border-white/5 relative z-10 flex flex-col items-center justify-center transform group-hover:-translate-y-1 transition-transform duration-300">
-                            <div class="w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 rounded-xl md:rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl sm:text-2xl md:text-4xl mb-3 md:mb-6 shadow-[0_0_30px_rgba(16,185,129,0.15)] group-hover:scale-110 transition-transform duration-500">
+                    <div class="relative p-[1px] rounded-2xl md:rounded-3xl overflow-hidden reveal reveal-bottom bg-gradient-to-br from-white/20 to-white/0 group"
+                        style="transition-delay: 0.2s;">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        </div>
+                        <div
+                            class="h-full w-full bg-[#1e293b]/80 backdrop-blur-xl p-3 sm:p-5 md:p-10 rounded-[15px] md:rounded-[23px] text-center border border-white/5 relative z-10 flex flex-col items-center justify-center transform group-hover:-translate-y-1 transition-transform duration-300">
+                            <div
+                                class="w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 rounded-xl md:rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl sm:text-2xl md:text-4xl mb-3 md:mb-6 shadow-[0_0_30px_rgba(16,185,129,0.15)] group-hover:scale-110 transition-transform duration-500">
                                 <i class="fa-solid fa-motorcycle"></i>
                             </div>
-                            <h3 class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-1.5 md:mb-3 tracking-tight flex items-baseline justify-center gap-1">
+                            <h3
+                                class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-1.5 md:mb-3 tracking-tight flex items-baseline justify-center gap-1">
                                 <span class="stat-number" data-target="50" data-suffix="K">+0K</span>
                             </h3>
-                            <p class="text-gray-400 font-medium text-[9px] sm:text-xs md:text-base uppercase tracking-wider" data-i18n="stat3">طلب ناجح</p>
+                            <p class="text-gray-400 font-medium text-[9px] sm:text-xs md:text-base uppercase tracking-wider"
+                                data-i18n="stat3">طلب ناجح</p>
                         </div>
                     </div>
                 </div>
@@ -1568,9 +1727,10 @@
                                             class="w-10 h-10 md:w-12 md:h-12 bg-secondary rounded-full flex items-center justify-center text-primary font-black text-lg md:text-xl shrink-0">
                                             ع</div>
                                         <div class="text-start">
-                                            <h4 class="font-bold text-xs md:text-sm text-darkText" data-i18n="revName4">عمر فاروق</h4>
-                                            <span
-                                                class="text-[10px] md:text-xs text-gray-400 font-bold uppercase" data-i18n="revRole4">الطبيب
+                                            <h4 class="font-bold text-xs md:text-sm text-darkText"
+                                                data-i18n="revName4">عمر فاروق</h4>
+                                            <span class="text-[10px] md:text-xs text-gray-400 font-bold uppercase"
+                                                data-i18n="revRole4">الطبيب
                                                 المعالج</span>
                                         </div>
                                     </div>
@@ -1592,8 +1752,8 @@
                                                 class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
                                                 class="fa-solid fa-star-half-stroke"></i>
                                         </div>
-                                        <p
-                                            class="text-gray-600 text-sm md:text-base leading-relaxed mb-6 md:mb-8 italic" data-i18n="revText5">
+                                        <p class="text-gray-600 text-sm md:text-base leading-relaxed mb-6 md:mb-8 italic"
+                                            data-i18n="revText5">
                                             "الأسعار مناسبة جداً مقارنة بالتطبيقات الأخرى، كما أن واجهة التطبيق مريحة
                                             للعين وسهلة الاستخدام حتى لكبار السن."
                                         </p>
@@ -1604,8 +1764,10 @@
                                             class="w-10 h-10 md:w-12 md:h-12 bg-secondary rounded-full flex items-center justify-center text-primary font-black text-lg md:text-xl shrink-0">
                                             ن</div>
                                         <div class="text-start">
-                                            <h4 class="font-bold text-xs md:text-sm text-darkText" data-i18n="revName5">نور إبراهيم</h4>
-                                            <span class="text-[10px] md:text-xs text-gray-400 font-bold uppercase" data-i18n="revRole5">ربة
+                                            <h4 class="font-bold text-xs md:text-sm text-darkText"
+                                                data-i18n="revName5">نور إبراهيم</h4>
+                                            <span class="text-[10px] md:text-xs text-gray-400 font-bold uppercase"
+                                                data-i18n="revRole5">ربة
                                                 منزل</span>
                                         </div>
                                     </div>
@@ -2191,11 +2353,18 @@
         // --- 3. Internationalization (i18n) System ---
         const i18n = {
             ar: {
+
+                authModalTitle: "تسجيل الدخول مطلوب",
+                authModalDesc: "يجب عليك تسجيل الدخول أولاً لتتمكن من الوصول إلى خدمات الصيدليات والتقديم على طلب انضمام.",
+                btnGoogleLogin: "تسجيل الدخول عبر جوجل",
+                navCancel: "إلغاء الأمر",
                 navHome: "الرئيسية",
                 navFeatures: "المميزات",
                 navHow: "كيف يعمل",
                 navReviews: "آراء العملاء",
                 navPharmacies: "للصيدليات",
+                navDashboard: "لوحة التحكم", // Added for Admin
+                navLogout: "تسجيل الخروج",
                 navContact: "اتصل بنا",
                 btnRegPharmacy: "سجل كصيدلية",
                 btnRegPharmacyAndIcon: "سجل كصيدلية شريكة",
@@ -2317,11 +2486,17 @@
                 footCopy: "2026 MediNear جميع الحقوق محفوظة."
             },
             en: {
+                authModalTitle: "Login Required",
+                authModalDesc: "You must login first to access pharmacy services and submit an application.",
+                btnGoogleLogin: "Login with Google",
+                navCancel: "Cancel",
                 navHome: "Home",
                 navFeatures: "Features",
                 navHow: "How it works",
                 navReviews: "Reviews",
                 navPharmacies: "For Pharmacies",
+                navDashboard: "Dashboard", // Added for Admin
+                navLogout: "Logout",
                 navContact: "Contact Us",
                 btnRegPharmacy: "Register Pharmacy",
                 btnRegPharmacyAndIcon: "Register as Partner",
@@ -2443,8 +2618,21 @@
                 footCopy: "2026 MediNear All rights reserved."
             }
         };
-
         let currentLang = 'ar';
+
+        function toggleModal(modalID) {
+            const modal = document.getElementById(modalID);
+            if (!modal) return;
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
 
         function updateLists(lang) {
             for (let i = 1; i <= 4; i++) {
@@ -2676,6 +2864,34 @@
 
             const sectionHow = document.getElementById('how-it-works');
             if (sectionHow) observer.observe(sectionHow);
+        });
+    </script>
+    <script>
+        // --- Page Loader Removal ---
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('page-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                loader.style.transition = 'opacity 0.6s ease-out';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    document.body.classList.remove('overflow-hidden');
+                }, 600); // Wait for opacity transition to finish
+            }
+        });
+
+        // --- Toast Flash Messages Handler ---
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.animate-toast').forEach(toast => {
+                setTimeout(() => {
+                    if (toast) {
+                        toast.style.opacity = '0';
+                        toast.style.transform = 'translateY(-10px)';
+                        toast.style.transition = 'all 0.5s ease-out';
+                        setTimeout(() => toast.remove(), 500);
+                    }
+                }, 6000);
+            });
         });
     </script>
 </body>

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Dashboard\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\Admin\Pharmacy\PharmacyStoreRequest;
 use App\Models\PharmacyApplication;
-use Illuminate\Http\Request;
 
 class PharmacyApplicationController extends Controller
 {
@@ -35,4 +34,5 @@ class PharmacyApplicationController extends Controller
 
         return back()->with('success', 'Application submitted successfully!');
     }
+
 }

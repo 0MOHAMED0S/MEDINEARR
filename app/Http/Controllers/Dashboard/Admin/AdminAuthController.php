@@ -14,8 +14,6 @@ class AdminAuthController extends Controller
     {
         return view('dashboard.login');
     }
-
-
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -44,20 +42,17 @@ class AdminAuthController extends Controller
             return redirect()->back()
                 ->withInput($request->only('email'))
                 ->with('error', 'كلمة المرور غير صحيحة، حاول مرة أخرى.');
-
         } catch (Exception $e) {
             return redirect()->back()
                 ->withInput($request->only('email'))
                 ->with('error', 'حدث خطأ فني غير متوقع، يرجى المحاولة لاحقاً.');
         }
     }
-
     public function logout(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
         return redirect()->route('admin.login')
             ->with('success', 'تم تسجيل الخروج بنجاح.');
     }

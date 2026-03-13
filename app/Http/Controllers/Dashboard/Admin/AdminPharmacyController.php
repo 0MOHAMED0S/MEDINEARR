@@ -3,25 +3,48 @@
 namespace App\Http\Controllers\Dashboard\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\PharmacyApplication;
+use App\Models\Pharmacy;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AdminPharmacyController extends Controller
 {
-    public function index()
+public function index()
+{
+    $pharmacies = Pharmacy::latest()->paginate(10);
+    $stats = [
+        'total'    => Pharmacy::count(),
+        'active'   => Pharmacy::where('is_active', true)->count(),
+        'inactive' => Pharmacy::where('is_active', false)->count(),
+    ];
+
+    return view('dashboard.pharmacies.index', compact('pharmacies', 'stats'));
+}
+
+    /**
+     * AJAX Method to toggle pharmacy active status
+     */
+    public function toggleStatus(Request $request, $id)
     {
-        // 1. جلب جميع طلبات الصيدليات (الأحدث أولاً)
-        $pharmacies = PharmacyApplication::latest()->get();
+        try {
+            $pharmacy = Pharmacy::findOrFail($id);
 
-        // 2. حساب الإحصائيات لعرضها في البطاقات العلوية
-        $stats = [
-            'total'        => $pharmacies->count(),
-            'approved'     => $pharmacies->where('status', 'approved')->count(),
-            'under_review' => $pharmacies->where('status', 'under_review')->count(),
-            'rejected'     => $pharmacies->where('status', 'rejected')->count(),
-        ];
+            // Flip the boolean status
+            $pharmacy->is_active = !$pharmacy->is_active;
+            $pharmacy->save();
 
-        // 3. إرسال البيانات إلى الـ View
-        return view('dashboard.pharmacies.index', compact('pharmacies', 'stats'));
+            return response()->json([
+                'success'   => true,
+                'message'   => $pharmacy->is_active ? 'تم تفعيل الصيدلية بنجاح.' : 'تم إيقاف الصيدلية بنجاح.',
+                'is_active' => $pharmacy->is_active
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Admin Pharmacy Toggle Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء تغيير الحالة.'
+            ], 500);
+        }
     }
 }

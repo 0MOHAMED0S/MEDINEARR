@@ -18,10 +18,13 @@ public function index()
         'inactive' => Category::where('status', 0)->count(),
     ];
 
-    $categories = Category::withCount('medicines')->orderBy('id', 'desc')->get();
+    // Change .get() to .paginate()
+    $categories = Category::withCount('medicines')->orderBy('id', 'desc')->paginate(10);
 
     return view('dashboard.categories.index', compact('categories', 'stats'));
 }
+
+
     public function store(StoreCategoryRequest $request)
     {
         $data = $request->except('image');

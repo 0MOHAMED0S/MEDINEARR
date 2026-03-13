@@ -11,17 +11,21 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminMedicineController extends Controller
 {
-    public function index()
-    {
-        $stats = [
-            'total' => Medicine::count(),
-            'active' => Medicine::where('status', 1)->count(),
-            'inactive' => Medicine::where('status', 0)->count(),
-        ];
-        $medicines = Medicine::with('category')->orderBy('id', 'desc')->get();
-        $categories = Category::where('status', 1)->get();
-        return view('dashboard.medicines.index', compact('medicines', 'stats', 'categories'));
-    }
+public function index()
+{
+    $stats = [
+        'total' => Medicine::count(),
+        'active' => Medicine::where('status', 1)->count(),
+        'inactive' => Medicine::where('status', 0)->count(),
+    ];
+
+    // Added Pagination (10 medicines per page)
+    $medicines = Medicine::with('category')->orderBy('id', 'desc')->paginate(10);
+
+    $categories = Category::where('status', 1)->get();
+
+    return view('dashboard.medicines.index', compact('medicines', 'stats', 'categories'));
+}
 
     public function store(StoreMedicineRequest $request)
     {

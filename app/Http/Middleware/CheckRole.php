@@ -17,19 +17,21 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // 1. Check if user is logged in
+        // 1. التحقق من تسجيل الدخول
         if (!auth()->check()) {
-            return redirect()->route('login');
+            return redirect()->route('google.login');
         }
 
-        // 2. Check if the user's role is in the allowed list
+        // 2. التحقق مما إذا كان دور المستخدم ضمن الأدوار المسموح بها
         $userRole = auth()->user()->role;
 
         if (in_array($userRole, $roles)) {
             return $next($request);
         }
 
-        // 3. If not authorized, throw 403 or redirect
-        abort(403, 'Unauthorized action. This area is restricted to ' . implode(' or ', $roles));
+        // 3. إذا لم يكن لديه صلاحية: التوجيه للرئيسية مع رسالة خطأ
+        // نستخدم back() للعودة لصفحته السابقة أو route('home') للرئيسية
+        return redirect('/')
+            ->with('error', 'عذراً، لا تملك الصلاحية الكافية للدخول إلى هذه الصفحة.');
     }
 }
