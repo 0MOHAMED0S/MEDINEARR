@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Dashboard\Admin\Pharmacy;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule; // تأكد من استدعاء هذه الكلاس
 
 class PharmacyStoreRequest extends FormRequest
 {
@@ -24,14 +25,42 @@ class PharmacyStoreRequest extends FormRequest
         return [
             'pharmacy_name'    => 'required|string|max:255',
             'owner_name'       => 'required|string|max:255',
-            'phone'            => 'required|string|max:20',
-            'email'            => 'required|email|max:255',
+
+            // الهاتف: يجب أن يكون فريداً فقط إذا كان هناك طلب "مقبول" بنفس الرقم
+            'phone'            => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('pharmacy_applications', 'phone')->where(function ($query) {
+                    return $query->where('status', 'approved');
+                })
+            ],
+
+            // الإيميل: يجب أن يكون فريداً فقط إذا كان هناك طلب "مقبول" بنفس الإيميل
+            'email'            => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('pharmacy_applications', 'email')->where(function ($query) {
+                    return $query->where('status', 'approved');
+                })
+            ],
+
             'city'             => 'required|string|max:255',
             'address'          => 'required|string|max:500',
             'lat'              => 'required|numeric',
             'lng'              => 'required|numeric',
             'working_hours'    => 'required|string|max:255',
-            'license_number'   => 'required|string|unique:pharmacy_applications,license_number',
+
+            // رقم الترخيص: يجب أن يكون فريداً فقط إذا كان هناك طلب "مقبول" بنفس الرقم
+            'license_number'   => [
+                'required',
+                'string',
+                Rule::unique('pharmacy_applications', 'license_number')->where(function ($query) {
+                    return $query->where('status', 'approved');
+                })
+            ],
+
             'license_document' => 'required|file|mimes:pdf,png,jpg,jpeg|max:10240', // Max 10MB
             'image'            => 'nullable|image|mimes:jpeg,png,jpg|max:2048',     // Max 2MB
             'services'         => 'required|array|min:1',
@@ -61,11 +90,13 @@ class PharmacyStoreRequest extends FormRequest
             'phone.required' => 'رقم الهاتف مطلوب.',
             'phone.string'   => 'رقم الهاتف يجب أن يكون نصاً صالحاً.',
             'phone.max'      => 'رقم الهاتف أطول من اللازم.',
+            'phone.unique'   => 'رقم الهاتف هذا مسجل لصيدلية معتمدة بالفعل.', // رسالة مخصصة جديدة
 
             // Email
             'email.required' => 'البريد الإلكتروني مطلوب.',
             'email.email'    => 'يرجى إدخال بريد إلكتروني صحيح.',
             'email.max'      => 'البريد الإلكتروني أطول من اللازم.',
+            'email.unique'   => 'البريد الإلكتروني هذا مسجل لصيدلية معتمدة بالفعل.', // رسالة مخصصة جديدة
 
             // City & Address
             'city.required'    => 'المحافظة / المدينة مطلوبة.',
@@ -82,7 +113,7 @@ class PharmacyStoreRequest extends FormRequest
 
             // License Number
             'license_number.required' => 'رقم الترخيص مطلوب.',
-            'license_number.unique'   => 'رقم الترخيص هذا مسجل لدينا بالفعل.',
+            'license_number.unique'   => 'رقم الترخيص هذا مسجل لصيدلية معتمدة بالفعل.', // تم تحديث الرسالة
 
             // License Document
             'license_document.required' => 'يرجى رفع مستند الترخيص الخاص بالصيدلية.',

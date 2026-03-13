@@ -37,7 +37,7 @@ class AdminPharmacyApplicationController extends Controller
         return view('dashboard.pharmaciesApplications.index', compact('pharmacies', 'stats'));
     }
 
-    public function updateStatus(Request $request, $id)
+public function updateStatus(Request $request, $id)
     {
         $request->validate([
             'status'      => 'required|in:approved,rejected',
@@ -46,11 +46,14 @@ class AdminPharmacyApplicationController extends Controller
 
         try {
             DB::beginTransaction();
+
             $application = PharmacyApplication::findOrFail($id);
-            $application->update([
-                'status'      => $request->status,
-                'admin_notes' => $request->status === 'rejected' ? $request->admin_notes : null
-            ]);
+
+            // استخدام التعيين المباشر لضمان الحفظ وتجنب مشكلة الـ fillable
+            $application->status = $request->status;
+            $application->admin_notes = $request->status === 'rejected' ? $request->admin_notes : null;
+            $application->save(); // حفظ البيانات صراحةً
+
             if ($request->status === 'approved') {
                 $user = User::where('email', $application->email)->first();
                 $userId = $user ? $user->id : ($application->user_id ?? null);
@@ -64,26 +67,28 @@ class AdminPharmacyApplicationController extends Controller
                     [
                         'user_id'                 => $userId,
                         'pharmacy_application_id' => $application->id,
-                        'pharmacy_name'     => $application->pharmacy_name,
-                        'owner_name'        => $application->owner_name,
-                        'phone'             => $application->phone,
-                        'city'              => $application->city,
-                        'address'           => $application->address,
-                        'working_hours'     => $application->working_hours,
-                        'license_number'    => $application->license_number,
-                        'image'             => $application->image,
-                        'license_document'  => $application->license_document,
-                        'lat'               => $application->lat ?? null,
-                        'lng'               => $application->lng ?? null,
-                        'services'          => is_string($application->services) ? json_decode($application->services, true) : $application->services,
-                        'has_collaboration' => $application->has_collaboration == 1 || $application->collab === 'yes',
-                        'is_active'         => true,
+                        'pharmacy_name'           => $application->pharmacy_name,
+                        'owner_name'              => $application->owner_name,
+                        'phone'                   => $application->phone,
+                        'city'                    => $application->city,
+                        'address'                 => $application->address,
+                        'working_hours'           => $application->working_hours,
+                        'license_number'          => $application->license_number,
+                        'image'                   => $application->image,
+                        'license_document'        => $application->license_document,
+                        'lat'                     => $application->lat ?? null,
+                        'lng'                     => $application->lng ?? null,
+                        'services'                => is_string($application->services) ? json_decode($application->services, true) : $application->services,
+                        'has_collaboration'       => $application->has_collaboration == 1 || $application->collab === 'yes',
+                        'is_active'               => true,
                     ]
                 );
             }
+
             DB::commit();
-            $message = $request->status === 'approved' ? 'تم قبول الصيدلية وتفعيلها بنجاح.' : 'تم رفض طلب الصيدلية.';
+            $message = $request->status === 'approved' ? 'تم قبول الصيدلية وتفعيلها بنجاح.' : 'تم رفض طلب الصيدلية وحفظ ملاحظات الإدارة.';
             return back()->with('success', $message);
+
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Admin Pharmacy Status Update Error: ' . $e->getMessage());
