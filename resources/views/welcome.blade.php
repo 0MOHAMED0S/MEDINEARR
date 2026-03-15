@@ -2202,7 +2202,7 @@
         window.addEventListener('load', () => {
             const loader = document.getElementById('page-loader');
             if (loader) {
-                // Loader waits precisely 3 seconds
+                // Loader waits precisely 2 seconds
                 setTimeout(() => {
                     loader.style.opacity = '0';
                     loader.style.transition = 'opacity 0.6s ease-out';
@@ -2210,7 +2210,7 @@
                         loader.style.display = 'none';
                         document.body.classList.remove('overflow-hidden');
                     }, 600); // Wait for opacity transition to finish
-                }, 3000);
+                }, 2000);
             }
         });
 
