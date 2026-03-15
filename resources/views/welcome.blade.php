@@ -2201,14 +2201,17 @@
         // --- 0. Page Loader ---
         window.addEventListener('load', () => {
             const loader = document.getElementById('page-loader');
-            // Loader waits precisely 2 seconds
-            setTimeout(() => {
-                loader.style.opacity = '0';
+            if (loader) {
+                // Loader waits precisely 3 seconds
                 setTimeout(() => {
-                    loader.style.display = 'none';
-                    document.body.classList.remove('overflow-hidden');
-                }, 800);
-            }, 2000);
+                    loader.style.opacity = '0';
+                    loader.style.transition = 'opacity 0.6s ease-out';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        document.body.classList.remove('overflow-hidden');
+                    }, 600); // Wait for opacity transition to finish
+                }, 3000);
+            }
         });
 
         // --- Swiper Initiative ---
@@ -2906,19 +2909,6 @@
         });
     </script>
     <script>
-        // --- Page Loader Removal ---
-        window.addEventListener('load', () => {
-            const loader = document.getElementById('page-loader');
-            if (loader) {
-                loader.style.opacity = '0';
-                loader.style.transition = 'opacity 0.6s ease-out';
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                    document.body.classList.remove('overflow-hidden');
-                }, 600); // Wait for opacity transition to finish
-            }
-        });
-
         // --- Toast Flash Messages Handler ---
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.animate-toast').forEach(toast => {
