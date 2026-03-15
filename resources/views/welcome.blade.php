@@ -2,10 +2,40 @@
 <html lang="ar" dir="rtl">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediNear - دوائك أقرب مما تتخيل</title>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>@yield('title', 'الرئيسية') | MediNear - دوائك أقرب مما تتخيل</title>
+
+    <meta name="title" content="MediNear - دوائك أقرب مما تتخيل">
+    <meta name="description" content="منصة MediNear هي بوابتك الأسرع والأسهل للبحث عن الأدوية، العثور على أقرب صيدلية، وتوصيل طلباتك الطبية بكل أمان وموثوقية أينما كنت.">
+    <meta name="keywords" content="صيدلية, أدوية, توصيل أدوية, تطبيق صيدليات, روشتة, صحة, صيدليات قريبة, MediNear">
+    <meta name="author" content="MediNear Team">
+
+    <meta name="theme-color" content="#0d9488">
+
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/images/logo.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/favicon-16x16.png') }}">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/images/apple-touch-icon.png') }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="MediNear - دوائك أقرب مما تتخيل">
+    <meta property="og:description" content="بوابتك الأسرع والأسهل للبحث عن الأدوية والعثور على أقرب صيدلية إليك.">
+    <meta property="og:image" content="{{ asset('assets/images/logo.png') }}">
+    <meta property="og:site_name" content="MediNear">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ url()->current() }}">
+    <meta property="twitter:title" content="MediNear - دوائك أقرب مما تتخيل">
+    <meta property="twitter:description" content="بوابتك الأسرع والأسهل للبحث عن الأدوية والعثور على أقرب صيدلية إليك.">
+    <meta property="twitter:image" content="{{ asset('assets/images/logo.png') }}">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -654,10 +684,10 @@
         </div>
     </div>
     <div
-        class="fixed top-4 left-4 right-4 md:left-auto md:right-6 md:top-6 z-[1000001] flex flex-col gap-3 pointer-events-none w-full max-w-sm">
+        class="fixed top-4 right-4 left-4 md:left-auto md:right-6 md:top-6 z-[1000001] flex flex-col gap-3 pointer-events-none md:w-[400px]">
         @if (session('success'))
             <div
-                class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-2xl rounded-2xl p-4 flex items-center gap-4">
+                class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-2xl rounded-2xl p-4 flex items-center gap-4 w-full">
                 <div class="bg-emerald-100 p-2 rounded-xl text-emerald-600 shrink-0">
                     <i class="fa-solid fa-circle-check text-xl"></i>
                 </div>
@@ -674,7 +704,7 @@
 
         @if (session('error') || $errors->any())
             <div
-                class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-2xl rounded-2xl p-4 flex items-center gap-4">
+                class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-2xl rounded-2xl p-4 flex items-center gap-4 w-full">
                 <div class="bg-rose-100 p-2 rounded-xl text-rose-600 shrink-0">
                     <i class="fa-solid fa-circle-exclamation text-xl"></i>
                 </div>
@@ -880,10 +910,19 @@
                 class="hidden lg:hidden bg-white/95 backdrop-blur-2xl border-x border-b border-gray-100/50 absolute w-full shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all origin-top rounded-b-[2rem] overflow-y-auto overscroll-contain max-h-[85vh] z-[49]">
                 <div class="px-5 pt-5 pb-8 space-y-2 flex flex-col text-center">
                     <button onclick="navigateTo('home'); closeMobileMenu();"
-                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">الرئيسية</button>
+                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors" data-i18n="navHome">الرئيسية</button>
                     <button
                         onclick="navigateTo('home'); setTimeout(()=>document.getElementById('features').scrollIntoView({behavior: 'smooth'}), 100); closeMobileMenu();"
-                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">المميزات</button>
+                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors" data-i18n="navFeatures">المميزات</button>
+                    <button
+                        onclick="navigateTo('home'); setTimeout(()=>document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'}), 100); closeMobileMenu();"
+                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors" data-i18n="navHow">كيف يعمل</button>
+                    <button
+                        onclick="navigateTo('home'); setTimeout(()=>document.getElementById('reviews').scrollIntoView({behavior: 'smooth'}), 100); closeMobileMenu();"
+                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors" data-i18n="navReviews">آراء العملاء</button>
+                    <button
+                        onclick="navigateTo('home'); setTimeout(()=>document.getElementById('contact').scrollIntoView({behavior: 'smooth'}), 100); closeMobileMenu();"
+                        class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors" data-i18n="navContact">اتصل بنا</button>
 
                     @auth
                         @if (Auth::user()->role === 'admin')
@@ -891,8 +930,8 @@
                                 class="block w-full px-4 py-3 text-primary font-bold bg-teal-50 rounded-xl transition-colors">لوحة
                                 التحكم</a>
                         @else
-                            <a href="{{ route('pharmacy.Application.index') }}"
-                                class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">للصيدليات</a>
+                            <a href="{{ route('pharmacy.Application.index') }}" data-i18n="navPharmacies"
+                                class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors text-center">للصيدليات</a>
                         @endif
 
                         <div
@@ -917,12 +956,12 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('pharmacy.Application.index') }}"
-                            class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">للصيدليات</a>
+                        <button onclick="toggleModal('authRequiredModal'); closeMobileMenu();"
+                            class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors text-center" data-i18n="navPharmacies">للصيدليات</button>
                         <button onclick="window.location.href='{{ route('google.login') }}'"
                             class="w-full bg-gradient-custom text-white px-6 py-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-shadow flex items-center justify-center gap-2 hover:-translate-y-0.5">
                             <i class="fa-brands fa-google text-xl -mt-0.5"></i>
-                            <span>تسجيل الدخول</span>
+                            <span data-i18n="btnRegPharmacy">تسجيل الدخول</span>
                         </button>
                     @endauth
                 </div>

@@ -31,7 +31,7 @@
         </div>
     </div>
 
-    <nav class="mt-4 md:mt-6 px-3 md:px-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-20px)] scrollbar-hide">
+    <nav class="mt-4 md:mt-6 px-3 md:px-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-hide">
 
         <a href="{{ route('admin.dashboard') }}"
             class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
@@ -68,20 +68,6 @@
             <span class="{{ request()->routeIs('medicines.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الأدوية والمنتجات</span>
         </a>
 
-        <a href="{{ route('coupons.index') }}"
-            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
-            {{ request()->routeIs('coupons.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-            <i class="fa-solid fa-pills w-5 text-center {{ request()->routeIs('coupons.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-            <span class="{{ request()->routeIs('coupons.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الكوبونات</span>
-        </a>
-
-        <a href="{{ route('ads.index') }}"
-            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
-            {{ request()->routeIs('ads.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-            <i class="fa-solid fa-pills w-5 text-center {{ request()->routeIs('ads.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-            <span class="{{ request()->routeIs('ads.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الاعلانات</span>
-        </a>
-
         <a href="{{ route('admin.profile.index') }}"
             class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl mt-4
             {{ request()->routeIs('admin.profile.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
@@ -91,4 +77,15 @@
 
     </nav>
 
+    <div class="absolute bottom-4 md:bottom-6 w-full px-4 md:px-5">
+        <div class="bg-gradient-to-br from-white/10 to-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/5 text-center shadow-lg">
+            <div class="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-2.5">
+                <i class="fa-solid fa-headset text-accent text-sm"></i>
+            </div>
+            <p class="text-[10px] md:text-xs text-white/70 mb-3 font-medium leading-tight">تحتاج إلى مساعدة؟</p>
+            <button class="text-xs md:text-sm bg-accent hover:bg-lime-500 text-darkText font-black py-2 px-4 rounded-xl w-full transition-all shadow-lg shadow-accent/20">
+                الدعم الفني
+            </button>
+        </div>
+    </div>
 </aside>

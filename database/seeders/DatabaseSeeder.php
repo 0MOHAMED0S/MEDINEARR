@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             MedicineSeeder::class,
             PharmacySeeder::class,
+            CouponSeeder::class
         ]);
     }
 }

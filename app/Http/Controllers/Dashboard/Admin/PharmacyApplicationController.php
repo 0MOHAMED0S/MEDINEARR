@@ -9,32 +9,22 @@ use Illuminate\Support\Facades\Auth;
 
 class PharmacyApplicationController extends Controller
 {
-public function index()
+    public function index()
     {
-        // 1. تعريف المتغيرات الافتراضية للزوار غير المسجلين
         $activeApplication = null;
         $rejectedApplications = collect(); // مجموعة فارغة
-
-        // 2. إذا كان المستخدم مسجلاً، قم بجلب بيانات طلباته
         if (Auth::check()) {
             $userId = Auth::id();
-
-            // البحث عن طلب لا يزال قيد المراجعة أو تم قبوله
             $activeApplication = PharmacyApplication::where('user_id', $userId)
                 ->whereIn('status', ['under_review', 'approved'])
                 ->first();
-
-            // البحث عن سجل الطلبات المرفوضة
             $rejectedApplications = PharmacyApplication::where('user_id', $userId)
                 ->where('status', 'rejected')
                 ->latest()
                 ->get();
         }
-
-        // 3. إرسال البيانات إلى واجهة الـ Blade
         return view('main.pharmacy', compact('activeApplication', 'rejectedApplications'));
     }
-    // app/Http/Controllers/PharmacyController.php
     public function store(PharmacyStoreRequest $request)
     {
         $data = $request->validated();
@@ -56,5 +46,4 @@ public function index()
 
         return back()->with('success', 'Application submitted successfully!');
     }
-
 }

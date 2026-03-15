@@ -21,7 +21,6 @@ class AdminPharmacyApplicationController extends Controller
                 ELSE 2
             END
         ")->latest();
-
         // Stats calculated from all records
         $allPharmacies = PharmacyApplication::all();
         $stats = [
@@ -30,38 +29,29 @@ class AdminPharmacyApplicationController extends Controller
             'under_review' => $allPharmacies->where('status', 'under_review')->count(),
             'rejected'     => $allPharmacies->where('status', 'rejected')->count(),
         ];
-
         // Use Paginate for the main variable
         $pharmacies = $query->paginate(10);
-
         return view('dashboard.pharmaciesApplications.index', compact('pharmacies', 'stats'));
     }
-
-public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $id)
     {
         $request->validate([
             'status'      => 'required|in:approved,rejected',
             'admin_notes' => 'required_if:status,rejected|nullable|string|max:1000'
         ]);
-
         try {
             DB::beginTransaction();
-
             $application = PharmacyApplication::findOrFail($id);
-
             // استخدام التعيين المباشر لضمان الحفظ وتجنب مشكلة الـ fillable
             $application->status = $request->status;
             $application->admin_notes = $request->status === 'rejected' ? $request->admin_notes : null;
             $application->save(); // حفظ البيانات صراحةً
-
             if ($request->status === 'approved') {
                 $user = User::where('email', $application->email)->first();
                 $userId = $user ? $user->id : ($application->user_id ?? null);
-
                 if (!$userId) {
                     throw new \Exception("لا يمكن قبول الصيدلية لعدم وجود حساب مستخدم (User) مرتبط بهذا البريد الإلكتروني.");
                 }
-
                 Pharmacy::firstOrCreate(
                     ['email' => $application->email],
                     [
@@ -84,11 +74,9 @@ public function updateStatus(Request $request, $id)
                     ]
                 );
             }
-
             DB::commit();
             $message = $request->status === 'approved' ? 'تم قبول الصيدلية وتفعيلها بنجاح.' : 'تم رفض طلب الصيدلية وحفظ ملاحظات الإدارة.';
             return back()->with('success', $message);
-
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Admin Pharmacy Status Update Error: ' . $e->getMessage());
