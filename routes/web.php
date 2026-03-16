@@ -8,6 +8,7 @@ use App\Http\Controllers\Dashboard\Admin\AdminMedicineController;
 use App\Http\Controllers\Dashboard\Admin\AdminPharmacyApplicationController;
 use App\Http\Controllers\Dashboard\Admin\AdminPharmacyController;
 use App\Http\Controllers\Dashboard\Admin\AdminProfileController;
+use App\Http\Controllers\Dashboard\Admin\AdminUsersController;
 use App\Http\Controllers\Dashboard\Admin\CouponController;
 use App\Http\Controllers\Dashboard\Admin\PharmacyApplicationController;
 use App\Http\Controllers\Dashboard\Pharmacy\GoogleController;
@@ -22,7 +23,9 @@ Route::prefix('admin')->group(function () {
 });
 
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/dashboard', function () {return view('dashboard.index');})->name('admin.dashboard');
+    Route::get('/dashboard', function () {
+        return view('dashboard.index');
+    })->name('admin.dashboard');
     // Admin Profile Routes
     Route::get('/profile', [AdminProfileController::class, 'index'])->name('admin.profile.index');
     Route::put('/profile/info', [AdminProfileController::class, 'updateInfo'])->name('admin.profile.info');
@@ -45,16 +48,21 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('pharmacies', AdminPharmacyController::class);
     Route::post('/pharmacies/{id}/toggle-status', [AdminPharmacyController::class, 'toggleStatus'])->name('admin.pharmacies.toggle');
 
+    Route::post('pharmacies/{id}/toggle-big', [AdminPharmacyController::class, 'toggleBigPharmacy']);
     // Coupons Routes
-Route::resource('coupons',CouponController::class)->except(['create', 'show', 'edit']);
-Route::post('coupons/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])->name('coupons.toggle-status');
+    Route::resource('coupons', CouponController::class)->except(['create', 'show', 'edit']);
+    Route::post('coupons/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])->name('coupons.toggle-status');
 
-//ads
-Route::resource('ads', AdminAdController::class)->except(['create', 'show', 'edit']);
-Route::post('ads/{ad}/toggle-status', [AdminAdController::class, 'toggleStatus'])->name('admin.ads.toggle-status');
+    //ads
+    Route::resource('ads', AdminAdController::class)->except(['create', 'show', 'edit']);
+    Route::post('ads/{ad}/toggle-status', [AdminAdController::class, 'toggleStatus'])->name('admin.ads.toggle-status');
+
+    //users
+    Route::resource('users', AdminUsersController::class)->only(['index', 'update', 'destroy']);
+    Route::post('users/{user}/toggle-status', [AdminUsersController::class, 'toggleStatus'])->name('users.toggle-status');
 });
 
-Route::prefix('pharmacy')->middleware(['auth', 'role:pharmacy'])->group(function () {
+Route::prefix('pharmacy')->middleware(['auth', 'role:pharmacy', 'is_active'])->group(function () {
     Route::post('/logout', [GoogleController::class, 'logout'])->name('pharmacy.logout');
     Route::get('/pharmacyApplication', [PharmacyApplicationController::class, 'index'])->name('pharmacy.Application.index');
     Route::post('/pharmacy/apply', [PharmacyApplicationController::class, 'store'])->name('pharmacy.apply');

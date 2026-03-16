@@ -12,46 +12,115 @@ use Illuminate\Support\Facades\Log;
 
 class AdminPharmacyApplicationController extends Controller
 {
-    public function index()
+public function index(Request $request)
     {
-        // Fetch all applications: "Under Review" first, then newest first
-        $query = PharmacyApplication::orderByRaw("
+        $query = PharmacyApplication::query();
+
+        // 1. الفلترة حسب الحالة (مقبول / مرفوض / مراجعة)
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // 2. البحث النصي
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('pharmacy_name', 'like', "%{$search}%")
+                  ->orWhere('owner_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($userQuery) use ($search) {
+                      $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('phone', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // 3. خريطة المحافظات والعدادات
+        $governoratesMap = [
+            'cairo' => 'القاهرة', 'giza' => 'الجيزة', 'alexandria' => 'الإسكندرية',
+            'qalyubia' => 'القليوبية', 'sharqia' => 'الشرقية', 'dakahlia' => 'الدقهلية',
+            'gharbia' => 'الغربية', 'menofia' => 'المنوفية', 'kafr_el_sheikh' => 'كفر الشيخ',
+            'beheira' => 'البحيرة', 'damietta' => 'دمياط', 'port_said' => 'بورسعيد',
+            'ismailia' => 'الإسماعيلية', 'suez' => 'السويس', 'fayoum' => 'الفيوم',
+            'beni_suef' => 'بني سويف', 'minya' => 'المنيا', 'assiut' => 'أسيوط',
+            'sohag' => 'سوهاج', 'qena' => 'قنا', 'luxor' => 'الأقصر', 'aswan' => 'أسوان',
+            'red_sea' => 'البحر الأحمر', 'new_valley' => 'الوادي الجديد', 'matrouh' => 'مطروح',
+            'north_sinai' => 'شمال سيناء', 'south_sinai' => 'جنوب سيناء'
+        ];
+
+        // حساب الأعداد قبل تطبيق فلتر الموقع (ليظل العداد ظاهراً)
+        $govCountsQuery = clone $query;
+        $govCountsDb = $govCountsQuery->select('city', DB::raw('count(*) as count'))->groupBy('city')->pluck('count', 'city')->toArray();
+
+        $govCounts = [];
+        $totalFilteredCount = 0;
+        foreach($governoratesMap as $key => $arName) {
+            $count = $govCountsDb[$arName] ?? 0;
+            $govCounts[$key] = $count;
+            $totalFilteredCount += $count;
+        }
+
+        // 4. الفلترة الجغرافية على الجدول
+        if ($request->filled('location') && $request->location !== 'all') {
+            $cityArabicName = $governoratesMap[$request->location] ?? null;
+            if ($cityArabicName) {
+                $query->where('city', $cityArabicName);
+            }
+        }
+
+        // ======================= التعديل الجديد للخريطة =======================
+        // جلب الإحداثيات لكل الطلبات المفلترة لرسم الخريطة (بدون Pagination)
+        $mapData = clone $query;
+        $allMapPharmacies = $mapData->select('id', 'pharmacy_name', 'phone', 'address', 'lat', 'lng', 'status', 'image')->get();
+        // ======================================================================
+
+        // جلب البيانات بالصفحات مع إعطاء الأولوية للطلبات التي "تحت المراجعة"
+        $pharmacies = $query->orderByRaw("
             CASE
                 WHEN status = 'under_review' THEN 1
                 ELSE 2
             END
-        ")->latest();
-        // Stats calculated from all records
-        $allPharmacies = PharmacyApplication::all();
+        ")->latest()->paginate(10)->appends($request->query());
+
+        // الإحصائيات العامة من كل الجدول
         $stats = [
-            'total'        => $allPharmacies->count(),
-            'approved'     => $allPharmacies->where('status', 'approved')->count(),
-            'under_review' => $allPharmacies->where('status', 'under_review')->count(),
-            'rejected'     => $allPharmacies->where('status', 'rejected')->count(),
+            'total'        => PharmacyApplication::count(),
+            'approved'     => PharmacyApplication::where('status', 'approved')->count(),
+            'under_review' => PharmacyApplication::where('status', 'under_review')->count(),
+            'rejected'     => PharmacyApplication::where('status', 'rejected')->count(),
         ];
-        // Use Paginate for the main variable
-        $pharmacies = $query->paginate(10);
-        return view('dashboard.pharmaciesApplications.index', compact('pharmacies', 'stats'));
+
+        return view('dashboard.pharmaciesApplications.index', compact(
+            'pharmacies', 'stats', 'govCounts', 'totalFilteredCount', 'governoratesMap', 'allMapPharmacies'
+        ));
     }
+
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status'      => 'required|in:approved,rejected',
-            'admin_notes' => 'required_if:status,rejected|nullable|string|max:1000'
+            'status'          => 'required|in:approved,rejected',
+            'admin_notes'     => 'required_if:status,rejected|nullable|string|max:1000',
+            'is_big_pharmacy' => 'nullable' // إضافة التحقق من الحقل الجديد
         ]);
+
         try {
             DB::beginTransaction();
             $application = PharmacyApplication::findOrFail($id);
-            // استخدام التعيين المباشر لضمان الحفظ وتجنب مشكلة الـ fillable
+
             $application->status = $request->status;
             $application->admin_notes = $request->status === 'rejected' ? $request->admin_notes : null;
-            $application->save(); // حفظ البيانات صراحةً
+            $application->save();
+
             if ($request->status === 'approved') {
                 $user = User::where('email', $application->email)->first();
                 $userId = $user ? $user->id : ($application->user_id ?? null);
+
                 if (!$userId) {
                     throw new \Exception("لا يمكن قبول الصيدلية لعدم وجود حساب مستخدم (User) مرتبط بهذا البريد الإلكتروني.");
                 }
+
                 Pharmacy::firstOrCreate(
                     ['email' => $application->email],
                     [
@@ -71,18 +140,23 @@ class AdminPharmacyApplicationController extends Controller
                         'services'                => is_string($application->services) ? json_decode($application->services, true) : $application->services,
                         'has_collaboration'       => $application->has_collaboration == 1 || $application->collab === 'yes',
                         'is_active'               => true,
+                        // حفظ قيمة هل هي صيدلية كبرى
+                        'is_big_pharmacy'         => $request->has('is_big_pharmacy') ? true : false,
                     ]
                 );
             }
+
             DB::commit();
             $message = $request->status === 'approved' ? 'تم قبول الصيدلية وتفعيلها بنجاح.' : 'تم رفض طلب الصيدلية وحفظ ملاحظات الإدارة.';
             return back()->with('success', $message);
+
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Admin Pharmacy Status Update Error: ' . $e->getMessage());
             return back()->withErrors(['error' => 'حدث خطأ: ' . $e->getMessage()]);
         }
     }
+
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -96,18 +170,16 @@ class AdminPharmacyApplicationController extends Controller
             'lat'               => 'nullable|numeric',
             'lng'               => 'nullable|numeric',
             'has_collaboration' => 'required|boolean',
-            'services'          => 'nullable|array', // Because it's an array of checkboxes
+            'services'          => 'nullable|array',
         ]);
 
         try {
             $application = \App\Models\PharmacyApplication::findOrFail($id);
 
-            // Security: Prevent editing if already approved/rejected
             if ($application->status !== 'under_review') {
                 return back()->withErrors(['error' => 'لا يمكن تعديل بيانات طلب تمت معالجته مسبقاً.']);
             }
 
-            // Update all fields
             $application->update([
                 'pharmacy_name'     => $request->pharmacy_name,
                 'owner_name'        => $request->owner_name,
@@ -119,15 +191,16 @@ class AdminPharmacyApplicationController extends Controller
                 'lat'               => $request->lat,
                 'lng'               => $request->lng,
                 'has_collaboration' => $request->has_collaboration,
-                'services'          => $request->services ?? [], // Save as array (casts to JSON automatically)
+                'services'          => $request->services ?? [],
             ]);
 
             return back()->with('success', 'تم تحديث جميع بيانات الصيدلية بنجاح.');
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Admin Pharmacy Edit Error: ' . $e->getMessage());
+            Log::error('Admin Pharmacy Edit Error: ' . $e->getMessage());
             return back()->withErrors(['error' => 'حدث خطأ أثناء التحديث. يرجى المحاولة مجدداً.']);
         }
     }
+
     public function destroy($id)
     {
         try {

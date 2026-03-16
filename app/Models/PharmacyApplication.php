@@ -22,7 +22,8 @@ class PharmacyApplication extends Model
         'services',
         'has_collaboration',
         'image',
-        'status'
+        'status',
+        
     ];
 
     protected $casts = [

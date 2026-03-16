@@ -16,10 +16,11 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdminSeeder::class,
-            CategorySeeder::class,
+            UserSeeder::class,
+            // CategorySeeder::class,
             MedicineSeeder::class,
             PharmacySeeder::class,
-            CouponSeeder::class
+            CouponSeeder::class,
         ]);
     }
 }

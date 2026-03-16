@@ -1,10 +1,13 @@
 @extends('dashboard.layout.master')
 @section('content')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <div class="p-4 md:p-6 lg:p-8 relative">
 
-        <div id="toast-container" class="fixed top-4 left-4 right-4 md:left-auto md:right-6 md:top-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+        <div id="ajax-toast-container" class="fixed top-4 left-4 right-4 md:left-auto md:right-6 md:top-6 z-[999999] flex flex-col gap-3 pointer-events-none w-max max-w-[90vw]">
             @if(session('success'))
-                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right">
+                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right mb-3">
                     <div class="bg-emerald-100 p-2 rounded-xl text-emerald-600 shrink-0">
                         <i class="fa-solid fa-circle-check text-xl"></i>
                     </div>
@@ -16,7 +19,7 @@
                 </div>
             @endif
             @if ($errors->any())
-                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right">
+                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right mb-3">
                     <div class="bg-rose-100 p-2 rounded-xl text-rose-600 shrink-0">
                         <i class="fa-solid fa-triangle-exclamation text-xl"></i>
                     </div>
@@ -78,31 +81,49 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden transition-all">
+        <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden transition-all mb-8" id="pharmacyTableSection">
             <div class="p-5 md:p-6 border-b border-gray-50 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 bg-slate-50/30">
                 <div class="flex items-center gap-3 shrink-0">
-                    <h3 class="font-black text-slate-800 text-lg tracking-tight">قائمة الصيدليات</h3>
-                    <span id="resultCounter" class="bg-primary/10 text-primary text-[10px] font-black px-3 py-1.5 rounded-full transition-all uppercase tracking-wider">
-                        {{ $pharmacies->total() }} صيدلية
+                    <h3 class="font-black text-slate-800 text-lg tracking-tight">سجل الطلبات</h3>
+                    <span class="bg-primary/10 text-primary text-[10px] font-black px-3 py-1.5 rounded-full transition-all uppercase tracking-wider">
+                        {{ $pharmacies->total() }} طلب
                     </span>
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto flex-wrap">
-                    <div class="relative w-full sm:w-64">
-                        <input type="text" id="searchInput" placeholder="ابحث باسم الصيدلية أو المالك..." class="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 pr-11 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none text-slate-700 shadow-sm">
+
+                    <div class="relative w-full sm:w-56 lg:w-64">
+                        <input type="text" id="serverSearchInput" value="{{ request('search') }}" placeholder="ابحث باسم الصيدلية (اضغط Enter)" class="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 pr-11 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none text-slate-700 shadow-sm">
                         <i class="fa-solid fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        @if(request('search'))
+                            <button type="button" onclick="setServerFilter('search', '')" class="absolute left-3 top-1/2 -translate-y-1/2 text-rose-400 hover:text-rose-600 text-xs font-bold">إلغاء</button>
+                        @endif
                     </div>
 
                     <div class="relative w-full sm:w-auto">
-                        <select id="statusFilter" class="w-full sm:w-auto bg-white border border-gray-200 rounded-2xl py-3 pr-10 pl-10 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none text-slate-600 shadow-sm font-medium cursor-pointer">
-                            <option value="all">جميع الحالات</option>
-                            <option value="approved">المقبولة</option>
-                            <option value="under_review">قيد المراجعة</option>
-                            <option value="rejected">المرفوضة</option>
+                        @php $currentLoc = request('location', 'all'); @endphp
+                        <select onchange="setServerFilter('location', this.value)" class="w-full sm:w-auto bg-white border border-gray-200 rounded-2xl py-3 pr-10 pl-8 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none text-slate-600 shadow-sm font-medium cursor-pointer">
+                            <option value="all">كل المحافظات</option>
+                            @foreach($governoratesMap as $key => $arName)
+                                <option value="{{ $key }}" {{ $currentLoc === $key ? 'selected' : '' }}>{{ $arName }}</option>
+                            @endforeach
+                        </select>
+                        <i class="fa-solid fa-map-location-dot absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        <i class="fa-solid fa-chevron-down absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
+                    </div>
+
+                    <div class="relative w-full sm:w-auto">
+                        @php $currentStatus = request('status', 'all'); @endphp
+                        <select onchange="setServerFilter('status', this.value)" class="w-full sm:w-auto bg-white border border-gray-200 rounded-2xl py-3 pr-10 pl-8 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none text-slate-600 shadow-sm font-medium cursor-pointer">
+                            <option value="all" {{ $currentStatus === 'all' ? 'selected' : '' }}>جميع الحالات</option>
+                            <option value="approved" {{ $currentStatus === 'approved' ? 'selected' : '' }}>المقبولة</option>
+                            <option value="under_review" {{ $currentStatus === 'under_review' ? 'selected' : '' }}>قيد المراجعة</option>
+                            <option value="rejected" {{ $currentStatus === 'rejected' ? 'selected' : '' }}>المرفوضة</option>
                         </select>
                         <i class="fa-solid fa-filter absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-                        <i class="fa-solid fa-chevron-down absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
+                        <i class="fa-solid fa-chevron-down absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
                     </div>
+
                 </div>
             </div>
 
@@ -118,12 +139,9 @@
                             <th class="p-5 w-48 text-center text-center">الإجراءات</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100" id="tableBody">
-                        @forelse ($pharmacies ?? [] as $index => $pharmacy)
-                            <tr class="pharmacy-row hover:bg-slate-50 transition-all duration-300 group"
-                                data-name="{{ mb_strtolower($pharmacy->pharmacy_name . ' ' . ($pharmacy->user->name ?? $pharmacy->owner_name)) }}"
-                                data-status="{{ $pharmacy->status }}">
-
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse ($pharmacies as $index => $pharmacy)
+                            <tr class="hover:bg-slate-50 transition-all duration-300 group">
                                 <td class="p-5 font-bold text-slate-400 text-xs text-center">{{ $pharmacies->firstItem() + $index }}</td>
 
                                 <td class="p-5">
@@ -136,14 +154,20 @@
                                             @endif
                                         </div>
                                         <div class="flex flex-col">
-                                            <span class="font-black text-slate-800 text-sm mb-1 flex items-center gap-2">
+                                            <span class="font-black text-slate-800 text-sm mb-1 flex items-center flex-wrap gap-2">
                                                 {{ $pharmacy->pharmacy_name }}
                                                 @if(\Carbon\Carbon::parse($pharmacy->created_at)->diffInHours(now()) <= 24)
                                                     <span class="bg-blue-100 text-blue-600 text-[8px] px-1.5 py-0.5 rounded-md font-black uppercase tracking-wider animate-pulse border border-blue-200">جديد</span>
                                                 @endif
                                             </span>
-                                            <span class="text-[11px] text-gray-500 font-medium flex items-center gap-1">
-                                                <i class="fa-solid fa-location-dot text-gray-400"></i> {{ $pharmacy->city }}
+
+                                            <span class="text-[11px] text-gray-500 font-medium flex items-center gap-1.5 mt-0.5">
+                                                <i class="fa-solid fa-map-location-dot text-gray-400"></i>
+                                                <span class="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{{ $pharmacy->city ?? 'غير محدد' }}</span>
+                                                @if($pharmacy->address)
+                                                    <span class="text-gray-300">|</span>
+                                                    <span class="truncate max-w-[120px] sm:max-w-[150px] inline-block" title="{{ $pharmacy->address }}">{{ $pharmacy->address }}</span>
+                                                @endif
                                             </span>
                                         </div>
                                     </div>
@@ -159,7 +183,7 @@
                                                 'avatar' => $pharmacy->user->avatar ?? null
                                             ];
                                         @endphp
-                                        <button type="button" onclick="openOwnerModal({{ json_encode($ownerData) }})" class="font-bold text-slate-700 text-sm mb-1 hover:text-blue-600 transition-colors flex items-center gap-1.5 tooltip text-right" title="عرض تفاصيل المالك">
+                                        <button type="button" onclick="openOwnerModal({{ json_encode($ownerData) }})" class="font-bold text-slate-700 text-sm mb-1 hover:text-blue-600 transition-colors flex items-center gap-1.5 tooltip text-right" title="عرض تفاصيل حساب المالك">
                                             <i class="fa-regular fa-id-badge text-gray-400 text-xs"></i>
                                             {{ $ownerData['name'] }}
                                         </button>
@@ -212,30 +236,29 @@
                                         @endif
                                     </div>
                                 </td>
+                                <input type="hidden" id="raw-pharmacy-{{ $pharmacy->id }}" value="{{ json_encode($pharmacy) }}">
                             </tr>
                         @empty
-                            <tr id="defaultEmptyRow">
+                            <tr>
                                 <td colspan="6" class="p-20 text-center">
                                     <div class="flex flex-col items-center justify-center text-gray-400">
-                                        <i class="fa-solid fa-inbox text-4xl mb-4 text-gray-200"></i>
-                                        <p class="font-bold text-lg text-slate-600">لا توجد طلبات صيدليات بعد</p>
+                                        @if(request('search') || request('status') || request('location'))
+                                            <i class="fa-solid fa-magnifying-glass text-4xl mb-4 text-gray-200"></i>
+                                            <p class="font-bold text-lg text-slate-600">لا توجد نتائج مطابقة لبحثك</p>
+                                            <a href="{{ route('admin.pharmaciesApplications.index') }}" class="mt-4 text-sm text-primary hover:underline">إلغاء جميع الفلاتر</a>
+                                        @else
+                                            <i class="fa-solid fa-inbox text-4xl mb-4 text-gray-200"></i>
+                                            <p class="font-bold text-lg text-slate-600">لا توجد طلبات صيدليات بعد</p>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @endforelse
-
-                        <tr id="noResultsRow" style="display: none;">
-                            <td colspan="6" class="p-20 text-center">
-                                <div class="flex flex-col items-center justify-center text-gray-400">
-                                    <i class="fa-solid fa-magnifying-glass text-4xl mb-4 text-gray-200"></i>
-                                    <p class="font-bold text-lg text-slate-600">لا توجد نتائج مطابقة لبحثك</p>
-                                </div>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
 
+            @if($pharmacies->hasPages())
             <div class="px-6 py-4 bg-slate-50/50 border-t border-gray-100">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-center sm:text-right">
                     <p class="text-xs font-bold text-slate-500">
@@ -246,7 +269,57 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
+
+        <div class="mt-10">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center text-lg shadow-sm">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+                <h3 class="text-xl md:text-2xl font-black text-slate-800 tracking-tight">توزيع الطلبات حسب المحافظات</h3>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+
+                <div onclick="setServerFilter('location', 'all')" class="gov-card bg-white p-3.5 md:p-4 rounded-2xl border {{ $currentLoc === 'all' ? 'border-rose-400 ring-2 ring-rose-50 bg-rose-50/20' : 'border-gray-100' }} shadow-sm flex items-center justify-between group hover:border-rose-400 hover:shadow-lg transition-all cursor-pointer">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                            <i class="fa-solid fa-layer-group text-[10px]"></i>
+                        </div>
+                        <span class="font-bold text-slate-700 text-[11px] truncate">الكل</span>
+                    </div>
+                    <span class="px-2 py-1 rounded-md text-[10px] font-black shadow-inner {{ $totalFilteredCount > 0 ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400' }}">
+                        {{ $totalFilteredCount }}
+                    </span>
+                </div>
+
+                @foreach($governoratesMap as $key => $name)
+                    <div onclick="setServerFilter('location', '{{ $key }}')" class="gov-card bg-white p-3.5 md:p-4 rounded-2xl border {{ $currentLoc === $key ? 'border-rose-400 ring-2 ring-rose-50 bg-rose-50/20' : 'border-gray-100' }} shadow-sm flex items-center justify-between group hover:border-rose-400 hover:shadow-lg transition-all cursor-pointer">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                                <i class="fa-solid fa-map-pin text-[10px]"></i>
+                            </div>
+                            <span class="font-bold text-slate-700 text-[11px] truncate">{{ $name }}</span>
+                        </div>
+                        <span class="px-2 py-1 rounded-md text-[10px] font-black shadow-inner transition-colors {{ ($govCounts[$key] ?? 0) > 0 ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-600' }}">
+                            {{ $govCounts[$key] ?? 0 }}
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="mt-10 bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-lg shadow-sm">
+                    <i class="fa-solid fa-map-marked-alt"></i>
+                </div>
+                <h3 class="text-xl md:text-2xl font-black text-slate-800 tracking-tight">خريطة مواقع الطلبات</h3>
+            </div>
+            <div id="egyptMap" class="w-full h-[500px] rounded-2xl z-10 border border-gray-200 shadow-inner"></div>
+        </div>
+
     </div>
 
     <div id="ownerModal" class="fixed inset-0 z-[110] hidden flex-col items-center justify-center p-4 sm:p-0">
@@ -298,8 +371,13 @@
                     <div class="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white shadow-lg bg-white overflow-hidden shrink-0">
                         <img id="v-image" src="" alt="Pharmacy" class="w-full h-full object-cover">
                     </div>
-                    <div class="flex-1 text-center md:text-right">
-                        <h2 id="v-name" class="text-2xl font-black text-slate-800 mb-1">اسم الصيدلية</h2>
+                    <div class="flex-1 text-center md:text-right mt-4 md:mt-0">
+                        <h2 class="text-2xl font-black text-slate-800 mb-1 flex items-center justify-center md:justify-start gap-2">
+                            <span id="v-name-text">اسم الصيدلية</span>
+                            <span id="v-big-badge" class="hidden items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-100 to-yellow-50 text-amber-600 border border-amber-200 text-[10px] font-black shadow-sm">
+                                <i class="fa-solid fa-star text-amber-400"></i> كبرى
+                            </span>
+                        </h2>
                         <p id="v-owner" class="text-sm font-bold text-gray-500"><i class="fa-solid fa-user-tie ml-1"></i> اسم المالك</p>
                     </div>
                     <div id="v-status-badge" class="shrink-0 mt-4 md:mt-0"></div>
@@ -316,7 +394,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-right">
                     <div class="bg-slate-50 p-4 rounded-2xl border border-gray-100">
                         <span class="block text-[10px] uppercase font-black text-slate-400 mb-1">رقم الهاتف</span>
                         <p id="v-phone" class="font-bold text-slate-700 text-sm font-mono" dir="ltr"></p>
@@ -326,7 +404,7 @@
                         <p id="v-email" class="font-bold text-slate-700 text-sm font-mono" dir="ltr"></p>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-2xl border border-gray-100">
-                        <span class="block text-[10px] uppercase font-black text-slate-400 mb-1">المحافظة / المدينة</span>
+                        <span class="block text-[10px] uppercase font-black text-slate-400 mb-1">المحافظة / النطاق</span>
                         <p id="v-city" class="font-bold text-slate-700 text-sm"></p>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-2xl border border-gray-100">
@@ -350,7 +428,7 @@
                     </div>
 
                     <div>
-                        <h4 class="font-black text-slate-800 text-sm mb-3 border-b border-gray-100 pb-2">المستندات والتراخيص</h4>
+                        <h4 class="font-black text-slate-800 text-sm mb-3 border-b border-gray-100 pb-2">المستندات والموقع</h4>
                         <div class="bg-slate-50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between gap-4 mb-3">
                             <div class="overflow-hidden">
                                 <span class="block text-[10px] uppercase font-black text-slate-400 mb-1">رقم الترخيص</span>
@@ -362,7 +440,7 @@
                         </div>
                         <a id="v-map-btn" href="#" target="_blank" class="w-full py-3 bg-slate-800 hover:bg-black text-white rounded-2xl font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg">
                             <i class="fa-solid fa-map-location-dot"></i>
-                            عرض الموقع على الخريطة
+                            فتح الموقع في خرائط جوجل
                         </a>
                     </div>
                 </div>
@@ -378,7 +456,6 @@
     <div id="editModal" class="fixed inset-0 z-[105] hidden flex-col items-center justify-center p-4 sm:p-0">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="toggleModal('editModal')"></div>
         <div class="relative bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl overflow-hidden animate-scale-up flex flex-col max-h-[90vh]">
-
             <div class="relative h-28 bg-gradient-to-r from-blue-600 to-indigo-600 shrink-0 flex items-center px-8 text-right">
                 <button type="button" onclick="toggleModal('editModal')" class="absolute top-4 left-4 w-10 h-10 rounded-2xl bg-white/20 hover:bg-white text-white hover:text-slate-800 transition-all flex items-center justify-center backdrop-blur-md">
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -428,15 +505,26 @@
                             <label class="block text-sm font-bold text-slate-700 mb-2">العنوان التفصيلي</label>
                             <input type="text" id="e-address" name="address" class="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none shadow-sm">
                         </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">خط العرض (Latitude)</label>
-                            <input type="text" id="e-lat" name="lat" class="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none shadow-sm" dir="ltr">
+
+                        <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+                            <label class="block text-sm font-bold text-slate-700 mb-3 border-b border-gray-100 pb-2"><i class="fa-solid fa-map-location-dot mr-1"></i> الإحداثيات (خط الطول والعرض)</label>
+                            <div class="grid grid-cols-2 gap-4 mb-3">
+                                <div>
+                                    <label class="block text-[10px] text-gray-500 mb-1">خط العرض (Latitude)</label>
+                                    <input type="text" id="e-lat" name="lat" class="w-full bg-slate-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none font-mono text-left" dir="ltr" oninput="updateGovernorateDisplay()">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-gray-500 mb-1">خط الطول (Longitude)</label>
+                                    <input type="text" id="e-lng" name="lng" class="w-full bg-slate-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none font-mono text-left" dir="ltr" oninput="updateGovernorateDisplay()">
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 mt-2 pt-3 border-t border-gray-100">
+                                <span class="text-xs text-gray-500">المحافظة التقريبية:</span>
+                                <span id="edit_governorate_display" class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-xs font-bold shadow-inner">جاري التحديد...</span>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">خط الطول (Longitude)</label>
-                            <input type="text" id="e-lng" name="lng" class="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none shadow-sm" dir="ltr">
-                        </div>
-                        <div class="bg-white p-5 rounded-2xl border border-gray-200">
+
+                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
                             <label class="block text-sm font-bold text-slate-700 mb-3 border-b border-gray-100 pb-2">الخدمات المتوفرة</label>
                             <div class="flex flex-wrap gap-4">
                                 <label class="flex items-center gap-2 cursor-pointer">
@@ -453,9 +541,9 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="bg-white p-5 rounded-2xl border border-gray-200">
+                        <div class="md:col-span-2 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
                             <label class="block text-sm font-bold text-slate-700 mb-3 border-b border-gray-100 pb-2">التعاون الطبي</label>
-                            <select id="e-collab" name="has_collaboration" class="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none shadow-sm font-bold">
+                            <select id="e-collab" name="has_collaboration" class="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none font-bold">
                                 <option value="1">نعم، يوجد تعاون</option>
                                 <option value="0">لا يوجد تعاون</option>
                             </select>
@@ -479,10 +567,25 @@
                 <i class="fa-solid fa-check animate-bounce-short"></i>
             </div>
             <h3 class="text-2xl font-black text-slate-800 mb-2">تفعيل الصيدلية؟</h3>
-            <p class="text-sm text-gray-500 font-medium mb-8 leading-relaxed">بالموافقة، ستتمكن الصيدلية من تسجيل الدخول واستقبال الطلبات.</p>
+            <p class="text-sm text-gray-500 font-medium mb-6 leading-relaxed">بالموافقة، ستتمكن الصيدلية من تسجيل الدخول واستقبال الطلبات.</p>
+
             <form id="approveForm" action="" method="POST" onsubmit="disableSubmitButton(this)">
                 @csrf @method('PUT')
                 <input type="hidden" name="status" value="approved">
+
+                <div class="mb-6 bg-slate-50 border border-gray-100 rounded-2xl p-4 flex items-center justify-between text-right text-slate-700">
+                    <div>
+                        <h4 class="font-black text-sm text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-star text-amber-400"></i> صيدلية كبرى
+                        </h4>
+                        <p class="text-[10px] text-gray-500 mt-1 font-bold">تحديد كصيدلية رئيسية/كبرى بالمنصة.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer group">
+                        <input type="checkbox" name="is_big_pharmacy" value="1" class="sr-only peer" id="isBigPharmacyCheckbox">
+                        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                    </label>
+                </div>
+
                 <div class="flex items-center justify-center gap-3">
                     <button type="button" onclick="toggleModal('approveModal')" class="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors text-sm">إلغاء</button>
                     <button type="submit" class="flex-1 px-6 py-4 rounded-2xl font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/30 transition-all text-sm">تأكيد القبول</button>
@@ -535,6 +638,195 @@
     </div>
 
     <script>
+        // ==================== SERVER-SIDE FILTERING ====================
+        function setServerFilter(param, value) {
+            const url = new URL(window.location.href);
+            if (value === 'all' || value === '') {
+                url.searchParams.delete(param);
+            } else {
+                url.searchParams.set(param, value);
+            }
+            url.searchParams.delete('page');
+            window.location.href = url.href;
+        }
+
+        document.getElementById('serverSearchInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                setServerFilter('search', this.value);
+            }
+        });
+
+        // ==================== MAP INITIALIZATION ====================
+        let map;
+        let markersLayer;
+        let mapMarkers = {};
+
+        // خريطة المحافظات والذكاء الجغرافي
+        const governorates = {
+            'cairo': { name: 'القاهرة', lat: 30.0444, lng: 31.2357, radius: 50 },
+            'giza': { name: 'الجيزة', lat: 30.0131, lng: 31.2089, radius: 60 },
+            'alexandria': { name: 'الإسكندرية', lat: 31.2001, lng: 29.9187, radius: 60 },
+            'qalyubia': { name: 'القليوبية', lat: 30.4069, lng: 31.1862, radius: 40 },
+            'sharqia': { name: 'الشرقية', lat: 30.5877, lng: 31.5020, radius: 60 },
+            'dakahlia': { name: 'الدقهلية', lat: 31.0379, lng: 31.3815, radius: 60 },
+            'gharbia': { name: 'الغربية', lat: 30.8754, lng: 31.0335, radius: 50 },
+            'menofia': { name: 'المنوفية', lat: 30.5972, lng: 30.9876, radius: 50 },
+            'kafr_el_sheikh': { name: 'كفر الشيخ', lat: 31.1107, lng: 30.9388, radius: 50 },
+            'beheira': { name: 'البحيرة', lat: 31.0409, lng: 30.4700, radius: 70 },
+            'damietta': { name: 'دمياط', lat: 31.4165, lng: 31.8133, radius: 40 },
+            'port_said': { name: 'بورسعيد', lat: 31.2565, lng: 32.2841, radius: 40 },
+            'ismailia': { name: 'الإسماعيلية', lat: 30.5965, lng: 32.2715, radius: 60 },
+            'suez': { name: 'السويس', lat: 29.9668, lng: 32.5498, radius: 60 },
+            'fayoum': { name: 'الفيوم', lat: 29.3084, lng: 30.8428, radius: 60 },
+            'beni_suef': { name: 'بني سويف', lat: 29.0661, lng: 31.0994, radius: 60 },
+            'minya': { name: 'المنيا', lat: 28.0871, lng: 30.7618, radius: 80 },
+            'assiut': { name: 'أسيوط', lat: 27.1810, lng: 31.1837, radius: 70 },
+            'sohag': { name: 'سوهاج', lat: 26.5591, lng: 31.6957, radius: 70 },
+            'qena': { name: 'قنا', lat: 26.1551, lng: 32.7160, radius: 70 },
+            'luxor': { name: 'الأقصر', lat: 25.6872, lng: 32.6396, radius: 50 },
+            'aswan': { name: 'أسوان', lat: 24.0889, lng: 32.8998, radius: 100 },
+            'red_sea': { name: 'البحر الأحمر', lat: 27.2579, lng: 33.8116, radius: 200 },
+            'new_valley': { name: 'الوادي الجديد', lat: 25.4514, lng: 30.5463, radius: 200 },
+            'matrouh': { name: 'مطروح', lat: 31.3525, lng: 27.2373, radius: 200 },
+            'north_sinai': { name: 'شمال سيناء', lat: 31.1316, lng: 33.7984, radius: 150 },
+            'south_sinai': { name: 'جنوب سيناء', lat: 28.2364, lng: 33.6254, radius: 150 }
+        };
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a =
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function updateGovernorateDisplay() {
+            const lat = parseFloat(document.getElementById('e-lat').value);
+            const lng = parseFloat(document.getElementById('e-lng').value);
+            const displayEl = document.getElementById('edit_governorate_display');
+
+            if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+                let closestGovName = 'غير محدد';
+                let minDistance = Infinity;
+
+                for (const [key, gov] of Object.entries(governorates)) {
+                    const dist = calculateDistance(gov.lat, gov.lng, lat, lng);
+                    if (dist < minDistance && dist <= gov.radius) {
+                        minDistance = dist;
+                        closestGovName = gov.name;
+                    }
+                }
+                displayEl.innerText = closestGovName;
+                displayEl.className = closestGovName === 'غير محدد'
+                    ? 'bg-rose-50 text-rose-600 px-2 py-1 rounded text-xs font-bold shadow-inner'
+                    : 'bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-xs font-bold shadow-inner';
+            } else {
+                displayEl.innerText = 'الإحداثيات غير صحيحة أو غير مكتملة';
+                displayEl.className = 'bg-gray-100 text-gray-500 px-2 py-1 rounded text-xs font-bold shadow-inner';
+            }
+        }
+
+        // جلب جميع الإحداثيات من السيرفر لرسمها كلها (بدون Pagination)
+        const allPharmaciesForMap = @json($allMapPharmacies ?? []);
+        const egyptBounds = L.latLngBounds([21.5, 24.5], [31.8, 37.0]);
+
+        function initEgyptMap() {
+            if (document.getElementById('egyptMap')) {
+                map = L.map('egyptMap', {
+                    center: [26.8206, 30.8025],
+                    zoom: 6,
+                    minZoom: 5,
+                    maxBounds: egyptBounds,
+                    maxBoundsViscosity: 1.0
+                });
+
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; OSM'
+                }).addTo(map);
+
+                markersLayer = L.layerGroup().addTo(map);
+                updateMapMarkers();
+            }
+        }
+
+        function focusOnMap(lat, lng, id) {
+            document.getElementById('egyptMap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            map.flyTo([lat, lng], 15, { duration: 1.5 });
+            setTimeout(() => {
+                if(mapMarkers[id]) {
+                    mapMarkers[id].openPopup();
+                }
+            }, 1500);
+        }
+
+        window.openViewModalFromMap = function(id) {
+            const rawData = document.getElementById('raw-pharmacy-' + id).value;
+            if(rawData) {
+                openViewModal(JSON.parse(rawData));
+            }
+        };
+
+        function updateMapMarkers() {
+            if (!map || !markersLayer) return;
+            markersLayer.clearLayers();
+            mapMarkers = {};
+
+            // تجهيز أيقونات ملونة حسب حالة الطلب
+            const icons = {
+                'approved': L.divIcon({ className: 'custom-div-icon', html: "<div style='background-color:#10b981;' class='marker-pin'></div><i class='fa-solid fa-check text-white relative z-10 text-[10px] mt-[6px]'></i>", iconSize: [30, 42], iconAnchor: [15, 42], popupAnchor: [0, -35] }),
+                'under_review': L.divIcon({ className: 'custom-div-icon', html: "<div style='background-color:#f59e0b;' class='marker-pin'></div><i class='fa-solid fa-hourglass-half text-white relative z-10 text-[10px] mt-[6px]'></i>", iconSize: [30, 42], iconAnchor: [15, 42], popupAnchor: [0, -35] }),
+                'rejected': L.divIcon({ className: 'custom-div-icon', html: "<div style='background-color:#f43f5e;' class='marker-pin'></div><i class='fa-solid fa-xmark text-white relative z-10 text-[10px] mt-[6px]'></i>", iconSize: [30, 42], iconAnchor: [15, 42], popupAnchor: [0, -35] })
+            };
+
+            allPharmaciesForMap.forEach(pharmacy => {
+                if (pharmacy.lat && pharmacy.lng) {
+                    const lat = parseFloat(pharmacy.lat);
+                    const lng = parseFloat(pharmacy.lng);
+                    const pName = pharmacy.pharmacy_name;
+                    const pImg = pharmacy.image ? `/storage/${pharmacy.image}` : `https://ui-avatars.com/api/?name=${encodeURI(pName)}&background=0d9488&color=fff`;
+                    const pPhone = pharmacy.phone || 'غير متوفر';
+                    const pAddress = pharmacy.address || 'العنوان غير محدد';
+                    const pId = pharmacy.id;
+                    const status = pharmacy.status;
+
+                    let bgGradient = 'bg-gradient-to-r from-emerald-500 to-teal-400';
+                    if(status === 'under_review') bgGradient = 'bg-gradient-to-r from-amber-400 to-orange-400';
+                    if(status === 'rejected') bgGradient = 'bg-gradient-to-r from-rose-500 to-red-400';
+
+                    const popupHtml = `
+                        <div class="flex flex-col pb-1">
+                            <div class="h-16 ${bgGradient} relative">
+                                <img src="${pImg}" class="w-12 h-12 rounded-full border-2 border-white object-cover absolute -bottom-4 right-4 shadow-sm bg-white">
+                            </div>
+                            <div class="pt-5 pb-2 px-4 text-right">
+                                <h4 class="font-black text-slate-800 text-sm mb-1">${pName}</h4>
+                                <p class="text-[10px] text-gray-500 mb-1.5 whitespace-nowrap overflow-hidden text-ellipsis"><i class="fa-solid fa-location-dot text-gray-400 ml-1"></i> ${pAddress}</p>
+                                <p class="text-[10px] text-gray-500 mb-3 font-mono" dir="ltr"><i class="fa-solid fa-phone text-gray-400 mr-1"></i> ${pPhone}</p>
+                            </div>
+                        </div>
+                    `;
+
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        const selectedIcon = icons[status] || icons['under_review'];
+                        const marker = L.marker([lat, lng], {icon: selectedIcon})
+                                        .bindPopup(popupHtml, { className: 'custom-popup' })
+                                        .addTo(markersLayer);
+                        mapMarkers[pId] = marker;
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initEgyptMap();
+        });
+
+        // ==================== MODALS & ACTIONS ====================
         function toggleModal(modalID) {
             const modal = document.getElementById(modalID);
             modal.classList.toggle('hidden');
@@ -553,7 +845,7 @@
 
         function formatArabicDate(dateString) {
             if (!dateString) return 'غير متوفر';
-            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
             return new Date(dateString).toLocaleDateString('ar-EG', options);
         }
 
@@ -561,10 +853,8 @@
             document.getElementById('o-name').innerText = userAccount.name;
             document.getElementById('o-phone').innerText = userAccount.phone || 'غير محدد';
             document.getElementById('o-email').innerText = userAccount.email || 'غير محدد';
-
             if (userAccount.avatar) {
-                let avatarSrc = userAccount.avatar.startsWith('http') ? userAccount.avatar : `/storage/${userAccount.avatar}`;
-                document.getElementById('o-avatar').src = avatarSrc;
+                document.getElementById('o-avatar').src = userAccount.avatar.startsWith('http') ? userAccount.avatar : `/storage/${userAccount.avatar}`;
             } else {
                 document.getElementById('o-avatar').src = 'https://ui-avatars.com/api/?name=' + encodeURI(userAccount.name) + '&background=e2e8f0&color=475569';
             }
@@ -572,22 +862,55 @@
         }
 
         function openViewModal(pharmacy) {
-            document.getElementById('v-name').innerText = pharmacy.pharmacy_name;
+            document.getElementById('v-name-text').innerText = pharmacy.pharmacy_name;
             document.getElementById('v-owner').innerHTML = `<i class="fa-solid fa-user-tie ml-1"></i> ${pharmacy.owner_name}`;
             document.getElementById('v-phone').innerText = pharmacy.phone;
             document.getElementById('v-email').innerText = pharmacy.email;
-            document.getElementById('v-city').innerText = pharmacy.city || 'غير محدد';
             document.getElementById('v-address').innerText = pharmacy.address || 'غير محدد';
             document.getElementById('v-hours').innerText = pharmacy.working_hours || 'غير محدد';
-            document.getElementById('v-license').innerText = pharmacy.license_number || 'غير محدد';
+            document.getElementById('v-license').innerText = pharmacy.license_number || 'غير متوفر';
 
             let imgUrl = pharmacy.image ? `/storage/${pharmacy.image}` : 'https://ui-avatars.com/api/?name=' + encodeURI(pharmacy.pharmacy_name) + '&background=0d9488&color=fff';
             document.getElementById('v-image').src = imgUrl;
 
-            document.getElementById('v-license-btn').href = `/storage/${pharmacy.license_document}`;
-            document.getElementById('v-map-btn').href = `https://www.google.com/maps/search/?api=1&query=$${pharmacy.lat},${pharmacy.lng}`;
+            // تحديد النطاق الجغرافي الذكي
+            let govName = 'الموقع الجغرافي غير متوفر';
+            if (pharmacy.lat && pharmacy.lng && !isNaN(pharmacy.lat) && !isNaN(pharmacy.lng)) {
+                let minDistance = Infinity;
+                for (const [key, gov] of Object.entries(governorates)) {
+                    const dist = calculateDistance(gov.lat, gov.lng, parseFloat(pharmacy.lat), parseFloat(pharmacy.lng));
+                    if (dist < minDistance && dist <= gov.radius) {
+                        minDistance = dist;
+                        govName = gov.name;
+                    }
+                }
+            }
+            document.getElementById('v-city').innerText = govName;
+
+            const mapBtn = document.getElementById('v-map-btn');
+            if (pharmacy.lat && pharmacy.lng) {
+                mapBtn.href = `https://www.google.com/maps?q=${pharmacy.lat},${pharmacy.lng}`;
+                mapBtn.style.display = 'flex';
+            } else {
+                mapBtn.style.display = 'none';
+            }
+
+            const docBtn = document.getElementById('v-license-btn');
+            if (pharmacy.license_document) {
+                docBtn.href = `/storage/${pharmacy.license_document}`;
+                docBtn.style.display = 'flex';
+            } else {
+                docBtn.style.display = 'none';
+            }
 
             document.getElementById('v-created-date').innerText = formatArabicDate(pharmacy.created_at);
+
+            const bigBadge = document.getElementById('v-big-badge');
+            if (pharmacy.is_big_pharmacy_flag || pharmacy.is_big_pharmacy) {
+                bigBadge.classList.remove('hidden'); bigBadge.classList.add('inline-flex');
+            } else {
+                bigBadge.classList.add('hidden'); bigBadge.classList.remove('inline-flex');
+            }
 
             const actionDateContainer = document.getElementById('v-action-date-container');
             const actionLabel = document.getElementById('v-action-label');
@@ -646,6 +969,7 @@
 
         function openApproveModal(id) {
             document.getElementById('approveForm').action = `/admin/pharmaciesApplications/${id}/status`;
+            document.getElementById('isBigPharmacyCheckbox').checked = false;
             toggleModal('approveModal');
         }
 
@@ -671,7 +995,6 @@
             document.getElementById('e-working-hours').value = pharmacy.working_hours || '';
             document.getElementById('e-lat').value = pharmacy.lat || '';
             document.getElementById('e-lng').value = pharmacy.lng || '';
-            document.getElementById('e-collab').value = (pharmacy.has_collaboration == 1 || pharmacy.collab === 'yes') ? '1' : '0';
 
             document.getElementById('srv_24_hours').checked = false;
             document.getElementById('srv_delivery').checked = false;
@@ -683,10 +1006,13 @@
                 if (services.includes('delivery')) document.getElementById('srv_delivery').checked = true;
                 if (services.includes('consultation')) document.getElementById('srv_consultation').checked = true;
             }
+
+            document.getElementById('e-collab').value = (pharmacy.has_collaboration == 1 || pharmacy.collab === 'yes') ? '1' : '0';
+
+            updateGovernorateDisplay();
             toggleModal('editModal');
         }
 
-        // Auto hide toasts
         setTimeout(() => {
             document.querySelectorAll('.animate-toast').forEach(t => {
                 t.style.opacity = '0';
@@ -704,7 +1030,13 @@
         @keyframes toastSlideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
         .animate-bounce-short { animation: bounceShort 1s infinite; }
         @keyframes bounceShort { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10%); } }
-
         .custom-pagination nav svg { width: 1.25rem; height: 1.25rem; }
+        .bg-gradient-custom { background: linear-gradient(135deg, #0d9488 0%, #84cc16 100%); }
+        .custom-popup .leaflet-popup-content-wrapper { border-radius: 1rem; padding: 0; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        .custom-popup .leaflet-popup-content { margin: 0; width: 240px !important; }
+        .custom-popup .leaflet-popup-tip-container { margin-top: -1px; }
+        .marker-pin { width: 30px; height: 30px; border-radius: 50% 50% 50% 0; position: absolute; transform: rotate(-45deg); left: 50%; top: 50%; margin: -15px 0 0 -15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .custom-div-icon { background: none; border: none; }
+        .custom-div-icon i { position: absolute; width: 22px; font-size: 14px; left: 0; right: 0; text-align: center; }
     </style>
 @endsection

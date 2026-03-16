@@ -4,7 +4,7 @@
 
         <div id="toast-container" class="fixed top-4 left-4 right-4 md:left-auto md:right-6 md:top-6 z-[9999] flex flex-col gap-3 pointer-events-none">
             @if(session('success'))
-                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right">
+                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right mb-3">
                     <div class="bg-emerald-100 p-2 rounded-xl text-emerald-600 shrink-0">
                         <i class="fa-solid fa-circle-check text-xl"></i>
                     </div>
@@ -16,7 +16,7 @@
                 </div>
             @endif
             @if ($errors->any())
-                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right">
+                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right mb-3">
                     <div class="bg-rose-100 p-2 rounded-xl text-rose-600 shrink-0">
                         <i class="fa-solid fa-triangle-exclamation text-xl"></i>
                     </div>
@@ -78,22 +78,27 @@
             <div class="p-5 md:p-6 border-b border-gray-50 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 bg-slate-50/30">
                 <div class="flex items-center gap-3 shrink-0">
                     <h3 class="font-black text-slate-800 text-base md:text-lg tracking-tight">قائمة الأدوية</h3>
-                    <span id="resultCounter" class="bg-blue-100 text-blue-700 text-[10px] font-bold px-3 py-1.5 rounded-full transition-all uppercase tracking-wider">
-                        {{ $medicines->total() }} دواء
+                    <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-3 py-1.5 rounded-full transition-all uppercase tracking-wider">
+                        {{ $medicines->total() }} نتيجة
                     </span>
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto flex-wrap">
+
                     <div class="relative w-full sm:w-64">
-                        <input type="text" id="searchInput" placeholder="ابحث باسم الدواء..." class="w-full bg-white border border-gray-200 rounded-xl md:rounded-2xl px-4 py-2.5 md:px-5 md:py-3 pr-10 md:pr-11 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none text-slate-700 shadow-sm">
+                        <input type="text" id="serverSearchInput" value="{{ request('search') }}" placeholder="ابحث باسم الدواء (اضغط Enter)" class="w-full bg-white border border-gray-200 rounded-xl md:rounded-2xl px-4 py-2.5 md:px-5 md:py-3 pr-10 md:pr-11 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none text-slate-700 shadow-sm">
                         <i class="fa-solid fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        @if(request('search'))
+                            <button type="button" onclick="setServerFilter('search', '')" class="absolute left-3 top-1/2 -translate-y-1/2 text-rose-400 hover:text-rose-600 text-[10px] font-bold">إلغاء</button>
+                        @endif
                     </div>
 
                     <div class="relative w-full sm:w-auto">
-                        <select id="categoryFilter" class="w-full sm:w-auto bg-white border border-gray-200 rounded-xl md:rounded-2xl py-2.5 md:py-3 pr-9 md:pr-10 pl-9 md:pl-10 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none text-slate-600 shadow-sm font-medium cursor-pointer">
+                        @php $currentCat = request('category', 'all'); @endphp
+                        <select onchange="setServerFilter('category', this.value)" class="w-full sm:w-auto bg-white border border-gray-200 rounded-xl md:rounded-2xl py-2.5 md:py-3 pr-9 md:pr-10 pl-9 md:pl-10 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none text-slate-600 shadow-sm font-medium cursor-pointer">
                             <option value="all">جميع الأقسام</option>
                             @foreach ($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                <option value="{{ $cat->id }}" {{ $currentCat == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                             @endforeach
                         </select>
                         <i class="fa-solid fa-layer-group absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm"></i>
@@ -101,14 +106,16 @@
                     </div>
 
                     <div class="relative w-full sm:w-auto">
-                        <select id="statusFilter" class="w-full sm:w-auto bg-white border border-gray-200 rounded-xl md:rounded-2xl py-2.5 md:py-3 pr-9 md:pr-10 pl-9 md:pl-10 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none text-slate-600 shadow-sm font-medium cursor-pointer">
-                            <option value="all">جميع الحالات</option>
-                            <option value="1">المتاح فقط</option>
-                            <option value="0">الغير متاح فقط</option>
+                        @php $currentStatus = request('status', 'all'); @endphp
+                        <select onchange="setServerFilter('status', this.value)" class="w-full sm:w-auto bg-white border border-gray-200 rounded-xl md:rounded-2xl py-2.5 md:py-3 pr-9 md:pr-10 pl-9 md:pl-10 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none text-slate-600 shadow-sm font-medium cursor-pointer">
+                            <option value="all" {{ $currentStatus === 'all' ? 'selected' : '' }}>جميع الحالات</option>
+                            <option value="1" {{ $currentStatus === '1' ? 'selected' : '' }}>المتاح فقط</option>
+                            <option value="0" {{ $currentStatus === '0' ? 'selected' : '' }}>الغير متاح فقط</option>
                         </select>
                         <i class="fa-solid fa-toggle-on absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm"></i>
                         <i class="fa-solid fa-chevron-down absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
                     </div>
+
                 </div>
             </div>
 
@@ -126,17 +133,13 @@
                     </thead>
                     <tbody class="divide-y divide-gray-50" id="tableBody">
                         @forelse ($medicines as $index => $medicine)
-                            <tr class="medicine-row hover:bg-slate-50/80 transition-all duration-300 group {{ $medicine->status == 0 ? 'opacity-60 grayscale-[20%]' : '' }}"
-                                data-name="{{ mb_strtolower($medicine->name) }}"
-                                data-category="{{ $medicine->category_id }}"
-                                data-status="{{ $medicine->status }}">
-
+                            <tr class="medicine-row hover:bg-slate-50/80 transition-all duration-300 group {{ $medicine->status == 0 ? 'opacity-60 grayscale-[20%]' : '' }}" data-status="{{ $medicine->status }}">
                                 <td class="p-4 md:p-5 font-bold text-slate-400 text-xs text-center">{{ $medicines->firstItem() + $index }}</td>
 
                                 <td class="p-4 md:p-5">
                                     <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white flex items-center justify-center mx-auto overflow-hidden shadow-sm border border-slate-200 p-0.5">
                                         @if ($medicine->image)
-                                            <img src="{{ $medicine->image_url }}" alt="{{ $medicine->name }}" class="w-full h-full object-cover rounded-full">
+                                            <img src="{{ Str::startsWith($medicine->image, ['http://', 'https://']) ? $medicine->image : asset('storage/' . $medicine->image) }}" alt="{{ $medicine->name }}" class="w-full h-full object-cover rounded-full">
                                         @else
                                             <div class="w-full h-full bg-slate-100 rounded-full flex items-center justify-center">
                                                 <i class="fa-solid fa-prescription-bottle-medical text-slate-400 text-sm md:text-base"></i>
@@ -172,7 +175,10 @@
 
                                 <td class="p-4 md:p-5 text-center">
                                     <div class="flex items-center justify-center gap-1.5 md:gap-2">
-                                        <button onclick="openEditModal({{ json_encode($medicine) }}, '{{ $medicine->image_url }}')" class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center shadow-sm" title="تعديل الدواء">
+                                        @php
+                                            $imgForEdit = $medicine->image ? (Str::startsWith($medicine->image, ['http://', 'https://']) ? $medicine->image : asset('storage/' . $medicine->image)) : '';
+                                        @endphp
+                                        <button onclick="openEditModal({{ json_encode($medicine) }}, '{{ $imgForEdit }}')" class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center shadow-sm" title="تعديل الدواء">
                                             <i class="fa-solid fa-pen-to-square text-xs md:text-sm"></i>
                                         </button>
                                         <button onclick="openDeleteModal({{ $medicine->id }})" class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all flex items-center justify-center shadow-sm" title="حذف الدواء">
@@ -182,38 +188,37 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr id="defaultEmptyRow">
+                            <tr>
                                 <td colspan="6" class="p-16 md:p-20 text-center">
                                     <div class="flex flex-col items-center justify-center text-gray-400">
-                                        <i class="fa-solid fa-pills text-3xl md:text-4xl mb-3 md:mb-4 text-gray-300"></i>
-                                        <p class="font-bold text-base md:text-lg text-slate-600">لا توجد أدوية مضافة بعد</p>
+                                        @if(request('search') || request('status') || request('category'))
+                                            <i class="fa-solid fa-magnifying-glass text-3xl md:text-4xl mb-3 md:mb-4 text-gray-200"></i>
+                                            <p class="font-bold text-base md:text-lg text-slate-600">لا توجد نتائج مطابقة لبحثك</p>
+                                            <a href="{{ route('medicines.index') }}" class="mt-4 text-sm text-primary hover:underline">إلغاء جميع الفلاتر</a>
+                                        @else
+                                            <i class="fa-solid fa-pills text-3xl md:text-4xl mb-3 md:mb-4 text-gray-300"></i>
+                                            <p class="font-bold text-base md:text-lg text-slate-600">لا توجد أدوية مضافة بعد</p>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @endforelse
-
-                        <tr id="noResultsRow" style="display: none;">
-                            <td colspan="6" class="p-16 md:p-20 text-center">
-                                <div class="flex flex-col items-center justify-center text-gray-400">
-                                    <i class="fa-solid fa-magnifying-glass text-3xl md:text-4xl mb-3 md:mb-4 text-gray-200"></i>
-                                    <p class="font-bold text-base md:text-lg text-slate-600">لا توجد نتائج مطابقة لبحثك</p>
-                                </div>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
 
-            <div class="px-6 py-4 bg-slate-50/50 border-t border-gray-100">
-                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p class="text-xs font-bold text-slate-500 text-center sm:text-right">
-                        عرض <span class="text-slate-800">{{ $medicines->firstItem() ?? 0 }}</span> إلى <span class="text-slate-800">{{ $medicines->lastItem() ?? 0 }}</span> من إجمالي <span class="text-slate-800">{{ $medicines->total() }}</span> دواء
-                    </p>
-                    <div class="custom-pagination">
-                        {{ $medicines->links() }}
+            @if($medicines->hasPages())
+                <div class="px-6 py-4 bg-slate-50/50 border-t border-gray-100">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <p class="text-xs font-bold text-slate-500 text-center sm:text-right">
+                            عرض <span class="text-slate-800">{{ $medicines->firstItem() ?? 0 }}</span> إلى <span class="text-slate-800">{{ $medicines->lastItem() ?? 0 }}</span> من إجمالي <span class="text-slate-800">{{ $medicines->total() }}</span> دواء
+                        </p>
+                        <div class="custom-pagination">
+                            {{ $medicines->links() }}
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 
@@ -225,12 +230,9 @@
             </div>
             <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-2">تأكيد تغيير الحالة</h3>
             <p id="tc-message" class="text-xs md:text-sm text-gray-500 font-medium mb-6 md:mb-8 leading-relaxed"></p>
-
             <div class="flex items-center justify-center gap-3">
                 <button type="button" onclick="toggleModal('toggleConfirmModal')" class="flex-1 px-4 md:px-6 py-3.5 md:py-4 rounded-xl md:rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors text-xs md:text-sm">إلغاء الأمر</button>
-                <button type="button" id="tc-confirm-btn" onclick="executeToggle()" class="flex-1 px-4 md:px-6 py-3.5 md:py-4 rounded-xl md:rounded-2xl font-bold text-white shadow-lg transition-all text-xs md:text-sm">
-                    تأكيد
-                </button>
+                <button type="button" id="tc-confirm-btn" onclick="executeToggle()" class="flex-1 px-4 md:px-6 py-3.5 md:py-4 rounded-xl md:rounded-2xl font-bold text-white shadow-lg transition-all text-xs md:text-sm">تأكيد</button>
             </div>
         </div>
     </div>
@@ -244,12 +246,10 @@
                     <i class="fa-solid fa-xmark text-base md:text-lg"></i>
                 </button>
             </div>
-
             <form action="{{ route('medicines.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-hidden" onsubmit="disableSubmitButton(this)">
                 @csrf
                 <input type="hidden" name="form_type" value="create">
                 <div class="p-5 md:p-8 space-y-5 md:space-y-6 overflow-y-auto scrollbar-thin text-right">
-
                     <div class="flex flex-col items-center justify-center">
                         <label class="text-xs md:text-sm font-bold text-slate-700 mb-3 text-center">صورة الدواء <span class="text-rose-500">*</span></label>
                         <div class="relative w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-dashed {{ $errors->has('image') && old('form_type') == 'create' ? 'border-rose-400 bg-rose-50' : 'border-gray-200 bg-slate-50' }} flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors group shadow-inner overflow-hidden cursor-pointer">
@@ -263,12 +263,10 @@
                             </div>
                         </div>
                     </div>
-
                     <div>
                         <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">اسم الدواء <span class="text-rose-500">*</span></label>
                         <input type="text" name="name" value="{{ old('form_type') == 'create' ? old('name') : '' }}" class="w-full bg-slate-50 border {{ $errors->has('name') && old('form_type') == 'create' ? 'border-rose-400 focus:ring-rose-500/20' : 'border-gray-100 focus:ring-primary/20' }} rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none text-right shadow-sm" placeholder="مثال: بانادول اكسترا">
                     </div>
-
                     <div>
                         <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">القسم (التصنيف) <span class="text-rose-500">*</span></label>
                         <div class="relative">
@@ -281,12 +279,10 @@
                             <i class="fa-solid fa-chevron-down absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-gray-400 text-xs md:text-sm pointer-events-none"></i>
                         </div>
                     </div>
-
                     <div>
                         <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">وصف الدواء <span class="text-rose-500">*</span></label>
                         <textarea name="description" rows="3" class="w-full bg-slate-50 border {{ $errors->has('description') && old('form_type') == 'create' ? 'border-rose-400 focus:ring-rose-500/20' : 'border-gray-100 focus:ring-primary/20' }} rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none resize-none text-right shadow-sm" placeholder="اكتب وصفاً لدواعي الاستعمال...">{{ old('form_type') == 'create' ? old('description') : '' }}</textarea>
                     </div>
-
                     <div class="flex items-center justify-between bg-emerald-50/50 p-4 md:p-5 rounded-xl md:rounded-2xl border border-emerald-100">
                         <label class="text-xs md:text-sm font-black text-emerald-800">تفعيل الدواء فوراً</label>
                         <label class="relative inline-flex items-center cursor-pointer group/switch">
@@ -313,7 +309,6 @@
                     <i class="fa-solid fa-xmark text-base md:text-lg"></i>
                 </button>
             </div>
-
             <form id="editMedicineForm" action="{{ old('form_type') == 'edit' ? old('update_url') : '' }}" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-hidden" onsubmit="disableSubmitButton(this)">
                 @csrf @method('PUT')
                 <input type="hidden" name="form_type" value="edit">
@@ -394,8 +389,26 @@
 
     <script>
         let currentToggleId = null;
-        let currentToggleState = null;
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+
+        // ==================== SERVER-SIDE FILTERING ====================
+        function setServerFilter(param, value) {
+            const url = new URL(window.location.href);
+            if (value === 'all' || value === '') {
+                url.searchParams.delete(param);
+            } else {
+                url.searchParams.set(param, value);
+            }
+            url.searchParams.delete('page');
+            window.location.href = url.href;
+        }
+
+        document.getElementById('serverSearchInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                setServerFilter('search', this.value);
+            }
+        });
 
         function toggleModal(modalID) {
             const modal = document.getElementById(modalID);
@@ -458,7 +471,6 @@
 
         function openToggleConfirmModal(id, name, isCurrentlyActive) {
             currentToggleId = id;
-            currentToggleState = isCurrentlyActive;
 
             const iconBg = document.getElementById('tc-icon-bg');
             const icon = document.getElementById('tc-icon');
@@ -519,11 +531,14 @@
             const btn = document.getElementById(`toggle-btn-${id}`);
             const knob = document.getElementById(`toggle-knob-${id}`);
             const row = btn.closest('tr');
+
             row.setAttribute('data-status', isNowActive ? '1' : '0');
             row.classList.toggle('opacity-60', !isNowActive);
             row.classList.toggle('grayscale-[20%]', !isNowActive);
+
             btn.className = `relative inline-flex h-6 w-12 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none ${isNowActive ? 'bg-emerald-500' : 'bg-gray-300'}`;
             knob.className = `inline-block h-4 w-4 transform rounded-full bg-white transition duration-300 ease-in-out ${isNowActive ? '-translate-x-7' : '-translate-x-1'}`;
+
             const medicineName = row.getAttribute('data-name');
             btn.setAttribute('onclick', `openToggleConfirmModal(${id}, '${medicineName}', ${isNowActive ? 'true' : 'false'})`);
         }
@@ -554,37 +569,6 @@
             container.appendChild(toast);
             setTimeout(() => { if(toast.parentElement) toast.remove(); }, 3000);
         }
-
-        function filterTableRows() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-            const categoryFilter = document.getElementById('categoryFilter').value;
-            const rows = document.querySelectorAll('.medicine-row');
-            let visibleCount = 0;
-
-            rows.forEach(row => {
-                const name = row.getAttribute('data-name');
-                const status = row.getAttribute('data-status');
-                const category = row.getAttribute('data-category');
-                const matchesSearch = name.includes(searchInput);
-                const matchesStatus = statusFilter === 'all' || status === statusFilter;
-                const matchesCategory = categoryFilter === 'all' || category === categoryFilter;
-
-                if (matchesSearch && matchesStatus && matchesCategory) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            document.getElementById('resultCounter').innerText = visibleCount + ' دواء';
-            document.getElementById('noResultsRow').style.display = visibleCount === 0 ? '' : 'none';
-        }
-
-        document.getElementById('searchInput').addEventListener('input', filterTableRows);
-        document.getElementById('statusFilter').addEventListener('change', filterTableRows);
-        document.getElementById('categoryFilter').addEventListener('change', filterTableRows);
 
         @if($errors->any())
             @if(old('form_type') == 'create') toggleModal('createMedicineModal');

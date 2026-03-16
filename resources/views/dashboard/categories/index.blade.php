@@ -4,7 +4,7 @@
 
         <div id="toast-container" class="fixed top-4 left-4 right-4 md:left-auto md:right-6 md:top-6 z-[9999] flex flex-col gap-3 pointer-events-none">
             @if(session('success'))
-                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right">
+                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right mb-3">
                     <div class="bg-emerald-100 p-2 rounded-xl text-emerald-600 shrink-0">
                         <i class="fa-solid fa-circle-check text-xl"></i>
                     </div>
@@ -16,7 +16,7 @@
                 </div>
             @endif
             @if ($errors->any())
-                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right">
+                <div class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right mb-3">
                     <div class="bg-rose-100 p-2 rounded-xl text-rose-600 shrink-0">
                         <i class="fa-solid fa-triangle-exclamation text-xl"></i>
                     </div>
@@ -78,26 +78,32 @@
             <div class="p-5 md:p-6 border-b border-gray-50 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 bg-slate-50/30">
                 <div class="flex items-center gap-3 shrink-0">
                     <h3 class="font-black text-slate-800 text-base md:text-lg tracking-tight">قائمة التصنيفات</h3>
-                    <span id="resultCounter" class="bg-primary/10 text-primary text-[10px] font-black px-3 py-1.5 rounded-full transition-all uppercase tracking-wider">
+                    <span class="bg-primary/10 text-primary text-[10px] font-black px-3 py-1.5 rounded-full transition-all uppercase tracking-wider">
                         {{ $categories->total() }} قسم
                     </span>
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto flex-wrap">
-                    <div class="relative w-full sm:w-64">
-                        <input type="text" id="searchInput" placeholder="ابحث باسم التصنيف..." class="w-full bg-white border border-gray-200 rounded-xl md:rounded-2xl px-4 py-2.5 md:px-5 md:py-3 pr-10 md:pr-11 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none text-slate-700 shadow-sm">
+
+                    <div class="relative w-full sm:w-64 shrink-0">
+                        <input type="text" id="serverSearchInput" value="{{ request('search') }}" placeholder="ابحث باسم التصنيف (اضغط Enter)" class="w-full bg-white border border-gray-200 rounded-xl md:rounded-2xl px-4 py-2.5 md:px-5 md:py-3 pr-10 md:pr-11 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none text-slate-700 shadow-sm">
                         <i class="fa-solid fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        @if(request('search'))
+                            <button type="button" onclick="setServerFilter('search', '')" class="absolute left-3 top-1/2 -translate-y-1/2 text-rose-400 hover:text-rose-600 text-xs font-bold">إلغاء</button>
+                        @endif
                     </div>
 
-                    <div class="relative w-full sm:w-auto">
-                        <select id="statusFilter" class="w-full sm:w-auto bg-white border border-gray-200 rounded-xl md:rounded-2xl py-2.5 md:py-3 pr-9 md:pr-10 pl-9 md:pl-10 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none text-slate-600 shadow-sm font-medium cursor-pointer">
-                            <option value="all">جميع الحالات</option>
-                            <option value="1">النشطة فقط</option>
-                            <option value="0">المتوقفة فقط</option>
+                    <div class="relative w-full sm:w-auto shrink-0">
+                        @php $currentStatus = request('status', 'all'); @endphp
+                        <select onchange="setServerFilter('status', this.value)" class="w-full sm:w-auto bg-white border border-gray-200 rounded-xl md:rounded-2xl py-2.5 md:py-3 pr-9 md:pr-10 pl-9 md:pl-10 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none text-slate-600 shadow-sm font-medium cursor-pointer">
+                            <option value="all" {{ $currentStatus === 'all' ? 'selected' : '' }}>جميع الحالات</option>
+                            <option value="1" {{ $currentStatus === '1' ? 'selected' : '' }}>النشطة فقط</option>
+                            <option value="0" {{ $currentStatus === '0' ? 'selected' : '' }}>المتوقفة فقط</option>
                         </select>
                         <i class="fa-solid fa-filter absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm"></i>
                         <i class="fa-solid fa-chevron-down absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
                     </div>
+
                 </div>
             </div>
 
@@ -113,9 +119,9 @@
                             <th class="p-4 md:p-5 w-28 md:w-32 text-center text-center">الإجراءات</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100" id="tableBody">
+                    <tbody class="divide-y divide-gray-100">
                         @forelse ($categories as $index => $category)
-                            <tr class="category-row hover:bg-slate-50 transition-all duration-300 group {{ $category->status == 0 ? 'opacity-60 grayscale-[20%]' : '' }}"
+                            <tr class="hover:bg-slate-50 transition-all duration-300 group {{ $category->status == 0 ? 'opacity-60 grayscale-[20%]' : '' }}"
                                 data-name="{{ mb_strtolower($category->name) }}"
                                 data-status="{{ $category->status }}">
 
@@ -167,28 +173,26 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr id="defaultEmptyRow">
+                            <tr>
                                 <td colspan="6" class="p-16 md:p-20 text-center">
                                     <div class="flex flex-col items-center justify-center text-gray-400">
-                                        <i class="fa-solid fa-folder-open text-3xl md:text-4xl mb-3 md:mb-4 text-gray-200"></i>
-                                        <p class="font-bold text-base md:text-lg text-slate-600">لا توجد تصنيفات مضافة بعد</p>
+                                        @if(request('search') || request('status'))
+                                            <i class="fa-solid fa-magnifying-glass text-3xl md:text-4xl mb-3 md:mb-4 text-gray-200"></i>
+                                            <p class="font-bold text-base md:text-lg text-slate-600">لا توجد نتائج مطابقة لبحثك</p>
+                                            <a href="{{ route('categories.index') }}" class="mt-4 text-sm text-primary hover:underline">إلغاء جميع الفلاتر</a>
+                                        @else
+                                            <i class="fa-solid fa-folder-open text-3xl md:text-4xl mb-3 md:mb-4 text-gray-200"></i>
+                                            <p class="font-bold text-base md:text-lg text-slate-600">لا توجد تصنيفات مضافة بعد</p>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @endforelse
-
-                        <tr id="noResultsRow" style="display: none;">
-                            <td colspan="6" class="p-16 md:p-20 text-center">
-                                <div class="flex flex-col items-center justify-center text-gray-400">
-                                    <i class="fa-solid fa-magnifying-glass text-3xl md:text-4xl mb-3 md:mb-4 text-gray-200"></i>
-                                    <p class="font-bold text-base md:text-lg text-slate-600">لا توجد نتائج مطابقة لبحثك</p>
-                                </div>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
 
+            @if($categories->hasPages())
             <div class="px-6 py-4 bg-slate-50/50 border-t border-gray-100">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <p class="text-xs font-bold text-slate-500">
@@ -199,6 +203,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <div class="md:hidden p-3 bg-slate-50 text-center border-t border-gray-100">
                 <p class="text-[10px] text-gray-500 font-bold flex items-center justify-center gap-2">
@@ -362,9 +367,28 @@
 
     <script>
         let currentToggleId = null;
-        let currentToggleState = null;
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
 
+        // ==================== SERVER-SIDE FILTERING ====================
+        function setServerFilter(param, value) {
+            const url = new URL(window.location.href);
+            if (value === 'all' || value === '') {
+                url.searchParams.delete(param);
+            } else {
+                url.searchParams.set(param, value);
+            }
+            url.searchParams.delete('page');
+            window.location.href = url.href;
+        }
+
+        document.getElementById('serverSearchInput')?.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                setServerFilter('search', this.value);
+            }
+        });
+
+        // ==================== MODALS & ACTIONS ====================
         function toggleModal(modalID) {
             const modal = document.getElementById(modalID);
             modal.classList.toggle('hidden');
@@ -425,7 +449,6 @@
 
         function openToggleConfirmModal(id, name, isCurrentlyActive) {
             currentToggleId = id;
-            currentToggleState = isCurrentlyActive;
 
             const iconBg = document.getElementById('tc-icon-bg');
             const icon = document.getElementById('tc-icon');
@@ -503,15 +526,17 @@
             let activeEl = document.getElementById('stat-active');
             let inactiveEl = document.getElementById('stat-inactive');
 
-            let currentActive = parseInt(activeEl.innerText);
-            let currentInactive = parseInt(inactiveEl.innerText);
+            if (activeEl && inactiveEl) {
+                let currentActive = parseInt(activeEl.innerText);
+                let currentInactive = parseInt(inactiveEl.innerText);
 
-            if (isNowActive) {
-                activeEl.innerText = currentActive + 1;
-                inactiveEl.innerText = currentInactive - 1;
-            } else {
-                activeEl.innerText = currentActive - 1;
-                inactiveEl.innerText = currentInactive + 1;
+                if (isNowActive) {
+                    activeEl.innerText = currentActive + 1;
+                    inactiveEl.innerText = currentInactive - 1;
+                } else {
+                    activeEl.innerText = currentActive - 1;
+                    inactiveEl.innerText = currentInactive + 1;
+                }
             }
         }
 
@@ -527,32 +552,6 @@
             container.appendChild(toast);
             setTimeout(() => { if(toast.parentElement) toast.remove(); }, 3000);
         }
-
-        function filterTable() {
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const status = document.getElementById('statusFilter').value;
-            const rows = document.querySelectorAll('.category-row');
-            let count = 0;
-
-            rows.forEach(row => {
-                const name = row.getAttribute('data-name');
-                const rowStatus = row.getAttribute('data-status');
-                const matchesSearch = name.includes(search);
-                const matchesStatus = status === 'all' || rowStatus === status;
-
-                if (matchesSearch && matchesStatus) {
-                    row.style.display = '';
-                    count++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            document.getElementById('resultCounter').innerText = count + ' قسم';
-            document.getElementById('noResultsRow').style.display = count === 0 ? '' : 'none';
-        }
-
-        document.getElementById('searchInput').addEventListener('input', filterTable);
-        document.getElementById('statusFilter').addEventListener('change', filterTable);
 
         @if($errors->any())
             @if(old('form_type') == 'create') toggleModal('createCategoryModal');

@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
         'role' => \App\Http\Middleware\CheckRole::class,
+        'is_active' => \App\Http\Middleware\CheckUserIsActive::class,
+        'api.key' => \App\Http\Middleware\CheckApiKey::class,
     ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

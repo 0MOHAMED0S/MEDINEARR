@@ -15,7 +15,7 @@ class Pharmacy extends Model
         'pharmacy_name', 'owner_name', 'phone', 'email', 'city',
         'address', 'working_hours', 'license_number', 'image',
         'license_document', 'lat', 'lng', 'services',
-        'has_collaboration', 'is_active'
+        'has_collaboration', 'is_active','is_big_pharmacy'
     ];
 
     protected $casts = [

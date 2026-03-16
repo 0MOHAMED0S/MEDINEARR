@@ -30,6 +30,7 @@ return new class extends Migration
             $table->json('services')->nullable();
             $table->boolean('has_collaboration')->default(false);
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_big_pharmacy')->default(false);
             $table->timestamps();
         });
     }

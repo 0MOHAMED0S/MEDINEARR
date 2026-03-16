@@ -17,14 +17,5 @@ class AdminSeeder extends Seeder
             'role' => 'admin',
             'email_verified_at' => now(),
         ]);
-
-        // Optional: Create a test regular user
-        User::create([
-            'name' => 'Regular User',
-            'email' => 'user@medinear.com',
-            'password' => Hash::make('password123'),
-            'role' => 'user',
-            'email_verified_at' => now(),
-        ]);
     }
 }

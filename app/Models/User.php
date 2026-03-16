@@ -31,6 +31,7 @@ class User extends Authenticatable
         'photo',
         'latitude',
         'longitude',
+        'is_active'
     ];
     public function hasRole(string $role): bool
     {

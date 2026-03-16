@@ -64,7 +64,18 @@ class FacebookApiController extends Controller
                 }
 
                 if ($existingUser) {
-                    // SECURITY CHECK: Ensure the user's role is strictly 'user'
+                    // ==========================================
+                    // SECURITY CHECK 1: Ensure the user is active
+                    // ==========================================
+                    if (!$existingUser->is_active) {
+                        return [
+                            'error' => true,
+                            'type'  => 'FORBIDDEN',
+                            'msg'   => 'عذراً، تم إيقاف حسابك مؤقتاً. يرجى التواصل مع الإدارة.'
+                        ];
+                    }
+
+                    // SECURITY CHECK 2: Ensure the user's role is strictly 'user'
                     if ($existingUser->role !== 'user') {
                         return [
                             'error' => true,
@@ -74,7 +85,7 @@ class FacebookApiController extends Controller
                     }
 
                     // Check for provider conflicts (e.g., registered via Google or Apple)
-                    if ($existingUser->provider_type !== 'facebook') {
+                    if ($existingUser->provider_type !== null && $existingUser->provider_type !== 'facebook') {
                         return [
                             'error' => true,
                             'type'  => 'CONFLICT',
@@ -85,6 +96,7 @@ class FacebookApiController extends Controller
                     // Update user data (Update email if it was previously null and is now available)
                     $existingUser->update([
                         'provider_id'   => $facebookUser->getId(),
+                        'provider_type' => 'facebook',
                         'avatar'        => $facebookUser->getAvatar(),
                         'email'         => $existingUser->email ?? $email,
                     ]);
@@ -92,7 +104,7 @@ class FacebookApiController extends Controller
                     return ['error' => false, 'user' => $existingUser];
                 }
 
-                // Create a completely new user (Email here is either real or NULL)
+                // Create a completely new user (Defaults to active)
                 $newUser = User::create([
                     'name'              => $facebookUser->getName() ?? 'Facebook User',
                     'email'             => $email,
@@ -106,7 +118,7 @@ class FacebookApiController extends Controller
                 return ['error' => false, 'user' => $newUser];
             });
 
-            // Check for logical conflict or forbidden errors
+            // 4. Check for logical conflict or forbidden errors from Transaction
             if ($result['error']) {
                 $statusCode = $result['type'] === 'FORBIDDEN' ? 403 : 409;
                 return response()->json([
@@ -115,6 +127,7 @@ class FacebookApiController extends Controller
                 ], $statusCode);
             }
 
+            // 5. Success - Generate Token and Format Response
             $user = $result['user'];
             $token = $user->createToken('mobile-fb-auth-token')->plainTextToken;
 

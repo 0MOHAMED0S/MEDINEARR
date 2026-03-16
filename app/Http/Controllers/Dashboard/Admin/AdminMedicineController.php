@@ -11,21 +11,41 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminMedicineController extends Controller
 {
-public function index()
-{
-    $stats = [
-        'total' => Medicine::count(),
-        'active' => Medicine::where('status', 1)->count(),
-        'inactive' => Medicine::where('status', 0)->count(),
-    ];
+public function index(\Illuminate\Http\Request $request)
+    {
+        $query = Medicine::with('category');
 
-    // Added Pagination (10 medicines per page)
-    $medicines = Medicine::with('category')->orderBy('id', 'desc')->paginate(10);
+        // 1. الفلترة حسب القسم (Category)
+        if ($request->filled('category') && $request->category !== 'all') {
+            $query->where('category_id', $request->category);
+        }
 
-    $categories = Category::where('status', 1)->get();
+        // 2. الفلترة حسب الحالة (Status)
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status === '1' ? 1 : 0);
+        }
 
-    return view('dashboard.medicines.index', compact('medicines', 'stats', 'categories'));
-}
+        // 3. البحث النصي (Search)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $medicines = $query->orderBy('id', 'desc')->paginate(10)->appends($request->query());
+
+        $stats = [
+            'total'    => Medicine::count(),
+            'active'   => Medicine::where('status', 1)->count(),
+            'inactive' => Medicine::where('status', 0)->count(),
+        ];
+
+        $categories = Category::where('status', 1)->get();
+
+        return view('dashboard.medicines.index', compact('medicines', 'stats', 'categories'));
+    }
 
     public function store(StoreMedicineRequest $request)
     {

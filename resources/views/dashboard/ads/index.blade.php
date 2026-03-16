@@ -1,7 +1,6 @@
 @extends('dashboard.layout.master')
 @section('content')
         <div id="ajax-toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-8 z-[999999] flex flex-col gap-3 pointer-events-none w-max max-w-[90vw]">
-
             @if (session('success'))
                 <div class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-[0_10px_40px_rgba(0,0,0,0.1)] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm text-right">
                     <div class="bg-emerald-100 p-2 rounded-xl text-emerald-600 shrink-0">
@@ -34,7 +33,10 @@
                 </div>
             @endif
         </div>
+
     <div class="p-4 md:p-6 lg:p-8 relative z-0">
+
+
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
                 <h2 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">إدارة الإعلانات الترويجية</h2>
@@ -196,85 +198,103 @@
                     ];
                 @endphp
 
-                <div class="ad-card relative bg-white rounded-[2rem] border border-gray-100 shadow-sm transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-xl hover:border-primary/30 {{ $bgClass }}"
+                <div class="ad-card relative bg-white rounded-[2rem] border border-gray-100 shadow-sm transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:border-primary/20 group/card {{ $bgClass }}"
                      data-search="{{ mb_strtolower($ad->title) }}"
                      data-active="{{ $isActive ? '1' : '0' }}"
                      data-ad-info="{{ json_encode($adDataForJs) }}">
 
                     <div class="absolute top-3 left-3 right-3 flex justify-between items-start z-30 pointer-events-none">
                         @if(!$isActive)
-                            <div class="bg-rose-500/90 backdrop-blur text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-sm">
-                                متوقف
+                            <div class="bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-md border border-white/20 flex items-center gap-1.5">
+                                <i class="fa-solid fa-ban text-[8px]"></i> متوقف
                             </div>
                         @else
-                            <div></div> @endif
+                            <div></div>
+                        @endif
 
                         @if($couponCode)
-                            <div class="bg-white/95 backdrop-blur shadow-sm border border-gray-200 text-primary text-[10px] font-black px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                                <i class="fa-solid fa-ticket"></i>
-                                {{ $couponCode }}
+                            <div class="bg-white/90 backdrop-blur-md shadow-lg border border-white text-primary text-[10px] font-black px-3 py-1.5 rounded-xl flex items-center gap-1.5 transform group-hover/card:scale-105 transition-transform duration-300">
+                                <i class="fa-solid fa-ticket text-rose-500"></i>
+                                <span class="tracking-widest">{{ $couponCode }}</span>
                             </div>
                         @endif
                     </div>
 
                     @if($ad->type === 'banner')
-                        <div class="h-40 relative flex flex-col items-center justify-center p-6 z-10 transition-colors" style="background-color: {{ $ad->bg_color ?? '#f8fafc' }}">
-                            <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                            <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full p-1.5 shadow-lg border border-white/30 mb-3 relative z-20">
-                                <img src="{{ $ad->image_url ?? 'https://ui-avatars.com/api/?name=Ad&background=fff' }}" class="w-full h-full object-cover rounded-full">
+                        <div class="h-44 relative flex flex-col items-center justify-center p-6 z-10 transition-colors overflow-hidden group/banner" style="background-color: {{ $ad->bg_color ?? '#f8fafc' }}">
+                            <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover/banner:scale-150 transition-transform duration-700 ease-out"></div>
+                            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-black/10 rounded-full blur-2xl group-hover/banner:scale-150 transition-transform duration-700 ease-out"></div>
+
+                            <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.15)] border border-white/40 mb-3 relative z-20 transform rotate-3 group-hover/banner:rotate-0 group-hover/banner:scale-110 transition-all duration-500 ease-out">
+                                <img src="{{ $ad->image_url ?? 'https://ui-avatars.com/api/?name=Ad&background=fff' }}" class="w-full h-full object-cover rounded-xl">
                             </div>
-                            <h4 class="font-black text-sm text-center truncate w-full relative z-20 drop-shadow-md" style="color: {{ $ad->bg_color && hexdec(str_replace('#','',$ad->bg_color)) < 0x888888 ? '#ffffff' : '#1e293b' }}">
+                            <h4 class="font-black text-base text-center truncate w-full relative z-20 drop-shadow-md px-2" style="color: {{ $ad->bg_color && hexdec(str_replace('#','',$ad->bg_color)) < 0x888888 ? '#ffffff' : '#1e293b' }}">
                                 {{ $ad->title }}
                             </h4>
                         </div>
                     @else
-                        <div class="h-40 relative bg-slate-900 z-10 group-hover:scale-105 transition-transform duration-500">
-                            <img src="{{ $ad->image_url ?? 'https://via.placeholder.com/400x200' }}" class="w-full h-full object-cover opacity-90">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-5">
-                                <h4 class="font-black text-white text-sm truncate w-full drop-shadow-lg">{{ $ad->title }}</h4>
+                        <div class="h-44 relative bg-slate-900 z-10 overflow-hidden">
+                            <img src="{{ $ad->image_url ?? 'https://via.placeholder.com/400x200' }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 ease-out group-hover/card:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/40 to-transparent flex items-end p-5">
+                                <h4 class="font-black text-white text-base w-full drop-shadow-lg leading-tight line-clamp-2">{{ $ad->title }}</h4>
                             </div>
                         </div>
                     @endif
 
-                    <div class="p-5 flex-grow flex flex-col relative z-20 bg-white border-t border-gray-100">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="text-[10px] font-black uppercase {{ $ad->type === 'banner' ? 'text-blue-500 bg-blue-50 border-blue-100' : 'text-emerald-500 bg-emerald-50 border-emerald-100' }} px-2.5 py-1 rounded-lg border">
+                    <div class="p-5 flex-grow flex flex-col relative z-20 bg-white">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[10px] font-bold uppercase {{ $ad->type === 'banner' ? 'text-blue-600 bg-blue-50 border-blue-100' : 'text-emerald-600 bg-emerald-50 border-emerald-100' }} px-3 py-1.5 rounded-lg border flex items-center gap-1.5">
+                                <i class="fa-solid {{ $ad->type === 'banner' ? 'fa-bullhorn' : 'fa-image' }}"></i>
                                 {{ $ad->type === 'banner' ? 'إعلان بنر' : 'إعلان غلاف' }}
                             </span>
                         </div>
 
                         @if($ad->type === 'banner' && $ad->description)
-                            <p class="text-xs text-gray-500 font-medium line-clamp-2 mb-3">{{ $ad->description }}</p>
+                            <p class="text-xs text-slate-500 font-medium line-clamp-2 mb-4 leading-relaxed">{{ $ad->description }}</p>
                         @endif
 
-                        <div class="mt-auto pt-3 border-t border-gray-50">
+                        <div class="mt-auto">
                             @if($ad->link)
-                                <a href="{{ $ad->link }}" target="_blank" class="text-[11px] font-bold text-slate-600 hover:text-primary flex items-center gap-2 truncate transition-colors" dir="ltr">
-                                    <i class="fa-solid fa-arrow-up-right-from-square text-gray-400"></i> {{ Str::limit($ad->link, 35) }}
+                                <a href="{{ $ad->link }}" target="_blank" class="group/link flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-primary/5 border border-slate-100 hover:border-primary/20 transition-all text-left" dir="ltr">
+                                    <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover/link:text-primary transition-colors shrink-0">
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">رابط التوجيه</p>
+                                        <p class="text-[11px] font-bold text-slate-700 group-hover/link:text-primary truncate transition-colors">
+                                            {{ Str::limit($ad->link, 35) }}
+                                        </p>
+                                    </div>
                                 </a>
                             @else
-                                <span class="text-[11px] font-bold text-gray-400 flex items-center gap-2">
-                                    <i class="fa-solid fa-link-slash"></i> لا يوجد رابط
-                                </span>
+                                <div class="flex items-center gap-3 p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-left opacity-70" dir="ltr">
+                                    <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-300 shrink-0">
+                                        <i class="fa-solid fa-link-slash text-[10px]"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">الرابط</p>
+                                        <p class="text-[11px] font-bold text-slate-500">لا يوجد توجيه</p>
+                                    </div>
+                                </div>
                             @endif
                         </div>
                     </div>
 
-                    <div class="bg-slate-50/80 p-4 border-t border-gray-100 flex items-center justify-between relative z-20">
+                    <div class="bg-slate-50/60 p-4 border-t border-gray-100 flex items-center justify-between relative z-20">
                         <div class="tooltip" title="{{ $isActive ? 'إيقاف الإعلان وإزالته من التطبيق' : 'تفعيل وعرض في التطبيق' }}">
                             <button type="button"
                                     onclick="inlineToggleStatus({{ $ad->id }}, this)"
-                                    class="action-btn-toggle w-10 h-10 rounded-xl border border-gray-200 transition-all flex items-center justify-center
-                                           {{ $isActive ? 'bg-white text-emerald-500 hover:shadow-md border-emerald-200' : 'bg-white text-slate-400 hover:shadow-md' }}">
+                                    class="action-btn-toggle w-10 h-10 rounded-xl border border-gray-200 transition-all flex items-center justify-center shadow-sm
+                                           {{ $isActive ? 'bg-white text-emerald-500 hover:border-emerald-300 hover:bg-emerald-50' : 'bg-white text-slate-400 hover:bg-slate-100' }}">
                                 <i class="fa-solid fa-power-off text-sm"></i>
                             </button>
                         </div>
 
                         <div class="flex gap-2">
-                            <button type="button" onclick="openAdModal('edit', this.closest('.ad-card'))" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-blue-500 hover:bg-blue-50 hover:border-blue-200 flex items-center justify-center tooltip transition-all" title="تعديل الإعلان">
+                            <button type="button" onclick="openAdModal('edit', this.closest('.ad-card'))" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-all flex items-center justify-center shadow-sm tooltip" title="تعديل الإعلان">
                                 <i class="fa-solid fa-pen-to-square text-sm"></i>
                             </button>
-                            <button type="button" onclick="openDeleteModal({{ $ad->id }}, '{{ $ad->title }}')" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-rose-500 hover:bg-rose-50 hover:border-rose-200 flex items-center justify-center tooltip transition-all" title="حذف نهائي">
+                            <button type="button" onclick="openDeleteModal({{ $ad->id }}, '{{ $ad->title }}')" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition-all flex items-center justify-center shadow-sm tooltip" title="حذف نهائي">
                                 <i class="fa-solid fa-trash-can text-sm"></i>
                             </button>
                         </div>
@@ -433,7 +453,6 @@
     <script>
         const csrfToken = '{{ csrf_token() }}';
 
-        // Auto-open modal on validation errors
         @if ($errors->any())
             document.addEventListener('DOMContentLoaded', function() {
                 toggleModal('adModal');
@@ -443,7 +462,7 @@
         @else
             document.addEventListener('DOMContentLoaded', function() {
                 toggleFormFields();
-                syncCarousel(); // Build carousel on load
+                syncCarousel();
             });
         @endif
 
@@ -453,7 +472,6 @@
                 el.classList.replace('hidden', 'flex');
             } else {
                 el.classList.replace('flex', 'hidden');
-                // Clean form visually when closing
                 if (id === 'adModal') {
                     setTimeout(() => {
                         document.getElementById('adForm').reset();
@@ -463,13 +481,11 @@
                         document.getElementById('type_banner').checked = true;
                         toggleFormFields();
 
-                        // Reset image previews
                         document.getElementById('bannerPreviewContainer').classList.add('hidden');
                         document.getElementById('bannerDefaultIcon').classList.remove('hidden');
                         document.getElementById('coverPreviewContainer').classList.add('hidden');
                         document.getElementById('coverDefaultIcon').classList.remove('hidden');
 
-                        // Clear error styling
                         const errs = document.querySelectorAll('.text-rose-500.text-xs');
                         errs.forEach(e => e.remove());
                         const inputs = document.querySelectorAll('.border-rose-400');
@@ -484,7 +500,6 @@
             }
         }
 
-        // Form Type Toggler
         function toggleFormFields() {
             const isBanner = document.getElementById('type_banner').checked;
             const bannerFields = document.getElementById('banner_fields');
@@ -499,7 +514,6 @@
             }
         }
 
-        // Image Preview Handler
         function previewImage(input, imgId, containerId, defaultId) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -512,12 +526,10 @@
             }
         }
 
-        // Sync Color Input
         document.getElementById('ad_bg_color').addEventListener('input', function() {
             document.getElementById('ad_bg_color_text').value = this.value;
         });
 
-        // --- Custom JavaScript Toasts (For AJAX / Copy Actions) ---
         function showToast(msg, success = true) {
             const container = document.getElementById('ajax-toast-container');
             const toast = document.createElement('div');
@@ -548,8 +560,6 @@
             }, 4000);
         }
 
-
-        // --- WOW FACTOR: Auto Carousel Sync (Timer + Clickable Dots) FIXED SCROLL ---
         let carouselInterval = null;
         let currentSlideIndex = 0;
         let totalSlidesCount = 0;
@@ -578,7 +588,6 @@
             activeCards.forEach((card, index) => {
                 const adData = JSON.parse(card.getAttribute('data-ad-info'));
 
-                // Add Coupon Mini Badge to the slide
                 let couponBadge = adData.coupon_code
                     ? `<span class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-primary text-[8px] font-black px-2 py-1 rounded shadow-sm z-20 flex items-center gap-1 border border-white/50"><i class="fa-solid fa-ticket"></i> ${adData.coupon_code}</span>`
                     : '';
@@ -613,7 +622,6 @@
 
                 carousel.insertAdjacentHTML('beforeend', slideHtml);
 
-                // Construct Clickable Dots
                 const dot = document.createElement('button');
                 dot.type = 'button';
                 dot.id = `dot-${index}`;
@@ -630,7 +638,6 @@
             const slide = document.getElementById(`mobile-slide-${index}`);
 
             if (carousel && slide) {
-                // Using scrollLeft for inner container scrolling (No page jump!)
                 carousel.scrollTo({
                     left: slide.offsetLeft - carousel.offsetLeft,
                     behavior: 'smooth'
@@ -668,12 +675,10 @@
             }, 3000);
         }
 
-        // --- Standard JS Functions for Modals & Actions ---
         function openAdModal(action, element = null) {
             const form = document.getElementById('adForm');
             const method = document.getElementById('formMethod');
 
-            // Clean validation styles before opening
             const errs = document.querySelectorAll('.text-rose-500.text-xs');
             errs.forEach(e => e.remove());
             const inputs = document.querySelectorAll('.border-rose-400');
@@ -737,7 +742,6 @@
             toggleModal('deleteModal');
         }
 
-        // Smooth Inline AJAX Toggle
         async function inlineToggleStatus(id, btnEl) {
             const originalHTML = btnEl.innerHTML;
             btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i>';
@@ -761,9 +765,8 @@
                 if (data.success) {
                     showToast(data.message, true);
                     updateCardDOM(btnEl, data.is_active);
-                    syncCarousel(); // RE-RENDER MOBILE CAROUSEL INSTANTLY!
+                    syncCarousel();
 
-                    // Update Stats Counters
                     const aEl = document.getElementById('stat-active');
                     const iEl = document.getElementById('stat-inactive');
                     if(aEl && iEl) {
@@ -786,23 +789,22 @@
 
             if (isActive) {
                 card.classList.remove('opacity-75', 'grayscale-[40%]');
-                card.classList.add('hover:-translate-y-1', 'hover:shadow-xl', 'hover:border-primary/30');
-                btn.className = "action-btn-toggle w-10 h-10 rounded-xl border border-emerald-200 transition-all flex items-center justify-center bg-white text-emerald-500 hover:shadow-md hover:bg-emerald-50";
-                const badge = card.querySelector('.bg-rose-500\\/90'); // the inactive badge
+                card.classList.add('hover:-translate-y-1.5', 'hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)]', 'hover:border-primary/20');
+                btn.className = "action-btn-toggle w-10 h-10 rounded-xl border border-gray-200 transition-all flex items-center justify-center shadow-sm bg-white text-emerald-500 hover:border-emerald-300 hover:bg-emerald-50";
+                const badge = card.querySelector('.bg-rose-500\\/90');
                 if(badge) badge.remove();
             } else {
                 card.classList.add('opacity-75', 'grayscale-[40%]');
-                card.classList.remove('hover:-translate-y-1', 'hover:shadow-xl', 'hover:border-primary/30');
-                btn.className = "action-btn-toggle w-10 h-10 rounded-xl border border-gray-200 transition-all flex items-center justify-center bg-white text-slate-400 hover:shadow-md hover:bg-slate-100";
+                card.classList.remove('hover:-translate-y-1.5', 'hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)]', 'hover:border-primary/20');
+                btn.className = "action-btn-toggle w-10 h-10 rounded-xl border border-gray-200 transition-all flex items-center justify-center shadow-sm bg-white text-slate-400 hover:bg-slate-100";
 
                 const badgeContainer = card.querySelector('.absolute.top-3.left-3.right-3');
                 if(badgeContainer && !badgeContainer.querySelector('.bg-rose-500\\/90')) {
-                    badgeContainer.insertAdjacentHTML('afterbegin', '<div class="bg-rose-500/90 backdrop-blur text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-sm">متوقف</div>');
+                    badgeContainer.insertAdjacentHTML('afterbegin', '<div class="bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-md border border-white/20 flex items-center gap-1.5"><i class="fa-solid fa-ban text-[8px]"></i> متوقف</div>');
                 }
             }
         }
 
-        // Search Filter
         function filterAds() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             const status = document.getElementById('statusFilter').value;
@@ -822,7 +824,6 @@
         document.getElementById('searchInput').addEventListener('input', filterAds);
         document.getElementById('statusFilter').addEventListener('change', filterAds);
 
-        // Disable Button on Submit
         document.getElementById('adForm').addEventListener('submit', function() {
             const btn = document.getElementById('submit-btn');
             btn.disabled = true;
@@ -830,7 +831,6 @@
             btn.classList.add('opacity-75', 'cursor-not-allowed');
         });
 
-        // Helper for colors
         function hexdec(hexString) {
             return parseInt(hexString, 16);
         }
@@ -844,7 +844,6 @@
         .animate-bounce-short { animation: bounceShort 1.5s infinite; }
         @keyframes bounceShort { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10%); } }
         .bg-gradient-custom { background: linear-gradient(135deg, #0d9488 0%, #84cc16 100%); }
-        /* Native horizontal scroll hiding for a clean look */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>

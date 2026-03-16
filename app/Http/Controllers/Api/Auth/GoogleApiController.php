@@ -64,7 +64,18 @@ class GoogleApiController extends Controller
                 }
 
                 if ($existingUser) {
-                    // SECURITY CHECK: Ensure the user's role is strictly 'user'
+                    // ==========================================
+                    // SECURITY CHECK 1: Ensure the user is active
+                    // ==========================================
+                    if (!$existingUser->is_active) {
+                        return [
+                            'error' => true,
+                            'type'  => 'FORBIDDEN',
+                            'msg'   => 'عذراً، تم إيقاف حسابك مؤقتاً. يرجى التواصل مع الإدارة.'
+                        ];
+                    }
+
+                    // SECURITY CHECK 2: Ensure the user's role is strictly 'user'
                     if ($existingUser->role !== 'user') {
                         return [
                             'error' => true,
@@ -93,7 +104,7 @@ class GoogleApiController extends Controller
                     return ['error' => false, 'user' => $existingUser];
                 }
 
-                // Create a completely new user
+                // Create a completely new user (Defaults to active)
                 $newUser = User::create([
                     'name'              => $googleUser->getName() ?? 'Google User',
                     'email'             => $email,
@@ -107,7 +118,7 @@ class GoogleApiController extends Controller
                 return ['error' => false, 'user' => $newUser];
             });
 
-            // Check for logical conflict or forbidden errors
+            // 4. Check for logical conflict or forbidden errors from Transaction
             if ($result['error']) {
                 $statusCode = $result['type'] === 'FORBIDDEN' ? 403 : 409;
                 return response()->json([
@@ -116,6 +127,7 @@ class GoogleApiController extends Controller
                 ], $statusCode);
             }
 
+            // 5. Success - Generate Token and Format Response
             $user = $result['user'];
             $token = $user->createToken('mobile-google-auth-token')->plainTextToken;
 

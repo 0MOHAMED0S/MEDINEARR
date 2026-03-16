@@ -10,19 +10,35 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminCategoryController extends Controller
 {
-public function index()
-{
-    $stats = [
-        'total' => Category::count(),
-        'active' => Category::where('status', 1)->count(),
-        'inactive' => Category::where('status', 0)->count(),
-    ];
+public function index(\Illuminate\Http\Request $request)
+    {
+        $query = Category::withCount('medicines');
 
-    // Change .get() to .paginate()
-    $categories = Category::withCount('medicines')->orderBy('id', 'desc')->paginate(10);
+        // 1. الفلترة حسب الحالة (نشط / متوقف)
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status === '1' ? 1 : 0);
+        }
 
-    return view('dashboard.categories.index', compact('categories', 'stats'));
-}
+        // 2. البحث النصي (في اسم التصنيف أو الوصف)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // جلب البيانات مع الحفاظ على الفلاتر عند الانتقال بين الصفحات
+        $categories = $query->orderBy('id', 'desc')->paginate(10)->appends($request->query());
+
+        $stats = [
+            'total'    => Category::count(),
+            'active'   => Category::where('status', 1)->count(),
+            'inactive' => Category::where('status', 0)->count(),
+        ];
+
+        return view('dashboard.categories.index', compact('categories', 'stats'));
+    }
 
 
     public function store(StoreCategoryRequest $request)
