@@ -10,7 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule; // <-- تم استدعاء كلاس الرولز الاحترافي
 
-class CouponController extends Controller
+class AdminCouponController extends Controller
 {
     public function index()
     {

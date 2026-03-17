@@ -96,6 +96,13 @@
             <span class="{{ request()->routeIs('coupons.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الكوبونات</span>
         </a>
 
+        <a href="{{ route('delivery-companies.index') }}"
+            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+            {{ request()->routeIs('delivery-companies.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-ticket w-5 text-center {{ request()->routeIs('delivery-companies.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('delivery-companies.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">شركات التوصيل</span>
+        </a>
+
         <hr class="border-white/10 my-2 mx-2">
 
         <a href="{{ route('admin.profile.index') }}"
