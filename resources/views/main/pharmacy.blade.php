@@ -397,7 +397,7 @@
                         <a href="{{ url('/') }}#contact"
                             class="text-gray-500 hover:text-primary transition relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
                             data-i18n="navContact">اتصل بنا</a>
-                        <a href="{{ route('pharmacy.Application.index') ?? '#' }}"
+                        <a href="{{ route('pharmacy.application.index') ?? '#' }}"
                             class="text-primary transition relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-100 after:transition-transform"
                             data-i18n="navPharmacies">للصيدليات</a>
                     </nav>
@@ -487,7 +487,7 @@
                     <a href="{{ url('/') }}#contact" onclick="closeMobileMenu();"
                         class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors"
                         data-i18n="navContact">اتصل بنا</a>
-                    <a href="{{ route('pharmacy.Application.index') ?? '#' }}" onclick="closeMobileMenu();"
+                    <a href="{{ route('pharmacy.application.index') ?? '#' }}" onclick="closeMobileMenu();"
                         class="block w-full px-4 py-3 text-primary font-bold bg-secondary rounded-xl transition-colors hover:bg-teal-100"
                         data-i18n="navPharmacies">للصيدليات</a>
                     <hr class="my-4 border-gray-100">
@@ -647,7 +647,7 @@
                                 data-i18n="statusApproveTitle">تهانينا! تم قبول صيدليتك</h2>
                             <p class="text-sm md:text-base text-gray-500 font-medium" data-i18n="statusApproveDesc">
                                 يمكنك الآن البدء في استخدام لوحة التحكم الخاصة بالصيدلية.</p>
-                            <a href="{{ route('admin.dashboard') }}"
+                            <a href="{{ route('pharmacy.dashboard') }}"
                                 class="inline-block mt-8 bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-primaryHover transition-all"
                                 data-i18n="btnGoDashboard">توجه للوحة التحكم</a>
                         @endif

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\DataAnalysis;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
@@ -11,6 +10,7 @@ use App\Models\Pharmacy;
 use App\Models\Medicine;
 use App\Models\Category;
 use App\Models\PharmacyApplication;
+use App\Models\PharmacyMedicine;
 
 class DataAnalysisController extends Controller
 {
@@ -52,7 +52,6 @@ class DataAnalysisController extends Controller
                 })->toArray();
 
             return response()->json($users, 200);
-
         } catch (\Exception $e) {
             Log::error('Power BI Users API Error: ' . $e->getMessage());
             return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
@@ -128,7 +127,6 @@ class DataAnalysisController extends Controller
             $combinedData = array_merge($approvedPharmacies, $applications);
 
             return response()->json($combinedData, 200);
-
         } catch (\Exception $e) {
             Log::error('Power BI Pharmacies API Error: ' . $e->getMessage());
             return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
@@ -140,7 +138,7 @@ class DataAnalysisController extends Controller
      *
      * @return JsonResponse
      */
-public function categories(): JsonResponse
+    public function categories(): JsonResponse
     {
         try {
             $categories = Category::withCount([
@@ -161,8 +159,8 @@ public function categories(): JsonResponse
                         'Total_Medicines'  => (int) $category->Total_Medicines,
                         'Active_Medicines' => (int) $category->Active_Medicines,
                         'Activity_Rate_%'  => $category->Total_Medicines > 0
-                                                ? round(($category->Active_Medicines / $category->Total_Medicines) * 100, 2)
-                                                : 0,
+                            ? round(($category->Active_Medicines / $category->Total_Medicines) * 100, 2)
+                            : 0,
 
                         // توحيد التواريخ
                         'Created_At'       => $category->created_at ? $category->created_at->format('Y-m-d H:i:s') : null,
@@ -172,7 +170,6 @@ public function categories(): JsonResponse
                 })->toArray();
 
             return response()->json($categories, 200);
-
         } catch (\Exception $e) {
             Log::error('Power BI Categories API Error: ' . $e->getMessage());
             return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
@@ -206,9 +203,49 @@ public function categories(): JsonResponse
                 })->toArray();
 
             return response()->json($medicines, 200);
-
         } catch (\Exception $e) {
             Log::error('Power BI Medicines API Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * 5. API: بيانات مخزون الصيدليات (Fact Table) لـ Power BI
+     *
+     * @return JsonResponse
+     */
+    public function pharmacyInventory(): JsonResponse
+    {
+        try {
+            // جلب المخزون مع علاقة الدواء فقط لمعرفة الـ Category_ID
+            $inventory = PharmacyMedicine::with('medicine:id,category_id')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'Inventory_ID'    => $item->id,
+                        'Pharmacy_ID'     => $item->pharmacy_id,
+                        'Category_ID'     => $item->medicine->category_id ?? null,
+                        'Medicine_ID'     => $item->medicine_id,
+
+                        'Price'           => (float) $item->price,
+                        'Quantity'        => (int) $item->quantity,
+
+                        // نرسل الحالة الأصلية النصية
+                        'Status'          => $item->status,
+
+                        // قيمة منطقية (Boolean) لتسهيل الفلترة في Power BI
+                        'Is_Available'    => ($item->status === 'available' && $item->quantity > 0) ? true : false,
+
+                        // توحيد التواريخ (مبنية على آخر تحديث للمخزون)
+                        'Last_Update'     => $item->updated_at ? $item->updated_at->format('Y-m-d H:i:s') : null,
+                        'Date'            => $item->updated_at ? $item->updated_at->format('Y-m-d') : null,
+                        'Month_Year'      => $item->updated_at ? $item->updated_at->format('Y-m') : null,
+                    ];
+                })->toArray();
+
+            return response()->json($inventory, 200);
+        } catch (\Exception $e) {
+            Log::error('Power BI Pharmacy Inventory API Error: ' . $e->getMessage());
             return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
         }
     }

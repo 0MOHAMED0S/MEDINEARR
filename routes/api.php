@@ -12,36 +12,31 @@ use App\Http\Controllers\Api\Pharmacies\PharmacyController;
 use App\Http\Controllers\Api\Pharmacies\PharmacySearchController;
 use Illuminate\Support\Facades\Route;
 
-
 // 1. Authentication Routes (مسارات تسجيل الدخول لا تحتاج لتوكن)
 Route::post('/auth/google/login', [GoogleApiController::class, 'loginWithGoogle']);
 Route::post('/auth/facebook/login', [FacebookApiController::class, 'loginWithFacebook']);
 
 // 2. Protected Routes (المسارات المحمية)
-Route::middleware('auth:sanctum')->group(function () {
-
+Route::middleware(['auth:sanctum', 'role:user'])->group(function () {
     // Profile Management
     Route::get('/profile', [AuthController::class, 'getProfile']);
     Route::post('/profile/update', [AuthController::class, 'updateProfile']);
-
     // Logout
     Route::post('/logout', [SocialLogoutController::class, 'logout']);
     Route::post('/logout-all', [SocialLogoutController::class, 'logoutAllDevices']);
-
     //location
     Route::post('/profile/location', [AuthController::class, 'updateLocation']);
 });
 
-
-Route::prefix('pharmacy')->middleware('auth:sanctum')
-->group(function(){
-        Route::get('/pharmacies',[PharmacyController::class,'index']);
-        Route::get('/ads',[AdController::class,'index']);
-        Route::get('/categories',[CategoryController::class,'index']);
-        Route::get('/medicines',[MedicineController::class,'index']);
-        Route::get('/pharmacy_search',[PharmacySearchController::class,'index']);
-
-});
+Route::prefix('pharmacy')->middleware(['auth:sanctum', 'role:user'])
+    ->group(function () {
+        Route::get('/pharmacies', [PharmacyController::class, 'index']);
+        Route::get('/ads', [AdController::class, 'index']);
+        Route::get('/categories', [CategoryController::class, 'index']);
+        Route::get('/medicines', [MedicineController::class, 'index']);
+        Route::get('/near-pharmacies', [PharmacySearchController::class, 'index']);
+        Route::get('/{id}/inventory', [PharmacyController::class, 'getInventory']);
+    });
 
 Route::prefix('data-analysis')
     ->middleware('api.key')
@@ -50,4 +45,5 @@ Route::prefix('data-analysis')
         Route::get('/pharmacies', [DataAnalysisController::class, 'pharmacies']);
         Route::get('/medicines', [DataAnalysisController::class, 'medicines']);
         Route::get('/categories', [DataAnalysisController::class, 'categories']);
+        Route::get('/pharmacy-inventory', [DataAnalysisController::class, 'pharmacyInventory']);
     });

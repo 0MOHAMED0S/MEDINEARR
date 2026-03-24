@@ -8,12 +8,12 @@
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'الرئيسية') | لوحة تحكم MediNear</title>
+    <title>@yield('title', 'الرئيسية') | لوحة تحكم الصيدلية | MediNear</title>
 
-    <meta name="title" content="لوحة تحكم | MediNear">
+    <meta name="title" content="لوحة تحكم الصيدلية | MediNear">
     <meta name="description"
-        content="النظام الإداري الشامل لمنصة MediNear لإدارة الصيدليات، الأدوية، والطلبات الطبية باحترافية عالية.">
-    <meta name="author" content="MediNear Team">
+        content="النظام الإداري الخاص بالصيدلية لإدارة المخزون، الأدوية، والطلبات الطبية الواردة عبر منصة MediNear باحترافية.">
+    <meta name="author" content="MediNear Pharmacy Team">
 
     <meta name="theme-color" content="#0d9488">
 
@@ -24,8 +24,8 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/images/apple-touch-icon.png') }}">
 
     <meta property="og:type" content="website">
-    <meta property="og:title" content="لوحة تحكم | MediNear">
-    <meta property="og:description" content="النظام الإداري الشامل لمنصة MediNear الطبية.">
+    <meta property="og:title" content="لوحة تحكم الصيدلية | MediNear">
+    <meta property="og:description" content="النظام الإداري الشامل للصيدليات المشتركة في منصة MediNear الطبية.">
     <meta property="og:image" content="{{ asset('Dashboard/images/logo.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -114,7 +114,6 @@
             animation: toastIn 0.3s ease-out forwards;
         }
 
-        /* --- شريط التحميل العلوي --- */
         #top-loader {
             position: fixed;
             top: 0;
@@ -128,7 +127,6 @@
             pointer-events: none;
         }
 
-        /* --- تأثير انتقال المحتوى --- */
         #page-content-wrapper {
             transition: opacity 0.2s ease-out;
         }
@@ -144,16 +142,15 @@
     <div id="top-loader"></div>
 
     <div
-        class="fixed top-4 left-4 right-4 md:left-auto md:right-6 md:top-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+        class="fixed top-4 left-4 right-4 md:left-auto md:right-6 md:top-6 z-[9999] flex flex-col gap-3 pointer-events-none text-right">
         @if (session('success'))
             <div
-                class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right">
+                class="animate-toast pointer-events-auto bg-white border-r-4 border-emerald-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto">
                 <div class="bg-emerald-100 p-2 rounded-xl text-emerald-600 shrink-0">
-                    <i class="fa-solid fa-circle-check text-xl"></i>
+                    <i class="fa-solid fa-notes-medical text-xl"></i>
                 </div>
                 <div class="flex-1">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">تمت
-                        العملية</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">تحديث الصيدلية</p>
                     <p class="text-sm font-black text-slate-800 leading-tight">{{ session('success') }}</p>
                 </div>
                 <button onclick="this.parentElement.remove()"
@@ -164,13 +161,12 @@
 
         @if (session('error') || $errors->any())
             <div
-                class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto text-right">
+                class="animate-toast pointer-events-auto bg-white border-r-4 border-rose-500 shadow-xl rounded-2xl p-4 flex items-center gap-4 min-w-[280px] max-w-sm ml-auto">
                 <div class="bg-rose-100 p-2 rounded-xl text-rose-600 shrink-0">
                     <i class="fa-solid fa-circle-exclamation text-xl"></i>
                 </div>
                 <div class="flex-1">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">خطأ في
-                        النظام</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">خطأ في النظام</p>
                     <p class="text-sm font-black text-slate-800 leading-tight">
                         {{ session('error') ?? $errors->first() }}
                     </p>
@@ -185,11 +181,11 @@
     <div id="overlay" onclick="toggleSidebar()"
         class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden transition-all duration-300"></div>
 
-    @include('dashboard.layout.components.sidebar')
+    @include('pharmacy.layout.components.sidebar')
 
     <main class="lg:mr-72 min-h-screen flex flex-col transition-all duration-300 ease-in-out">
 
-        @include('dashboard.layout.components.header')
+        @include('pharmacy.layout.components.header')
 
         <div id="page-content-wrapper" class="p-3 xs:p-4 md:p-6 lg:p-10 flex-1 w-full max-w-[1600px] mx-auto">
             @yield('content')
@@ -199,16 +195,14 @@
             <div
                 class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-2">
                 <p class="text-[11px] md:text-xs font-bold text-slate-400">
-                    حقوق الطبع والنشر &copy; 2024 <span class="text-primary font-black">MediNear</span>.
+                    نظام إدارة الصيدلية &copy; 2024 <span class="text-primary font-black">MediNear</span>.
                 </p>
                 <div class="flex items-center gap-4">
                     <a href="#"
-                        class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">الدعم
-                        الفني</a>
+                        class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">دعم الصيدليات</a>
                     <span class="w-1 h-1 bg-slate-200 rounded-full"></span>
                     <a href="#"
-                        class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">سياسة
-                        الخصوصية</a>
+                        class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">دليل الاستخدام</a>
                 </div>
             </div>
         </footer>
@@ -216,7 +210,7 @@
 
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
-        // إعدادات SweetAlert العالمية
+        // إعدادات SweetAlert العالمية للتطبيقات الصيدلانية
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-start',
@@ -229,7 +223,6 @@
             }
         });
 
-        // --- وظيفة التحكم في المودال مع منع السكرول ---
         function toggleModal(modalID) {
             const modal = document.getElementById(modalID);
             if (!modal) return;
@@ -237,19 +230,17 @@
             if (modal.classList.contains('hidden')) {
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
-                document.body.classList.add('overflow-hidden'); // منع السكرول
+                document.body.classList.add('overflow-hidden');
             } else {
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
 
-                // التأكد من عدم وجود مودالات أخرى مفتوحة قبل إزالة منع السكرول
                 if (!document.querySelector('div[id*="Modal"]:not(.hidden)')) {
                     document.body.classList.remove('overflow-hidden');
                 }
             }
         }
 
-        // وظيفة التحكم في القائمة الجانبية
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('overlay');
@@ -258,14 +249,12 @@
             document.body.classList.toggle('overflow-hidden');
         }
 
-        // إغلاق التنبيهات تلقائياً
         document.querySelectorAll('.animate-toast').forEach(toast => {
             setTimeout(() => {
                 if (toast.parentElement) toast.remove();
             }, 6000);
         });
 
-        // --- نظام شريط التحميل والانتقال السريع ---
         document.addEventListener('DOMContentLoaded', () => {
             const loader = document.getElementById('top-loader');
             const wrapper = document.getElementById('page-content-wrapper');

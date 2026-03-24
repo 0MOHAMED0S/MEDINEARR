@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Pharmacy;
 use App\Models\PharmacyApplication;
+use App\Models\Medicine;
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
 use Illuminate\Support\Facades\Hash;
@@ -16,7 +17,9 @@ class PharmacySeeder extends Seeder
     {
         $faker = Faker::create('ar_EG');
 
-        // خريطة إحداثيات المحافظات (27 محافظة)
+        // ✨ جلب الأدوية مع أسعارها الرسمية وحالة السعر (ثابت أم مرن)
+        $allMedicines = Medicine::select('id', 'official_price', 'is_price_fixed')->get();
+
         $egyptCities = [
             'القاهرة'       => ['lat' => 30.0444, 'lng' => 31.2357],
             'الجيزة'        => ['lat' => 30.0131, 'lng' => 31.2089],
@@ -50,38 +53,23 @@ class PharmacySeeder extends Seeder
         $servicesList = ['24_hours', 'delivery', 'consultation'];
         $providers = [null, 'google', 'facebook'];
 
-        // ---------------------------------------------------------
-        // تجهيز طابور الطلبات (Queue) لضمان التوزيع الجغرافي المثالي لـ 80 صيدلية
-        // ---------------------------------------------------------
         $applicationsQueue = [];
         $cityNames = array_keys($egyptCities);
 
-        // 1. ضمان صيدلية "مقبولة" واحدة على الأقل لكل محافظة (27 محافظة = 27 صيدلية)
         foreach ($cityNames as $city) {
             $applicationsQueue[] = ['status' => 'approved', 'city' => $city];
         }
-
-        // 2. تكملة العدد ليصبح 40 صيدلية مقبولة (بإضافة 13 عشوائية)
         for ($i = 0; $i < 13; $i++) {
             $applicationsQueue[] = ['status' => 'approved', 'city' => $faker->randomElement($cityNames)];
         }
-
-        // 3. إضافة 25 طلب قيد المراجعة في محافظات عشوائية
         for ($i = 0; $i < 25; $i++) {
             $applicationsQueue[] = ['status' => 'under_review', 'city' => $faker->randomElement($cityNames)];
         }
-
-        // 4. إضافة 15 طلب مرفوض في محافظات عشوائية
         for ($i = 0; $i < 15; $i++) {
             $applicationsQueue[] = ['status' => 'rejected', 'city' => $faker->randomElement($cityNames)];
         }
-
-        // خلط الطابور تماماً لضمان إدخال عشوائي في قاعدة البيانات
         shuffle($applicationsQueue);
 
-        // ---------------------------------------------------------
-        // حساب تجريبي ثابت (يُستخدم للتجارب السريعة)
-        // ---------------------------------------------------------
         $mainUser = User::updateOrCreate(
             ['email' => 'pharmacy@medinear.com'],
             [
@@ -112,8 +100,7 @@ class PharmacySeeder extends Seeder
             ]
         );
 
-        // إدراج الحساب الثابت في جدول الصيدليات المعتمدة
-        Pharmacy::firstOrCreate(
+        $mainPharmacy = Pharmacy::firstOrCreate(
             ['email' => 'pharmacy@medinear.com'],
             [
                 'user_id'                 => $mainUser->id,
@@ -135,21 +122,19 @@ class PharmacySeeder extends Seeder
             ]
         );
 
-        // ---------------------------------------------------------
-        // توليد الـ 80 طلب/صيدلية عشوائية من الـ Queue
-        // ---------------------------------------------------------
+        // تمرير كولكشن الأدوية بالكامل لربطها بالصيدلية
+        $this->attachRandomMedicines($mainPharmacy, $allMedicines, $faker);
+
         foreach ($applicationsQueue as $queueItem) {
             $provider = $faker->randomElement($providers);
             $cityName = $queueItem['city'];
             $randomStatus = $queueItem['status'];
 
-            // إضافة انحراف عشوائي بسيط للإحداثيات لتوزيع الدبابيس داخل المحافظة
             $latOffset = $faker->numberBetween(-80000, 80000) / 1000000;
             $lngOffset = $faker->numberBetween(-80000, 80000) / 1000000;
             $lat = $egyptCities[$cityName]['lat'] + $latOffset;
             $lng = $egyptCities[$cityName]['lng'] + $lngOffset;
 
-            // أ. إنشاء المستخدم
             $user = User::create([
                 'name'              => $faker->name,
                 'email'             => $faker->unique()->safeEmail,
@@ -165,7 +150,6 @@ class PharmacySeeder extends Seeder
 
             $randomServices = $faker->randomElements($servicesList, $faker->numberBetween(1, 3));
 
-            // ب. إنشاء طلب الانضمام
             $application = PharmacyApplication::create([
                 'user_id'           => $user->id,
                 'pharmacy_name'     => 'صيدلية ' . $faker->lastName,
@@ -186,9 +170,8 @@ class PharmacySeeder extends Seeder
                 'created_at'        => $faker->dateTimeBetween('-6 months', 'now'),
             ]);
 
-            // ج. إضافة الصيدلية المعتمدة تلقائياً إذا كانت الحالة Approved
             if ($randomStatus === 'approved') {
-                Pharmacy::create([
+                $pharmacy = Pharmacy::create([
                     'user_id'                 => $user->id,
                     'pharmacy_application_id' => $application->id,
                     'pharmacy_name'           => $application->pharmacy_name,
@@ -204,11 +187,57 @@ class PharmacySeeder extends Seeder
                     'lng'                     => $application->lng,
                     'services'                => $application->services,
                     'has_collaboration'       => $application->has_collaboration,
-                    'is_active'               => $faker->boolean(85), // 85% نشط
-                    'is_big_pharmacy'         => $faker->boolean(30), // 30% من المقبولين كصيدليات كبرى
+                    'is_active'               => $faker->boolean(85),
+                    'is_big_pharmacy'         => $faker->boolean(30),
                     'created_at'              => $application->created_at,
                 ]);
+
+                $this->attachRandomMedicines($pharmacy, $allMedicines, $faker);
             }
         }
+    }
+
+    /**
+     * دالة مساعدة لربط الأدوية بالصيدلية بالأسعار والكميات العشوائية
+     */
+    private function attachRandomMedicines($pharmacy, $allMedicines, $faker)
+    {
+        if ($allMedicines->count() < 25) {
+            return;
+        }
+
+        // تحويل الكولكشن إلى مصفوفة لسحب عناصر عشوائية منها
+        $randomMedicines = $faker->randomElements($allMedicines->toArray(), 25);
+        $syncData = [];
+
+        foreach ($randomMedicines as $med) {
+            $quantity = $faker->numberBetween(0, 100);
+
+            $status = 'available';
+            if ($quantity === 0) {
+                $status = 'out_of_stock';
+            } elseif ($faker->boolean(10)) {
+                $status = 'hidden';
+            }
+
+            // ✨ المنطق الجديد للتسعير
+            if ($med['is_price_fixed']) {
+                // إذا كان الدواء تسعيرته إجبارية، يجب أن يكون سعر البيع هو السعر الرسمي بالضبط
+                $sellingPrice = $med['official_price'];
+            } else {
+                // إذا لم يكن إجبارياً (مثل الفيتامينات)، الصيدلية يمكنها البيع بالسعر الرسمي أو عمل خصم
+                $sellingPrice = $faker->boolean(70)
+                    ? $med['official_price']
+                    : round($med['official_price'] * $faker->randomFloat(2, 0.85, 0.95), 2);
+            }
+
+            $syncData[$med['id']] = [
+                'price'    => $sellingPrice,
+                'quantity' => $quantity,
+                'status'   => $status,
+            ];
+        }
+
+        $pharmacy->medicines()->syncWithoutDetaching($syncData);
     }
 }

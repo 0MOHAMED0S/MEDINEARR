@@ -1,5 +1,5 @@
 <aside id="sidebar"
-    class="sidebar fixed right-0 top-0 h-full w-[260px] sm:w-64 md:w-72 sidebar-gradient text-white z-50 transition-transform duration-300 ease-in-out lg:translate-x-0">
+    class="sidebar fixed right-0 top-0 h-full w-[260px] sm:w-64 md:w-72 sidebar-gradient text-white z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col">
 
     <div class="p-4 md:p-6 flex items-center gap-3 border-b border-white/10 shrink-0">
         <div class="bg-white p-2 rounded-xl flex items-center justify-center shrink-0 shadow-lg">
@@ -11,14 +11,11 @@
                     </linearGradient>
                 </defs>
                 <circle cx="50" cy="50" r="46" stroke="url(#logoGradLoader)" stroke-width="4" />
-                <path
-                    d="M50 15C34.536 15 22 27.536 22 43C22 62.5 50 85 50 85C50 85 78 62.5 78 43C78 27.536 65.464 15 50 15Z"
-                    fill="url(#logoGradLoader)" />
+                <path d="M50 15C34.536 15 22 27.536 22 43C22 62.5 50 85 50 85C50 85 78 62.5 78 43C78 27.536 65.464 15 50 15Z" fill="url(#logoGradLoader)" />
                 <path d="M45 28H55V37H64V47H55V56H45V47H36V37H45V28Z" fill="white" />
                 <g transform="translate(38, 65) rotate(-50)">
                     <rect x="-14" y="-26" width="28" height="52" rx="14" fill="white" />
-                    <rect x="-11" y="-23" width="22" height="46" rx="11" fill="white"
-                        stroke="url(#logoGradLoader)" stroke-width="2" />
+                    <rect x="-11" y="-23" width="22" height="46" rx="11" fill="white" stroke="url(#logoGradLoader)" stroke-width="2" />
                     <path d="M-10 0 H10 V12 A10 10 0 0 1 -10 12 Z" fill="url(#logoGradLoader)" />
                 </g>
             </svg>
@@ -26,66 +23,41 @@
         <div class="min-w-0">
             <span class="text-lg md:text-xl font-black tracking-tight block truncate uppercase">MediNear</span>
             <span class="text-[9px] md:text-[10px] text-white/50 uppercase tracking-widest block font-bold mt-0.5 opacity-80">
-                Admin Panel
+                Pharmacy Panel
             </span>
         </div>
     </div>
 
-    <nav class="mt-4 md:mt-6 px-3 md:px-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-hide">
+    <nav class="flex-1 px-3 md:px-4 py-4 space-y-1.5 overflow-y-auto scrollbar-hide pb-20">
 
-        <a href="{{ route('admin.dashboard') }}"
+        <a href="{{ route('pharmacy.dashboard') }}"
             class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
-            {{ request()->routeIs('admin.dashboard') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-            <i class="fa-solid fa-chart-pie w-5 text-center {{ request()->routeIs('admin.dashboard') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-            <span class="{{ request()->routeIs('admin.dashboard') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الرئيسية</span>
+            {{ request()->routeIs('pharmacy.dashboard') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-chart-pie w-5 text-center {{ request()->routeIs('pharmacy.dashboard') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('pharmacy.dashboard') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الرئيسية</span>
         </a>
 
-        <a href="{{ route('pharmaciesApplications.index') }}"
+        <a href="{{ route('pharmacy.medicines.index') }}"
             class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
-            {{ request()->routeIs('pharmaciesApplications.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-            <i class="fa-solid fa-clipboard-list w-5 text-center {{ request()->routeIs('pharmaciesApplications.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-            <span class="{{ request()->routeIs('pharmaciesApplications.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">طلبات الصيدليات</span>
+            {{ request()->routeIs('pharmacy.medicines.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-pills w-5 text-center {{ request()->routeIs('pharmacy.medicines.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('pharmacy.medicines.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">أدويتي ومخزوني</span>
         </a>
 
-        <a href="{{ route('pharmacies.index') }}"
-            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
-            {{ request()->routeIs('pharmacies.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-            <i class="fa-solid fa-store w-5 text-center {{ request()->routeIs('pharmacies.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-            <span class="{{ request()->routeIs('pharmacies.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الصيدليات المعتمدة</span>
-        </a>
+        <div class="my-4 border-t border-white/10 w-full"></div>
 
-        <a href="{{ route('categories.index') }}"
-            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
-            {{ request()->routeIs('categories.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-            <i class="fa-solid fa-tags w-5 text-center {{ request()->routeIs('categories.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-            <span class="{{ request()->routeIs('categories.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الفئات والأقسام</span>
-        </a>
-
-        <a href="{{ route('medicines.index') }}"
-            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
-            {{ request()->routeIs('medicines.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-            <i class="fa-solid fa-pills w-5 text-center {{ request()->routeIs('medicines.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-            <span class="{{ request()->routeIs('medicines.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الأدوية والمنتجات</span>
-        </a>
-
-        <a href="{{ route('admin.profile.index') }}"
-            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl mt-4
-            {{ request()->routeIs('admin.profile.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-            <i class="fa-solid fa-user-gear w-5 text-center {{ request()->routeIs('admin.profile.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-            <span class="{{ request()->routeIs('admin.profile.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الملف الشخصي</span>
-        </a>
+        <form method="POST" action="{{ route('pharmacy.logout') }}" class="mt-4">
+            @csrf
+            <button type="submit" class="w-full flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl hover:bg-rose-500/20 hover:border-rose-500/50 border border-transparent">
+                <i class="fa-solid fa-arrow-right-from-bracket w-5 text-center text-white/40 group-hover:text-rose-400 text-base md:text-lg"></i>
+                <span class="text-white/70 group-hover:text-rose-400 font-bold text-sm md:text-base">تسجيل الخروج</span>
+            </button>
+        </form>
 
     </nav>
-
-    <div class="absolute bottom-4 md:bottom-6 w-full px-4 md:px-5">
-        <div class="bg-gradient-to-br from-white/10 to-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/5 text-center shadow-lg">
-            <div class="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-2.5">
-                <i class="fa-solid fa-headset text-accent text-sm"></i>
-            </div>
-            <p class="text-[10px] md:text-xs text-white/70 mb-3 font-medium leading-tight">تحتاج إلى مساعدة؟</p>
-            <button class="text-xs md:text-sm bg-accent hover:bg-lime-500 text-darkText font-black py-2 px-4 rounded-xl w-full transition-all shadow-lg shadow-accent/20">
-                الدعم الفني
-            </button>
-        </div>
-    </div>
 </aside>
+
+<style>
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
