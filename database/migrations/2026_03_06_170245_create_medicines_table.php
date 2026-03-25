@@ -16,6 +16,11 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->text('description');
             $table->string('image')->nullable();
+
+            // إضافة حقلي السعر وإجبارية السعر
+            $table->decimal('official_price', 10, 2)->default(0);
+            $table->boolean('is_price_fixed')->default(true);
+
             $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->boolean('status')->default(1);
             $table->timestamps();

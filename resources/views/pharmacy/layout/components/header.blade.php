@@ -7,17 +7,17 @@
 
         <div class="min-w-0 mr-3">
             <h2 class="text-base sm:text-lg md:text-xl font-black text-slate-800 leading-tight truncate">
-                مرحباً، <span class="text-primary">{{ explode(' ', Auth::user()->name)[0] }}</span> 👋
+                مرحباً، د. <span class="text-primary">{{ explode(' ', Auth::user()->name)[0] }}</span> 👋
             </h2>
             <p class="text-[10px] sm:text-xs font-medium text-slate-400 hidden xs:block italic truncate mt-0.5">
-                مدير النظام - صلاحيات كاملة
+                لوحة إدارة الصيدلية الخاصة بك
             </p>
         </div>
     </div>
 
     <div class="flex items-center gap-2 sm:gap-4 shrink-0">
 
-        <button class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 relative hover:bg-teal-50 hover:text-primary transition-all group shrink-0">
+        <button class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 relative hover:bg-teal-50 hover:text-primary transition-all group shrink-0" title="الإشعارات">
             <i class="fa-solid fa-bell text-lg group-hover:shake"></i>
             <span class="absolute top-2 left-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
         </button>
@@ -51,12 +51,17 @@
                         <p class="text-[10px] text-slate-500 font-medium truncate lowercase text-right">{{ Auth::user()->email }}</p>
                     </div>
 
-                    <a href="{{ route('admin.profile.index') }}" class="w-full flex items-center justify-start gap-3 px-4 py-3 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors font-bold text-xs sm:text-sm mb-1">
-                        <i class="fa-regular fa-user shrink-0 text-base"></i>
-                        <span>الملف الشخصي</span>
+                    <a href="" class="w-full flex items-center justify-start gap-3 px-4 py-3 text-slate-600 hover:text-primary hover:bg-teal-50 rounded-xl transition-colors font-bold text-xs sm:text-sm mb-1">
+                        <i class="fa-solid fa-store shrink-0 text-base"></i>
+                        <span>بيانات صيدليتي</span>
                     </a>
 
-                    <form action="{{ route('admin.logout') }}" method="POST">
+                    <a href="" class="w-full flex items-center justify-start gap-3 px-4 py-3 text-slate-600 hover:text-primary hover:bg-teal-50 rounded-xl transition-colors font-bold text-xs sm:text-sm mb-1">
+                        <i class="fa-solid fa-sliders shrink-0 text-base"></i>
+                        <span>إعدادات الحساب</span>
+                    </a>
+
+                    <form action="{{ route('pharmacy.logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center justify-start gap-3 px-4 py-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors font-bold text-xs sm:text-sm">
                             <i class="fa-solid fa-arrow-right-from-bracket shrink-0 text-base"></i>

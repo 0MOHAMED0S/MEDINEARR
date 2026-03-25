@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'role' => \App\Http\Middleware\CheckRole::class,
         'is_active' => \App\Http\Middleware\CheckUserIsActive::class,
         'api.key' => \App\Http\Middleware\CheckApiKey::class,
+        'approved_pharmacy' => \App\Http\Middleware\CheckApprovedPharmacy::class,
     ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

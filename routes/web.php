@@ -14,6 +14,8 @@ use App\Http\Controllers\Dashboard\Admin\AdminProfileController;
 use App\Http\Controllers\Dashboard\Admin\AdminUsersController;
 use App\Http\Controllers\Dashboard\Admin\PharmacyApplicationController;
 use App\Http\Controllers\Dashboard\Pharmacy\GoogleController;
+use App\Http\Controllers\Dashboard\Pharmacy\PharmacyInventoryController;
+use App\Http\Controllers\Dashboard\Pharmacy\PharmacyMainController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -26,7 +28,7 @@ Route::prefix('admin')->group(function () {
 
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/', [AdminMainController::class, 'index'])->name('admin.dashboard');
-    
+
     // Admin Profile Routes
     Route::get('/profile', [AdminProfileController::class, 'index'])->name('admin.profile.index');
     Route::put('/profile/info', [AdminProfileController::class, 'updateInfo'])->name('admin.profile.info');
@@ -67,11 +69,22 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::patch('delivery-companies/{deliveryCompany}/toggle-status', [AdminDeliveryCompanyController::class, 'toggleStatus'])->name('delivery_companies.toggle_status');
     Route::resource('delivery-companies', AdminDeliveryCompanyController::class)->except(['create', 'show', 'edit']);
 });
+Route::prefix('pharmacy')->name('pharmacy.')->middleware(['auth', 'role:pharmacy', 'is_active'])->group(function () {
 
-Route::prefix('pharmacy')->middleware(['auth', 'role:pharmacy', 'is_active'])->group(function () {
-    Route::post('/logout', [GoogleController::class, 'logout'])->name('pharmacy.logout');
-    Route::get('/pharmacyApplication', [PharmacyApplicationController::class, 'index'])->name('pharmacy.Application.index');
-    Route::post('/pharmacy/apply', [PharmacyApplicationController::class, 'store'])->name('pharmacy.apply');
+    // 1. مسارات متاحة لأي صيدلي (سواء معتمد أو لا يزال قيد المراجعة)
+    Route::post('/logout', [GoogleController::class, 'logout'])->name('logout');
+    Route::get('/application', [PharmacyApplicationController::class, 'index'])->name('application.index');
+    Route::post('/apply', [PharmacyApplicationController::class, 'store'])->name('apply');
+
+    // 2. مسارات محمية بـ Middleware (مخصصة فقط للصيدليات المعتمدة)
+    Route::middleware(['approved_pharmacy'])->group(function () {
+
+        // لوحة التحكم الأساسية
+        Route::get('/dashboard', [PharmacyMainController::class, 'index'])->name('dashboard');
+
+        // مسارات الأدوية والمخزون (الآن سيصبح اسمها تلقائياً: pharmacy.medicines.index)
+        Route::resource('medicines', PharmacyInventoryController::class)->only(['index', 'store', 'update', 'destroy']);
+    });
 });
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');

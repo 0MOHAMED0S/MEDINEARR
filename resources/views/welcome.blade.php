@@ -35,7 +35,7 @@
     <meta property="twitter:title" content="MediNear - دوائك أقرب مما تتخيل">
     <meta property="twitter:description" content="بوابتك الأسرع والأسهل للبحث عن الأدوية والعثور على أقرب صيدلية إليك.">
     <meta property="twitter:image" content="{{ asset('assets/images/logo.png') }}">
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -829,7 +829,7 @@
                                 </button>
                             @else
                                 {{-- للمسجلين: يذهب لصفحة التقديم مباشرة --}}
-                                <a href="{{ route('pharmacy.Application.index') }}"
+                                <a href="{{ route('pharmacy.application.index') }}"
                                     class="text-gray-500 hover:text-primary transition nav-link desktop-nav-link relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
                                     id="nav-pharmacies" data-section="pharmacies" data-i18n="navPharmacies">للصيدليات</a>
                             @endguest
@@ -930,7 +930,7 @@
                                 class="block w-full px-4 py-3 text-primary font-bold bg-teal-50 rounded-xl transition-colors">لوحة
                                 التحكم</a>
                         @else
-                            <a href="{{ route('pharmacy.Application.index') }}" data-i18n="navPharmacies"
+                            <a href="{{ route('pharmacy.application.index') }}" data-i18n="navPharmacies"
                                 class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors text-center">للصيدليات</a>
                         @endif
 
@@ -1012,7 +1012,7 @@
                         @endguest
                         @auth
                             @if (Auth::user()->role != 'admin')
-                                <button onclick="window.location.href='{{ route('pharmacy.Application.index') }}'"
+                                <button onclick="window.location.href='{{ route('pharmacy.application.index') }}'"
                                     class="w-full sm:w-auto bg-white border-2 border-gray-100 hover:border-primary text-primary px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 group">
                                     <span data-i18n="btnRegPharmacyAndIcon">سجل كصيدلية شريكة</span>
                                     <i

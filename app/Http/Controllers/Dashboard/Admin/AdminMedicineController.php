@@ -7,11 +7,12 @@ use App\Http\Requests\Dashboard\Admin\Medicine\StoreMedicineRequest;
 use App\Http\Requests\Dashboard\Admin\Medicine\UpdateMedicineRequest;
 use App\Models\Medicine;
 use App\Models\Category;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class AdminMedicineController extends Controller
 {
-public function index(\Illuminate\Http\Request $request)
+    public function index(Request $request)
     {
         $query = Medicine::with('category');
 
@@ -30,7 +31,7 @@ public function index(\Illuminate\Http\Request $request)
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -50,7 +51,13 @@ public function index(\Illuminate\Http\Request $request)
     public function store(StoreMedicineRequest $request)
     {
         $data = $request->except('image');
+
+        // التقاط الـ Checkboxes وتحويلها إلى Boolean
         $data['status'] = $request->has('status') ? 1 : 0;
+        $data['is_price_fixed'] = $request->has('is_price_fixed') ? 1 : 0;
+
+        // ✨ The Fix: Catching null and defaulting to 0 to prevent SQL Error 1048
+        $data['official_price'] = $request->official_price ?? 0;
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('medicines', 'public');
@@ -66,7 +73,13 @@ public function index(\Illuminate\Http\Request $request)
     {
         $medicine = Medicine::findOrFail($id);
         $data = $request->except('image');
+
+        // التقاط الـ Checkboxes
         $data['status'] = $request->has('status') ? 1 : 0;
+        $data['is_price_fixed'] = $request->has('is_price_fixed') ? 1 : 0;
+
+        // ✨ The Fix: Catching null and defaulting to 0 to prevent SQL Error 1048
+        $data['official_price'] = $request->official_price ?? 0;
 
         if ($request->hasFile('image')) {
             if ($medicine->image && Storage::disk('public')->exists($medicine->image)) {

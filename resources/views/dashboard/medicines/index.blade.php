@@ -34,7 +34,7 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 md:mb-8">
             <div>
                 <h2 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">إدارة الأدوية</h2>
-                <p class="text-xs md:text-sm text-gray-500 font-medium mt-1">عرض وإدارة جميع الأدوية والمنتجات الطبية</p>
+                <p class="text-xs md:text-sm text-gray-500 font-medium mt-1">عرض وإدارة جميع الأدوية والمنتجات الطبية والتحكم بأسعارها</p>
             </div>
             <button onclick="toggleModal('createMedicineModal')" class="bg-primary hover:bg-primaryDark text-white px-5 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold transition-all shadow-sm shadow-primary/20 flex items-center gap-2 shrink-0 w-full sm:w-auto justify-center text-sm md:text-base">
                 <i class="fa-solid fa-plus"></i>
@@ -84,7 +84,6 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto flex-wrap">
-
                     <div class="relative w-full sm:w-64">
                         <input type="text" id="serverSearchInput" value="{{ request('search') }}" placeholder="ابحث باسم الدواء (اضغط Enter)" class="w-full bg-white border border-gray-200 rounded-xl md:rounded-2xl px-4 py-2.5 md:px-5 md:py-3 pr-10 md:pr-11 text-xs md:text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none text-slate-700 shadow-sm">
                         <i class="fa-solid fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
@@ -115,26 +114,31 @@
                         <i class="fa-solid fa-toggle-on absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm"></i>
                         <i class="fa-solid fa-chevron-down absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
                     </div>
-
                 </div>
             </div>
 
             <div class="overflow-x-auto scrollbar-thin">
-                <table class="w-full text-right min-w-[900px]">
+                <table class="w-full text-right min-w-[950px]">
                     <thead class="bg-slate-50 border-b border-gray-100 text-slate-500 text-[10px] md:text-[11px] uppercase tracking-wider font-bold">
                         <tr>
-                            <th class="p-4 md:p-5 w-16 text-center">#</th>
+                            <th class="p-4 md:p-5 w-20 text-center">ID</th>
                             <th class="p-4 md:p-5 w-20 md:w-24 text-center">صورة</th>
                             <th class="p-4 md:p-5">الدواء والوصف</th>
                             <th class="p-4 md:p-5 w-32 md:w-40 text-center">القسم</th>
+                            <th class="p-4 md:p-5 w-32 text-center">التسعير الرسمي</th>
                             <th class="p-4 md:p-5 w-28 md:w-32 text-center">إتاحة / إيقاف</th>
-                            <th class="p-4 md:p-5 w-28 md:w-32 text-center text-center">الإجراءات</th>
+                            <th class="p-4 md:p-5 w-28 md:w-32 text-center">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50" id="tableBody">
-                        @forelse ($medicines as $index => $medicine)
+                        @forelse ($medicines as $medicine)
                             <tr class="medicine-row hover:bg-slate-50/80 transition-all duration-300 group {{ $medicine->status == 0 ? 'opacity-60 grayscale-[20%]' : '' }}" data-status="{{ $medicine->status }}">
-                                <td class="p-4 md:p-5 font-bold text-slate-400 text-xs text-center">{{ $medicines->firstItem() + $index }}</td>
+
+                                <td class="p-4 md:p-5 text-center">
+                                    <span class="inline-flex items-center justify-center bg-slate-100 text-slate-500 text-[10px] md:text-xs font-mono font-black px-2.5 py-1 rounded-lg border border-slate-200 shadow-sm">
+                                        #{{ $medicine->id }}
+                                    </span>
+                                </td>
 
                                 <td class="p-4 md:p-5">
                                     <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white flex items-center justify-center mx-auto overflow-hidden shadow-sm border border-slate-200 p-0.5">
@@ -163,6 +167,17 @@
                                 </td>
 
                                 <td class="p-4 md:p-5 text-center">
+                                    <div class="flex flex-col items-center justify-center gap-1">
+                                        <span class="font-mono font-black text-slate-800 text-sm">{{ number_format($medicine->official_price, 2) }} <span class="text-[9px] text-gray-400">ج.م</span></span>
+                                        @if($medicine->is_price_fixed)
+                                            <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-200"><i class="fa-solid fa-lock text-[8px] mr-1"></i> تسعيرة جبرية</span>
+                                        @else
+                                            <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200"><i class="fa-solid fa-tags text-[8px] mr-1"></i> سعر مرن</span>
+                                        @endif
+                                    </div>
+                                </td>
+
+                                <td class="p-4 md:p-5 text-center">
                                     <button type="button"
                                             id="toggle-btn-{{ $medicine->id }}"
                                             onclick="openToggleConfirmModal({{ $medicine->id }}, '{{ addslashes($medicine->name) }}', {{ $medicine->status ? 'true' : 'false' }})"
@@ -178,9 +193,11 @@
                                         @php
                                             $imgForEdit = $medicine->image ? (Str::startsWith($medicine->image, ['http://', 'https://']) ? $medicine->image : asset('storage/' . $medicine->image)) : '';
                                         @endphp
-                                        <button onclick="openEditModal({{ json_encode($medicine) }}, '{{ $imgForEdit }}')" class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center shadow-sm" title="تعديل الدواء">
+
+                                        <button onclick="openEditModal(this, '{{ $imgForEdit }}')" data-medicine="{{ json_encode($medicine) }}" class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center shadow-sm" title="تعديل الدواء">
                                             <i class="fa-solid fa-pen-to-square text-xs md:text-sm"></i>
                                         </button>
+
                                         <button onclick="openDeleteModal({{ $medicine->id }})" class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all flex items-center justify-center shadow-sm" title="حذف الدواء">
                                             <i class="fa-solid fa-trash-can text-xs md:text-sm"></i>
                                         </button>
@@ -189,7 +206,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="p-16 md:p-20 text-center">
+                                <td colspan="7" class="p-16 md:p-20 text-center">
                                     <div class="flex flex-col items-center justify-center text-gray-400">
                                         @if(request('search') || request('status') || request('category'))
                                             <i class="fa-solid fa-magnifying-glass text-3xl md:text-4xl mb-3 md:mb-4 text-gray-200"></i>
@@ -239,7 +256,7 @@
 
     <div id="createMedicineModal" class="fixed inset-0 z-50 hidden flex-col items-center justify-center p-4 sm:p-0">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="toggleModal('createMedicineModal')"></div>
-        <div class="relative bg-white rounded-[2rem] md:rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-up flex flex-col max-h-[90vh]">
+        <div class="relative bg-white rounded-[2rem] md:rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-scale-up flex flex-col max-h-[90vh]">
             <div class="p-5 md:p-8 border-b border-gray-100 flex justify-between items-center bg-slate-50/50 shrink-0 text-right">
                 <h3 class="text-lg md:text-xl font-black text-slate-800">إضافة دواء جديد</h3>
                 <button type="button" onclick="toggleModal('createMedicineModal')" class="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-white border border-gray-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-all flex items-center justify-center shadow-sm">
@@ -250,6 +267,7 @@
                 @csrf
                 <input type="hidden" name="form_type" value="create">
                 <div class="p-5 md:p-8 space-y-5 md:space-y-6 overflow-y-auto scrollbar-thin text-right">
+
                     <div class="flex flex-col items-center justify-center">
                         <label class="text-xs md:text-sm font-bold text-slate-700 mb-3 text-center">صورة الدواء <span class="text-rose-500">*</span></label>
                         <div class="relative w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-dashed {{ $errors->has('image') && old('form_type') == 'create' ? 'border-rose-400 bg-rose-50' : 'border-gray-200 bg-slate-50' }} flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors group shadow-inner overflow-hidden cursor-pointer">
@@ -263,28 +281,49 @@
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">اسم الدواء <span class="text-rose-500">*</span></label>
-                        <input type="text" name="name" value="{{ old('form_type') == 'create' ? old('name') : '' }}" class="w-full bg-slate-50 border {{ $errors->has('name') && old('form_type') == 'create' ? 'border-rose-400 focus:ring-rose-500/20' : 'border-gray-100 focus:ring-primary/20' }} rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none text-right shadow-sm" placeholder="مثال: بانادول اكسترا">
-                    </div>
-                    <div>
-                        <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">القسم (التصنيف) <span class="text-rose-500">*</span></label>
-                        <div class="relative">
-                            <select name="category_id" class="w-full bg-slate-50 border {{ $errors->has('category_id') && old('form_type') == 'create' ? 'border-rose-400 focus:ring-rose-500/20' : 'border-gray-100 focus:ring-primary/20' }} rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none appearance-none shadow-sm cursor-pointer">
-                                <option value="" disabled selected>اختر القسم المناسب...</option>
-                                @foreach ($categories as $cat)
-                                    <option value="{{ $cat->id }}" {{ old('form_type') == 'create' && old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                                @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-gray-400 text-xs md:text-sm pointer-events-none"></i>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">اسم الدواء <span class="text-rose-500">*</span></label>
+                            <input type="text" name="name" value="{{ old('form_type') == 'create' ? old('name') : '' }}" class="w-full bg-slate-50 border {{ $errors->has('name') && old('form_type') == 'create' ? 'border-rose-400 focus:ring-rose-500/20' : 'border-gray-100 focus:ring-primary/20' }} rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none text-right shadow-sm" placeholder="مثال: بانادول اكسترا">
+                        </div>
+                        <div>
+                            <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">القسم (التصنيف) <span class="text-rose-500">*</span></label>
+                            <div class="relative">
+                                <select name="category_id" class="w-full bg-slate-50 border {{ $errors->has('category_id') && old('form_type') == 'create' ? 'border-rose-400 focus:ring-rose-500/20' : 'border-gray-100 focus:ring-primary/20' }} rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none appearance-none shadow-sm cursor-pointer">
+                                    <option value="" disabled selected>اختر القسم المناسب...</option>
+                                    @foreach ($categories as $cat)
+                                        <option value="{{ $cat->id }}" {{ old('form_type') == 'create' && old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                                    @endforeach
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-gray-400 text-xs md:text-sm pointer-events-none"></i>
+                            </div>
                         </div>
                     </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 p-4 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner">
+                        <div>
+                            <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">السعر الرسمي (ج.م) <span class="text-rose-500 transition-opacity" id="createPriceAsterisk">*</span></label>
+                            <input type="number" step="0.01" name="official_price" id="createOfficialPrice" value="{{ old('form_type') == 'create' ? old('official_price') : '' }}" class="w-full bg-white border {{ $errors->has('official_price') && old('form_type') == 'create' ? 'border-rose-400 focus:ring-rose-500/20' : 'border-gray-200 focus:ring-primary/20' }} rounded-xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:ring-4 transition-all outline-none font-mono text-right shadow-sm" placeholder="0.00">
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <label class="block text-xs md:text-sm font-bold text-slate-700 mb-3">هل السعر ثابت إجبارياً؟</label>
+                            <label class="relative inline-flex items-center cursor-pointer group/switch w-fit">
+                                <input type="checkbox" name="is_price_fixed" id="createIsFixed" value="1" class="sr-only peer" onchange="togglePriceRequirement(this, 'createPriceAsterisk')" {{ old('form_type') == 'create' && !old('is_price_fixed') ? '' : 'checked' }}>
+                                <div class="w-10 h-5 md:w-12 md:h-6 bg-gray-300 rounded-full peer peer-checked:bg-amber-500 transition-colors shadow-inner group-hover/switch:bg-gray-400"></div>
+                                <div class="absolute right-1 top-1 bg-white w-3 h-3 md:w-4 md:h-4 rounded-full transition-transform peer-checked:-translate-x-5 md:peer-checked:-translate-x-6 shadow-sm"></div>
+                                <span class="ml-3 text-[10px] md:text-xs font-bold text-gray-500 peer-checked:text-amber-600 transition-colors mr-3">تسعيرة جبرية 🔒</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">وصف الدواء <span class="text-rose-500">*</span></label>
                         <textarea name="description" rows="3" class="w-full bg-slate-50 border {{ $errors->has('description') && old('form_type') == 'create' ? 'border-rose-400 focus:ring-rose-500/20' : 'border-gray-100 focus:ring-primary/20' }} rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none resize-none text-right shadow-sm" placeholder="اكتب وصفاً لدواعي الاستعمال...">{{ old('form_type') == 'create' ? old('description') : '' }}</textarea>
                     </div>
+
                     <div class="flex items-center justify-between bg-emerald-50/50 p-4 md:p-5 rounded-xl md:rounded-2xl border border-emerald-100">
-                        <label class="text-xs md:text-sm font-black text-emerald-800">تفعيل الدواء فوراً</label>
+                        <label class="text-xs md:text-sm font-black text-emerald-800">تفعيل الدواء فوراً بالموقع</label>
                         <label class="relative inline-flex items-center cursor-pointer group/switch">
                             <input type="checkbox" name="status" value="1" class="sr-only peer" checked>
                             <div class="w-10 h-5 md:w-12 md:h-6 bg-gray-300 rounded-full peer peer-checked:bg-emerald-500 transition-colors shadow-inner group-hover/switch:bg-gray-400"></div>
@@ -294,7 +333,7 @@
                 </div>
                 <div class="p-5 md:p-8 bg-slate-50/80 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0">
                     <button type="button" onclick="toggleModal('createMedicineModal')" class="px-5 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold text-slate-500 bg-white border border-gray-200 hover:bg-slate-50 transition-colors text-xs md:text-sm">إلغاء</button>
-                    <button type="submit" class="px-6 md:px-8 py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold text-white bg-primary hover:bg-primaryDark shadow-lg shadow-primary/30 transition-all text-xs md:text-sm">حفظ</button>
+                    <button type="submit" class="px-6 md:px-8 py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold text-white bg-primary hover:bg-primaryDark shadow-lg shadow-primary/30 transition-all text-xs md:text-sm">حفظ وإضافة</button>
                 </div>
             </form>
         </div>
@@ -302,9 +341,9 @@
 
     <div id="editMedicineModal" class="fixed inset-0 z-50 hidden flex-col items-center justify-center p-4 sm:p-0">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="toggleModal('editMedicineModal')"></div>
-        <div class="relative bg-white rounded-[2rem] md:rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-up flex flex-col max-h-[90vh]">
+        <div class="relative bg-white rounded-[2rem] md:rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-scale-up flex flex-col max-h-[90vh]">
             <div class="p-5 md:p-8 border-b border-gray-100 flex justify-between items-center bg-slate-50/50 shrink-0 text-right">
-                <h3 class="text-lg md:text-xl font-black text-slate-800">تعديل الدواء</h3>
+                <h3 class="text-lg md:text-xl font-black text-slate-800">تعديل بيانات الدواء</h3>
                 <button type="button" onclick="toggleModal('editMedicineModal')" class="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-white border border-gray-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-all flex items-center justify-center shadow-sm">
                     <i class="fa-solid fa-xmark text-base md:text-lg"></i>
                 </button>
@@ -315,6 +354,7 @@
                 <input type="hidden" id="editUpdateUrl" name="update_url" value="{{ old('update_url') }}">
 
                 <div class="p-5 md:p-8 space-y-5 md:space-y-6 overflow-y-auto scrollbar-thin text-right">
+
                     <div class="flex flex-col items-center justify-center">
                         <div class="relative w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-dashed border-gray-200 bg-slate-50 flex flex-col items-center justify-center text-center hover:border-primary/50 cursor-pointer overflow-hidden group shadow-inner">
                             <input type="file" name="image" id="editImageInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" accept="image/*" onchange="previewImage(this, 'editImagePreview', 'editPreviewContainer', 'editDefaultState')">
@@ -328,20 +368,37 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">اسم الدواء <span class="text-rose-500">*</span></label>
-                        <input type="text" id="editNameInput" name="name" value="{{ old('form_type') == 'edit' ? old('name') : '' }}" class="w-full bg-slate-50 border border-gray-100 rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none text-right shadow-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">اسم الدواء <span class="text-rose-500">*</span></label>
+                            <input type="text" id="editNameInput" name="name" value="{{ old('form_type') == 'edit' ? old('name') : '' }}" class="w-full bg-slate-50 border border-gray-100 rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none text-right shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">القسم (التصنيف) <span class="text-rose-500">*</span></label>
+                            <div class="relative">
+                                <select id="editCategorySelect" name="category_id" class="w-full bg-slate-50 border border-gray-100 rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none appearance-none shadow-sm cursor-pointer">
+                                    @foreach ($categories as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                    @endforeach
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-gray-400 text-xs md:text-sm pointer-events-none"></i>
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">القسم (التصنيف) <span class="text-rose-500">*</span></label>
-                        <div class="relative">
-                            <select id="editCategorySelect" name="category_id" class="w-full bg-slate-50 border border-gray-100 rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:bg-white focus:ring-4 transition-all outline-none appearance-none shadow-sm cursor-pointer">
-                                @foreach ($categories as $cat)
-                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-gray-400 text-xs md:text-sm pointer-events-none"></i>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 p-4 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner">
+                        <div>
+                            <label class="block text-xs md:text-sm font-bold text-slate-700 mb-2">السعر الرسمي (ج.م) <span class="text-rose-500 transition-opacity" id="editPriceAsterisk">*</span></label>
+                            <input type="number" step="0.01" name="official_price" id="editOfficialPriceInput" value="{{ old('form_type') == 'edit' ? old('official_price') : '' }}" class="w-full bg-white border {{ $errors->has('official_price') && old('form_type') == 'edit' ? 'border-rose-400 focus:ring-rose-500/20' : 'border-gray-200 focus:ring-primary/20' }} rounded-xl px-4 py-3 md:px-5 md:py-3.5 text-xs md:text-sm focus:ring-4 transition-all outline-none font-mono text-right shadow-sm" placeholder="0.00">
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <label class="block text-xs md:text-sm font-bold text-slate-700 mb-3">هل السعر ثابت إجبارياً؟</label>
+                            <label class="relative inline-flex items-center cursor-pointer group/switch w-fit">
+                                <input type="checkbox" name="is_price_fixed" id="editIsFixedInput" value="1" class="sr-only peer" onchange="togglePriceRequirement(this, 'editPriceAsterisk')">
+                                <div class="w-10 h-5 md:w-12 md:h-6 bg-gray-300 rounded-full peer peer-checked:bg-amber-500 transition-colors shadow-inner group-hover/switch:bg-gray-400"></div>
+                                <div class="absolute right-1 top-1 bg-white w-3 h-3 md:w-4 md:h-4 rounded-full transition-transform peer-checked:-translate-x-5 md:peer-checked:-translate-x-6 shadow-sm"></div>
+                                <span class="ml-3 text-[10px] md:text-xs font-bold text-gray-500 peer-checked:text-amber-600 transition-colors mr-3">تسعيرة جبرية 🔒</span>
+                            </label>
                         </div>
                     </div>
 
@@ -362,7 +419,7 @@
 
                 <div class="p-5 md:p-8 bg-slate-50/80 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0">
                     <button type="button" onclick="toggleModal('editMedicineModal')" class="px-5 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold text-slate-500 bg-white border border-gray-200 hover:bg-slate-50 transition-colors text-xs md:text-sm">إلغاء</button>
-                    <button type="submit" class="px-6 md:px-8 py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all text-xs md:text-sm">تعديل</button>
+                    <button type="submit" class="px-6 md:px-8 py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all text-xs md:text-sm">حفظ التعديلات</button>
                 </div>
             </form>
         </div>
@@ -391,7 +448,15 @@
         let currentToggleId = null;
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
 
-        // ==================== SERVER-SIDE FILTERING ====================
+        function togglePriceRequirement(checkbox, asteriskId) {
+            const asterisk = document.getElementById(asteriskId);
+            if(checkbox.checked) {
+                asterisk.classList.remove('opacity-0');
+            } else {
+                asterisk.classList.add('opacity-0');
+            }
+        }
+
         function setServerFilter(param, value) {
             const url = new URL(window.location.href);
             if (value === 'all' || value === '') {
@@ -441,18 +506,29 @@
             }
         }
 
-        function openEditModal(medicine, imageUrl) {
+        // ✨ دالة الـ Edit المصححة ✨
+        function openEditModal(btn, imageUrl) {
+            // قراءة البيانات من الزر بأمان
+            let medicine = JSON.parse(btn.getAttribute('data-medicine'));
+
             let form = document.getElementById('editMedicineForm');
             form.action = `/admin/medicines/${medicine.id}`;
             document.getElementById('editUpdateUrl').value = form.action;
+
             document.getElementById('editNameInput').value = medicine.name;
             document.getElementById('editDescInput').value = medicine.description || '';
             document.getElementById('editCategorySelect').value = medicine.category_id;
             document.getElementById('editStatusInput').checked = (medicine.status == 1);
 
+            document.getElementById('editOfficialPriceInput').value = medicine.official_price;
+            let isFixedCheckbox = document.getElementById('editIsFixedInput');
+            isFixedCheckbox.checked = (medicine.is_price_fixed == 1);
+            togglePriceRequirement(isFixedCheckbox, 'editPriceAsterisk');
+
             let previewImage = document.getElementById('editImagePreview');
             let previewContainer = document.getElementById('editPreviewContainer');
             let defaultState = document.getElementById('editDefaultState');
+
             if(medicine.image) {
                 previewImage.src = imageUrl;
                 previewContainer.classList.remove('hidden');
@@ -461,6 +537,7 @@
                 previewContainer.classList.add('hidden');
                 defaultState.classList.remove('hidden');
             }
+
             toggleModal('editMedicineModal');
         }
 
@@ -471,7 +548,6 @@
 
         function openToggleConfirmModal(id, name, isCurrentlyActive) {
             currentToggleId = id;
-
             const iconBg = document.getElementById('tc-icon-bg');
             const icon = document.getElementById('tc-icon');
             const message = document.getElementById('tc-message');
@@ -490,7 +566,6 @@
                 confirmBtn.className = 'flex-1 px-4 md:px-6 py-3.5 md:py-4 rounded-xl md:rounded-2xl font-bold text-white shadow-lg transition-all text-xs md:text-sm bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30';
                 confirmBtn.innerText = 'نعم، قم بالتفعيل';
             }
-
             toggleModal('toggleConfirmModal');
         }
 
@@ -574,6 +649,13 @@
             @if(old('form_type') == 'create') toggleModal('createMedicineModal');
             @elseif(old('form_type') == 'edit') toggleModal('editMedicineModal');
             @endif
+
+            setTimeout(() => {
+                let createCheckbox = document.getElementById('createIsFixed');
+                let editCheckbox = document.getElementById('editIsFixedInput');
+                if(createCheckbox) togglePriceRequirement(createCheckbox, 'createPriceAsterisk');
+                if(editCheckbox) togglePriceRequirement(editCheckbox, 'editPriceAsterisk');
+            }, 100);
         @endif
 
         setTimeout(() => {
@@ -582,12 +664,18 @@
     </script>
 
     <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         .animate-scale-up { animation: scaleUp 0.3s forwards; }
         @keyframes scaleUp { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1); } }
+
         .animate-toast { animation: toastSlideIn 0.4s forwards; }
         @keyframes toastSlideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+
         .animate-bounce-short { animation: bounceShort 1s infinite; }
         @keyframes bounceShort { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10%); } }
+
         .custom-pagination nav svg { width: 1.25rem; height: 1.25rem; }
     </style>
 @endsection
