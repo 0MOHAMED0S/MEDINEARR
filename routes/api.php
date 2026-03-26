@@ -40,6 +40,7 @@ Route::prefix('pharmacy')->middleware(['auth:sanctum', 'role:user'])
         Route::get('/near-medicines', [NearMedicinesController::class, 'index']);
         Route::get('/{id}/inventory', [PharmacyController::class, 'getInventory']);
         Route::get('/search', [PharmacySearchController::class, 'index']);
+        Route::get('/search/recent', [PharmacySearchController::class, 'recentSearches']);
     });
 
 Route::prefix('data-analysis')
