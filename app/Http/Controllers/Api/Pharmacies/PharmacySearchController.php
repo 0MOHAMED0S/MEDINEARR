@@ -130,10 +130,10 @@ class PharmacySearchController extends Controller
                         // Pharmacy has the medicine and it's available
                         $query->whereHas('medicines', function ($subQuery) use ($medicine) {
                             $subQuery->where('pharmacy_medicines.medicine_id', $medicine->id)
-                                     ->where('pharmacy_medicines.status', 'available');
+                                ->where('pharmacy_medicines.status', 'available');
                         })
-                        // Or it is a Big Pharmacy
-                        ->orWhere('is_big_pharmacy', true);
+                            // Or it is a Big Pharmacy
+                            ->orWhere('is_big_pharmacy', true);
                     })
                     // Get the specific status of this medicine in the pharmacy (if any)
                     ->with(['medicines' => function ($query) use ($medicine) {
@@ -193,11 +193,71 @@ class PharmacySearchController extends Controller
                     ]
                 ], 200);
             }
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'An unexpected error occurred during the search.',
+                'error'   => $e->getMessage(),
+                'data'    => null
+            ], 500);
+        }
+    }
+
+    /**
+     * Get the authenticated user's recent search history (Suggestions)
+     */
+    public function recentSearches()
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated access.',
+                    'data'    => null
+                ], 401);
+            }
+
+            // Fetch the last 50 searches for the user, then filter the unique ones in memory
+            $history = \App\Models\SearchHistory::with('medicine:id,name')
+                ->where('user_id', $user->id)
+                ->latest()
+                ->take(50)
+                ->get()
+                ->unique(function ($item) {
+                    // Create a unique signature so we don't show duplicate suggestions
+                    return $item->search_type . '-' . $item->search_query . '-' . $item->medicine_id;
+                })
+                ->take(10) // Keep only the top 10 unique recent searches
+                ->values(); // Reset array keys so JSON returns a clean array
+
+            // Format the data perfectly for the Mobile Developer
+            $formattedHistory = $history->map(function ($item) {
+                return [
+                    'search_type'  => $item->search_type,
+                    'search_query' => $item->search_query,
+                    'medicine_id'  => $item->medicine_id,
+
+                    // ✨ Smart Display Text: The mobile app can just print this directly to the UI
+                    'display_text' => $item->search_type === 'medicine'
+                        ? ($item->medicine->name ?? 'Unknown Medicine')
+                        : $item->search_query,
+
+                    'time_ago'     => $item->created_at->diffForHumans(), // e.g., "2 hours ago"
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Recent searches fetched successfully.',
+                'data'    => $formattedHistory
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while fetching search history.',
                 'error'   => $e->getMessage(),
                 'data'    => null
             ], 500);
