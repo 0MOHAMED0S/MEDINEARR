@@ -33,7 +33,7 @@ class UpdateProfileRequest extends FormRequest
                 'regex:/^\+[1-9]\d{7,14}$/',
                 Rule::unique('users', 'phone')->ignore($this->user()?->id),
             ],
-            'photo' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'photo' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ];
     }
 
@@ -57,7 +57,7 @@ class UpdateProfileRequest extends FormRequest
             // Photo Messages
             'photo.image'   => 'The uploaded file must be a valid image format.',
             'photo.mimes'   => 'The profile photo must be a file of type: jpeg, png, jpg, webp.',
-            'photo.max'     => 'The profile photo must not be larger than 2MB.',
+            'photo.max'     => 'The profile photo must not be larger than 5MB.',
         ];
     }
 
