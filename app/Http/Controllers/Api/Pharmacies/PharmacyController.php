@@ -181,4 +181,5 @@ class PharmacyController extends Controller
             ], 500);
         }
     }
+    
 }

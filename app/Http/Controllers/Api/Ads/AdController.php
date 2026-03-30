@@ -34,7 +34,7 @@ class AdController extends Controller
                 });
 
             return response()->json([
-                'success' => true,
+                'success' => true, 
                 'message' => 'Ads retrieved successfully',
                 'data' => $ads
             ], 200);
