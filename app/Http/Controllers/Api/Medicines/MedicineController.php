@@ -30,7 +30,7 @@ class MedicineController extends Controller
                 $query->where('category_id', $request->category);
             }
 
-            $perPage = $request->input('per_page', 10);
+            $perPage = min($request->input('per_page', 10), 50);
 
             $medicines = $query->select(
                     'id',
@@ -70,4 +70,5 @@ class MedicineController extends Controller
             ], 500);
         }
     }
+    
 }

@@ -28,7 +28,7 @@ class NearMedicinesController extends Controller
             $lng = $user->longitude;
 
             $radius = 6371;
-            $perPage = $request->input('per_page', 5);
+            $perPage = min($request->input('per_page', 5),50);
 
             $pharmacies = Pharmacy::with(['medicines'])
                 ->whereNotNull('lat')
@@ -46,17 +46,16 @@ class NearMedicinesController extends Controller
                     ) AS distance
                 ", [$lat, $lng, $lat])
                 ->orderBy('distance', 'asc')
-                ->get(); // هنا بنجيبهم الأول
+                ->get(); 
 
-            // 🔥 نطلع الأدوية من أقرب الصيدليات
             $medicines = $pharmacies
-                ->pluck('medicines') // كل الأدوية
-                ->flatten()          // نحولهم list واحدة
-                ->shuffle()          // random
-                ->unique('id')       // بدون تكرار
+                ->pluck('medicines')   
+                ->flatten()             
+                ->shuffle()           
+                ->unique('id')       
                 ->values();
 
-            // 🔥 Pagination يدوي
+               
             $currentPage = request()->input('page', 1);
             $items = $medicines->forPage($currentPage, $perPage);
 
@@ -76,6 +75,6 @@ class NearMedicinesController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-    }   
+    }  
 
 }
