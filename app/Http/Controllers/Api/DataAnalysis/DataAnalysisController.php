@@ -11,6 +11,7 @@ use App\Models\Medicine;
 use App\Models\Category;
 use App\Models\PharmacyApplication;
 use App\Models\PharmacyMedicine;
+use App\Models\SearchHistory;
 
 class DataAnalysisController extends Controller
 {
@@ -246,6 +247,57 @@ class DataAnalysisController extends Controller
             return response()->json($inventory, 200);
         } catch (\Exception $e) {
             Log::error('Power BI Pharmacy Inventory API Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * 6. API: سجل البحث (Search History) لـ Power BI
+     *
+     * @return JsonResponse
+     */
+    public function searchHistory(): JsonResponse
+    {
+        try {
+            // نجلب السجل مع اسم المستخدم واسم الدواء لكي تكون البيانات مقروءة بوضوح في Power BI
+            $history = SearchHistory::with(['user:id,name', 'medicine:id,name'])
+                ->get()
+                ->map(function ($item) {
+
+                    // ✨ حقل ذكي: استخراج "عما كان يبحث؟" سواء صيدلية أو دواء ليتم وضعه في عمود واحد
+                    $searchTerm = $item->search_type === 'medicine'
+                        ? ($item->medicine->name ?? 'Unknown Medicine')
+                        : ($item->search_query ?? 'No Query');
+
+                    // تحويل مصفوفة الصيدليات إلى نص (Comma-separated) ليسهل قراءته في الجداول
+                    $pharmacyIds = is_array($item->returned_pharmacy_ids) && count($item->returned_pharmacy_ids) > 0
+                        ? implode(', ', $item->returned_pharmacy_ids)
+                        : 'None';
+
+                    return [
+                        'ID'                    => $item->id,
+                        'User_ID'               => $item->user_id ?? 'Guest',
+                        'User_Name'             => $item->user->name ?? 'Guest User',
+                        'Search_Type'           => ucfirst($item->search_type), // Pharmacy أو Medicine
+                        'Search_Term'           => $searchTerm, // الكلمة المكتوبة أو اسم الدواء
+                        'Medicine_ID'           => $item->medicine_id,
+
+                        'Latitude'              => $item->lat ? (float) $item->lat : null,
+                        'Longitude'             => $item->lng ? (float) $item->lng : null,
+
+                        'Results_Count'         => (int) $item->results_count,
+                        'Returned_Pharmacy_IDs' => $pharmacyIds, // مثال: "12, 45, 8"
+
+                        // توحيد التواريخ
+                        'Created_At'            => $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : null,
+                        'Date'                  => $item->created_at ? $item->created_at->format('Y-m-d') : null,
+                        'Month_Year'            => $item->created_at ? $item->created_at->format('Y-m') : null,
+                    ];
+                })->toArray();
+
+            return response()->json($history, 200);
+        } catch (\Exception $e) {
+            Log::error('Power BI Search History API Error: ' . $e->getMessage());
             return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
         }
     }
