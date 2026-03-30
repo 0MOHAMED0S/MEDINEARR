@@ -28,8 +28,9 @@ class UpdateProfileRequest extends FormRequest
                 'sometimes',
                 'nullable',
                 'string',
-                // Strict Egyptian Mobile Number Validation
-                'regex:/^01[0125][0-9]{8}$/',
+                // International Mobile Number Validation (E.164 standard)
+                // Starts with '+', followed by 8 to 15 digits
+                'regex:/^\+[1-9]\d{7,14}$/',
                 Rule::unique('users', 'phone')->ignore($this->user()?->id),
             ],
             'photo' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
@@ -50,7 +51,7 @@ class UpdateProfileRequest extends FormRequest
 
             // Phone Messages
             'phone.string'  => 'The phone number format is invalid.',
-            'phone.regex'   => 'Please provide a valid 11-digit Egyptian mobile number (e.g., 010..., 011..., 012..., 015...).',
+            'phone.regex'   => 'Please provide a valid international phone number starting with the country code (e.g., +201110562097).',
             'phone.unique'  => 'This phone number is already registered to another account.',
 
             // Photo Messages
