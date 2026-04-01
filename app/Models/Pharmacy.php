@@ -20,7 +20,8 @@ class Pharmacy extends Model
         'address',
         'working_hours',
         'license_number',
-        'image',
+        'image',             // ✨ Already here
+        'cover',             // ✨ Added cover here
         'license_document',
         'lat',
         'lng',

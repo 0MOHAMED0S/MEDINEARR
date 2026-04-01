@@ -15,6 +15,9 @@ class PharmacySearchController extends Controller
     /**
      * Unified Search Endpoint (Pharmacies & Medicines)
      */
+/**
+     * Unified Search Endpoint (Pharmacies & Medicines)
+     */
     public function index(Request $request)
     {
         // 1. Input Validation
@@ -69,10 +72,11 @@ class PharmacySearchController extends Controller
                     ->when($request->filled('q'), function ($query) use ($request) {
                         $query->where('pharmacy_name', 'LIKE', '%' . $request->q . '%');
                     })
-                    ->selectRaw("id, pharmacy_name, address, phone, working_hours, lat, lng, is_big_pharmacy, $haversineRaw AS distance", $bindings)
+                    // ✨ تم التعديل هنا لجلب كل الأعمدة (pharmacies.*) ✨
+                    ->selectRaw("pharmacies.*, $haversineRaw AS distance", $bindings)
                     ->orderBy('distance', 'asc')
                     ->paginate($perPage)
-                    ->withQueryString(); // 👈 Essential for pagination to keep filters
+                    ->withQueryString();
 
                 // Smart Distance Formatter for Pharmacies Search
                 $pharmacies->getCollection()->transform(function ($pharmacy) {
@@ -87,7 +91,7 @@ class PharmacySearchController extends Controller
 
                 // ✨ Save search history in the background (first 10 results) ✨
                 $returnedIds = $pharmacies->take(10)->pluck('id')->toArray();
-                LogSearchHistoryJob::dispatchAfterResponse([
+                \App\Jobs\LogSearchHistoryJob::dispatchAfterResponse([
                     'user_id'               => $user->id,
                     'search_type'           => 'pharmacy',
                     'search_query'          => $request->q,
@@ -130,19 +134,20 @@ class PharmacySearchController extends Controller
                         // Pharmacy has the medicine and it's available
                         $query->whereHas('medicines', function ($subQuery) use ($medicine) {
                             $subQuery->where('pharmacy_medicines.medicine_id', $medicine->id)
-                                ->where('pharmacy_medicines.status', 'available');
+                                     ->where('pharmacy_medicines.status', 'available');
                         })
-                            // Or it is a Big Pharmacy
-                            ->orWhere('is_big_pharmacy', true);
+                        // Or it is a Big Pharmacy
+                        ->orWhere('is_big_pharmacy', true);
                     })
                     // Get the specific status of this medicine in the pharmacy (if any)
                     ->with(['medicines' => function ($query) use ($medicine) {
                         $query->where('medicines.id', $medicine->id);
                     }])
-                    ->selectRaw("id, pharmacy_name, address, phone, working_hours, lat, lng, is_big_pharmacy, $haversineRaw AS distance", $bindings)
+                    // ✨ تم التعديل هنا لجلب كل الأعمدة (pharmacies.*) ✨
+                    ->selectRaw("pharmacies.*, $haversineRaw AS distance", $bindings)
                     ->orderBy('distance', 'asc')
                     ->paginate($perPage)
-                    ->withQueryString(); // 👈 Essential for pagination to keep filters
+                    ->withQueryString();
 
                 // Data Transformation
                 $pharmacies->getCollection()->transform(function ($pharmacy) {
@@ -173,7 +178,7 @@ class PharmacySearchController extends Controller
 
                 // ✨ Save search history in the background (first 10 results) ✨
                 $returnedIds = $pharmacies->take(10)->pluck('id')->toArray();
-                LogSearchHistoryJob::dispatchAfterResponse([
+                \App\Jobs\LogSearchHistoryJob::dispatchAfterResponse([
                     'user_id'               => $user->id,
                     'search_type'           => 'medicine',
                     'search_query'          => null,
@@ -202,7 +207,6 @@ class PharmacySearchController extends Controller
             ], 500);
         }
     }
-
     /**
      * Get the authenticated user's recent search history (Suggestions)
      */
