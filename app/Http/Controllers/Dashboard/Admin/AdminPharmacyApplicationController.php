@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class AdminPharmacyApplicationController extends Controller
 {
-public function index(Request $request)
+    public function index(Request $request)
     {
         $query = PharmacyApplication::query();
 
@@ -26,28 +26,46 @@ public function index(Request $request)
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('pharmacy_name', 'like', "%{$search}%")
-                  ->orWhere('owner_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($userQuery) use ($search) {
-                      $userQuery->where('name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%")
-                                ->orWhere('phone', 'like', "%{$search}%");
-                  });
+                    ->orWhere('owner_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
             });
         }
 
         // 3. خريطة المحافظات والعدادات
         $governoratesMap = [
-            'cairo' => 'القاهرة', 'giza' => 'الجيزة', 'alexandria' => 'الإسكندرية',
-            'qalyubia' => 'القليوبية', 'sharqia' => 'الشرقية', 'dakahlia' => 'الدقهلية',
-            'gharbia' => 'الغربية', 'menofia' => 'المنوفية', 'kafr_el_sheikh' => 'كفر الشيخ',
-            'beheira' => 'البحيرة', 'damietta' => 'دمياط', 'port_said' => 'بورسعيد',
-            'ismailia' => 'الإسماعيلية', 'suez' => 'السويس', 'fayoum' => 'الفيوم',
-            'beni_suef' => 'بني سويف', 'minya' => 'المنيا', 'assiut' => 'أسيوط',
-            'sohag' => 'سوهاج', 'qena' => 'قنا', 'luxor' => 'الأقصر', 'aswan' => 'أسوان',
-            'red_sea' => 'البحر الأحمر', 'new_valley' => 'الوادي الجديد', 'matrouh' => 'مطروح',
-            'north_sinai' => 'شمال سيناء', 'south_sinai' => 'جنوب سيناء'
+            'cairo' => 'القاهرة',
+            'giza' => 'الجيزة',
+            'alexandria' => 'الإسكندرية',
+            'qalyubia' => 'القليوبية',
+            'sharqia' => 'الشرقية',
+            'dakahlia' => 'الدقهلية',
+            'gharbia' => 'الغربية',
+            'menofia' => 'المنوفية',
+            'kafr_el_sheikh' => 'كفر الشيخ',
+            'beheira' => 'البحيرة',
+            'damietta' => 'دمياط',
+            'port_said' => 'بورسعيد',
+            'ismailia' => 'الإسماعيلية',
+            'suez' => 'السويس',
+            'fayoum' => 'الفيوم',
+            'beni_suef' => 'بني سويف',
+            'minya' => 'المنيا',
+            'assiut' => 'أسيوط',
+            'sohag' => 'سوهاج',
+            'qena' => 'قنا',
+            'luxor' => 'الأقصر',
+            'aswan' => 'أسوان',
+            'red_sea' => 'البحر الأحمر',
+            'new_valley' => 'الوادي الجديد',
+            'matrouh' => 'مطروح',
+            'north_sinai' => 'شمال سيناء',
+            'south_sinai' => 'جنوب سيناء'
         ];
 
         // حساب الأعداد قبل تطبيق فلتر الموقع (ليظل العداد ظاهراً)
@@ -56,7 +74,7 @@ public function index(Request $request)
 
         $govCounts = [];
         $totalFilteredCount = 0;
-        foreach($governoratesMap as $key => $arName) {
+        foreach ($governoratesMap as $key => $arName) {
             $count = $govCountsDb[$arName] ?? 0;
             $govCounts[$key] = $count;
             $totalFilteredCount += $count;
@@ -93,7 +111,12 @@ public function index(Request $request)
         ];
 
         return view('dashboard.pharmaciesApplications.index', compact(
-            'pharmacies', 'stats', 'govCounts', 'totalFilteredCount', 'governoratesMap', 'allMapPharmacies'
+            'pharmacies',
+            'stats',
+            'govCounts',
+            'totalFilteredCount',
+            'governoratesMap',
+            'allMapPharmacies'
         ));
     }
 
@@ -114,17 +137,27 @@ public function index(Request $request)
             $application->save();
 
             if ($request->status === 'approved') {
-                $user = User::where('email', $application->email)->first();
-                $userId = $user ? $user->id : ($application->user_id ?? null);
 
-                if (!$userId) {
-                    throw new \Exception("لا يمكن قبول الصيدلية لعدم وجود حساب مستخدم (User) مرتبط بهذا البريد الإلكتروني.");
+                // 1. البحث عن المستخدم بواسطة البريد الإلكتروني
+                $user = User::where('email', $application->email)->first();
+
+                // 2. إذا لم يتم العثور عليه بالإيميل، نحاول إيجاده بواسطة الـ user_id
+                if (!$user && $application->user_id) {
+                    $user = User::find($application->user_id);
                 }
 
+                if (!$user) {
+                    throw new \Exception("لا يمكن قبول الصيدلية لعدم وجود حساب مستخدم (User) مرتبط بهذا البريد الإلكتروني أو الطلب.");
+                }
+
+                // ✨ ترقية حساب المستخدم ليكون صيدلية ✨
+                $user->update(['role' => 'pharmacy']);
+
+                // 3. إنشاء سجل الصيدلية وربطه بالمستخدم
                 Pharmacy::firstOrCreate(
                     ['email' => $application->email],
                     [
-                        'user_id'                 => $userId,
+                        'user_id'                 => $user->id,
                         'pharmacy_application_id' => $application->id,
                         'pharmacy_name'           => $application->pharmacy_name,
                         'owner_name'              => $application->owner_name,
@@ -149,7 +182,6 @@ public function index(Request $request)
             DB::commit();
             $message = $request->status === 'approved' ? 'تم قبول الصيدلية وتفعيلها بنجاح.' : 'تم رفض طلب الصيدلية وحفظ ملاحظات الإدارة.';
             return back()->with('success', $message);
-
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Admin Pharmacy Status Update Error: ' . $e->getMessage());

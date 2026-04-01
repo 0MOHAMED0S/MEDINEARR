@@ -45,6 +45,11 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function pharmacy()
+    {
+        return $this->hasOne(Pharmacy::class);
+    }
     protected function casts(): array
     {
         return [
