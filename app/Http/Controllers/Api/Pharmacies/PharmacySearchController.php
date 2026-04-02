@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Pharmacies;
 
 use App\Http\Controllers\Controller;
-use App\Models\Pharmacy;
 use Illuminate\Http\Request;
 use App\Models\Pharmacy;
 use App\Models\Medicine;
@@ -264,4 +263,6 @@ class PharmacySearchController extends Controller
             ], 500);
         }
     }
+
+
 }
