@@ -54,7 +54,7 @@ class PharmacyController extends Controller
                 'is_big_pharmacy'
             )
                 ->latest()
-                ->paginate($perPage)    
+                ->paginate($perPage)
                 ->through(function ($pharmacy) {
                     return [
                         'id' => $pharmacy->id,
@@ -94,11 +94,18 @@ class PharmacyController extends Controller
      * @return JsonResponse
      */
 
-    public function getInventory($id): JsonResponse
+public function getInventory($id): \Illuminate\Http\JsonResponse
     {
         try {
-            // 1. Fetch the pharmacy with non-hidden medicines and their categories
-            $pharmacy = Pharmacy::with([
+            // ✨ 1. جلب بيانات المستخدم والأدوية المحفوظة مبكراً لتجنب بطء الأداء (N+1 Problem) ✨
+            $user = auth()->guard('sanctum')->user();
+            $savedMedicineIds = [];
+            $is_saved_pharmacy = false;
+            $distance = null;
+            $distance_text = null;
+
+            // 2. Fetch the pharmacy with non-hidden medicines and their categories
+            $pharmacy = \App\Models\Pharmacy::with([
                 'medicines' => function ($query) {
                     $query->wherePivot('status', '!=', 'hidden');
                 },
@@ -107,7 +114,7 @@ class PharmacyController extends Controller
                 ->where('is_active', true)
                 ->find($id);
 
-            // 2. Error Handling: Pharmacy not found or inactive
+            // 3. Error Handling: Pharmacy not found or inactive
             if (!$pharmacy) {
                 return response()->json([
                     'status'  => false,
@@ -116,11 +123,47 @@ class PharmacyController extends Controller
                 ], 404);
             }
 
-            // 3. Group medicines by category
+            // ✨ 4. إذا كان المستخدم مسجلاً، نجهز بيانات المفضلة والمسافة ✨
+            if ($user) {
+                // التحقق مما إذا كان المستخدم قد حفظ هذه الصيدلية
+                $is_saved_pharmacy = $user->savedPharmacies()->where('pharmacy_id', $pharmacy->id)->exists();
+
+                // جلب مصفوفة تحتوي على كل أرقام الأدوية (IDs) المحفوظة لدى هذا المستخدم
+                // (نفترض أن لديك علاقة اسمها savedMedicines في موديل الـ User)
+                $savedMedicineIds = $user->savedMedicines()->allRelatedIds()->toArray();
+
+                // حساب المسافة
+                if ($user->latitude && $user->longitude && $pharmacy->lat && $pharmacy->lng) {
+                    $lat1 = $user->latitude;
+                    $lng1 = $user->longitude;
+                    $lat2 = $pharmacy->lat;
+                    $lng2 = $pharmacy->lng;
+
+                    $earthRadius = 6371; // Radius of the earth in km
+                    $dLat = deg2rad($lat2 - $lat1);
+                    $dLng = deg2rad($lng2 - $lng1);
+
+                    $a = sin($dLat / 2) * sin($dLat / 2) +
+                         cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+                         sin($dLng / 2) * sin($dLng / 2);
+
+                    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+                    $rawDistance = $earthRadius * $c;
+
+                    if ($rawDistance < 1) {
+                        $distance_text = round($rawDistance * 1000) . ' m';
+                    } else {
+                        $distance_text = round($rawDistance, 2) . ' km';
+                    }
+                    $distance = round($rawDistance, 2);
+                }
+            }
+
+            // 5. Group medicines by category
+            // تمرير مصفوفة $savedMedicineIds بداخل الـ closures باستخدام (use)
             $groupedInventory = $pharmacy->medicines->groupBy(function ($medicine) {
-                // Fallback to 'Others' for uncategorized medicines
                 return $medicine->category->name ?? 'Others';
-            })->map(function ($medicinesGroup, $categoryName) {
+            })->map(function ($medicinesGroup, $categoryName) use ($savedMedicineIds) {
 
                 $category = $medicinesGroup->first()->category;
 
@@ -128,7 +171,7 @@ class PharmacyController extends Controller
                     'category_id'    => $category->id ?? null,
                     'category_name'  => $categoryName,
                     'category_image' => $category ? ($category->image_url ?? asset('Dashboard/images/default-category.png')) : asset('Dashboard/images/default-category.png'),
-                    'medicines'      => $medicinesGroup->map(function ($medicine) {
+                    'medicines'      => $medicinesGroup->map(function ($medicine) use ($savedMedicineIds) {
                         return [
                             'medicine_id' => $medicine->id,
                             'name'        => $medicine->name,
@@ -139,46 +182,17 @@ class PharmacyController extends Controller
                             'price'       => (float) $medicine->pivot->price,
                             'quantity'    => (int) $medicine->pivot->quantity,
                             'status'      => $medicine->pivot->status,
+
+                            // ✨ NEW: Is Saved Flag For Medicine ✨
+                            'is_saved'    => in_array($medicine->id, $savedMedicineIds),
                         ];
                     })->values()->all()
                 ];
             })->values()->all();
 
-            // ✨ 4. Calculate Distance using PHP (Haversine Formula) ✨
-            $distance = null;
-            $distance_text = null;
-            $user = auth()->guard('sanctum')->user(); // Use your correct auth guard
-
-            if ($user && $user->latitude && $user->longitude && $pharmacy->lat && $pharmacy->lng) {
-                $lat1 = $user->latitude;
-                $lng1 = $user->longitude;
-                $lat2 = $pharmacy->lat;
-                $lng2 = $pharmacy->lng;
-
-                $earthRadius = 6371; // Radius of the earth in km
-                $dLat = deg2rad($lat2 - $lat1);
-                $dLng = deg2rad($lng2 - $lng1);
-
-                $a = sin($dLat / 2) * sin($dLat / 2) +
-                     cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-                     sin($dLng / 2) * sin($dLng / 2);
-
-                $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-                $rawDistance = $earthRadius * $c;
-
-                // Smart Formatter
-                if ($rawDistance < 1) {
-                    $distance_text = round($rawDistance * 1000) . ' m';
-                } else {
-                    $distance_text = round($rawDistance, 2) . ' km';
-                }
-                $distance = round($rawDistance, 2);
-            }
-
-            // 5. Build the final response payload
+            // 6. Build the final response payload
             $responseData = [
                 'pharmacy_info' => [
-                    // ✨ Returning ALL data of the pharmacy ✨
                     'id'                      => $pharmacy->id,
                     'user_id'                 => $pharmacy->user_id,
                     'pharmacy_application_id' => $pharmacy->pharmacy_application_id,
@@ -197,9 +211,11 @@ class PharmacyController extends Controller
                         'lat' => $pharmacy->lat ? (float) $pharmacy->lat : null,
                         'lng' => $pharmacy->lng ? (float) $pharmacy->lng : null,
                     ],
-                    // ✨ Distance Fields Added ✨
                     'distance'                => $distance,
                     'distance_text'           => $distance_text,
+
+                    // Flag الخاص بالصيدلية
+                    'is_saved'                => $is_saved_pharmacy,
 
                     'services'                => $pharmacy->services,
                     'has_collaboration'       => (bool) $pharmacy->has_collaboration,
@@ -211,7 +227,7 @@ class PharmacyController extends Controller
                 'inventory' => $groupedInventory
             ];
 
-            // 6. Success Handling: Check if inventory is actually empty to provide a precise message
+            // 7. Success Handling
             $message = empty($groupedInventory)
                 ? 'Pharmacy details retrieved successfully, but the inventory is empty.'
                 : 'Pharmacy inventory retrieved successfully.';
@@ -221,9 +237,9 @@ class PharmacyController extends Controller
                 'message' => $message,
                 'data'    => $responseData
             ], 200);
-        } catch (Exception $e) {
-            // 7. Server Error Handling
-            Log::error('API Pharmacy Inventory Error (ID: ' . $id . '): ' . $e->getMessage());
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('API Pharmacy Inventory Error (ID: ' . $id . '): ' . $e->getMessage());
 
             return response()->json([
                 'status'  => false,
@@ -232,5 +248,5 @@ class PharmacyController extends Controller
             ], 500);
         }
     }
-    
+
 }
