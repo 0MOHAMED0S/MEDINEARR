@@ -20,7 +20,7 @@ class PharmacyController extends Controller
     {
         try {
             $query = Pharmacy::where('is_active', true);
-            // 🔍 Search
+            //  Search
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
@@ -30,17 +30,17 @@ class PharmacyController extends Controller
                 });
             }
 
-            // 🏙️ Filter by city
+            //  Filter by city
             if ($request->filled('city')) {
                 $query->where('city', $request->city);
             }
 
-            // ⭐ Filter big pharmacies
+            //  Filter big pharmacies
             if ($request->filled('is_big')) {
                 $query->where('is_big_pharmacy', $request->is_big == 1);
             }
 
-            $perPage = $request->input('per_page', 10);
+            $perPage = min($request->input('per_page', 10), 50);
 
             $pharmacies = $query->select(
                 'id',
@@ -54,7 +54,7 @@ class PharmacyController extends Controller
                 'is_big_pharmacy'
             )
                 ->latest()
-                ->paginate($perPage) // 👈 Pagination هنا
+                ->paginate($perPage)    
                 ->through(function ($pharmacy) {
                     return [
                         'id' => $pharmacy->id,
@@ -232,4 +232,5 @@ class PharmacyController extends Controller
             ], 500);
         }
     }
+    
 }

@@ -30,7 +30,8 @@ class MedicineController extends Controller
                 $query->where('category_id', $request->category);
             }
 
-            // جلب جميع الأدوية المطابقة بدون تقسيم (Pagination)
+            $perPage = min($request->input('per_page', 10), 50);
+
             $medicines = $query->select(
                     'id',
                     'name',
@@ -69,4 +70,5 @@ class MedicineController extends Controller
             ], 500);
         }
     }
+    
 }

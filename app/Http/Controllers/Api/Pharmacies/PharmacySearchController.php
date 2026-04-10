@@ -267,4 +267,6 @@ class PharmacySearchController extends Controller
             ], 500);
         }
     }
+
+
 }

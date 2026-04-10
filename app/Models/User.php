@@ -57,4 +57,24 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function savedMedicines()
+    {
+        return $this->belongsToMany(
+            Medicine::class,
+            'medicines_saved',
+            'user_id',
+            'medicine_id'
+        )->withTimestamps();
+    }
+
+    public function savedPharmacies()
+    {
+        return $this->belongsToMany(
+            Pharmacy::class,
+            'pharmacies_saved',
+            'user_id',
+            'pharmacy_id'
+        )->withTimestamps();
+    }
+
 }
