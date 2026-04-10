@@ -11,7 +11,7 @@ class SaveMedicinesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function toggleMedicine($id)
+    public function toggleMedicine(Request $request)
     {
         try {
             $user = auth()->user();
@@ -22,7 +22,15 @@ class SaveMedicinesController extends Controller
                 ], 401);
             }
 
-            $result = $user->savedMedicines()->toggle($id);
+            $medicineId = $request->input('medicine_id');
+
+            if (!$medicineId) {
+                return response()->json([
+                    'message' => 'medicine_id is required'
+                ], 400);
+            }
+
+            $result = $user->savedMedicines()->toggle($medicineId);
 
             return response()->json([
                 'message' => 'Done',
@@ -37,10 +45,31 @@ class SaveMedicinesController extends Controller
         }
     }
 
+    public function index()
+    {
+        try {
+            $user = auth()->user();
 
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
 
+            $medicines = $user->savedMedicines;        
 
+            return response()->json([
+                'message' => 'Saved medicines fetched successfully',
+                'data' => $medicines
+            ]);
 
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 
 }

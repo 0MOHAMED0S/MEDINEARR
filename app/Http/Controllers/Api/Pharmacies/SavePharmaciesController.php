@@ -11,7 +11,9 @@ class SavePharmaciesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function togglePharmacy($id)
+
+
+    public function togglePharmacy(Request $request)
     {
         try {
             $user = auth()->user();
@@ -22,7 +24,9 @@ class SavePharmaciesController extends Controller
                 ], 401);
             }
 
-            $result = $user->savedPharmacies()->toggle($id);
+            $pharmacyId = $request->input('pharmacy_id');
+
+            $result = $user->savedPharmacies()->toggle($pharmacyId);
 
             return response()->json([
                 'message' => 'Done',
@@ -32,11 +36,36 @@ class SavePharmaciesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Something went wrong',
-                'error' => $e->getMessage() // شيلها في production
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
 
+    public function index()
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+
+            $pharmacies = $user->savedPharmacies;    
+
+            return response()->json([
+                'message' => 'Saved pharmacies fetched successfully',
+                'data' => $pharmacies
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 }

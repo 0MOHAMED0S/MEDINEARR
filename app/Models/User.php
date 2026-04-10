@@ -55,17 +55,17 @@ class User extends Authenticatable
     public function savedMedicines()
     {
         return $this->belongsToMany(
-            SavedMedicine::class,
-             'medicines_saved',
+            Medicine::class,
+            'medicines_saved',
             'user_id',
             'medicine_id'
-             )->withTimestamps();
+        )->withTimestamps();
     }
 
     public function savedPharmacies()
     {
         return $this->belongsToMany(
-            SavedPharmacy::class,
+            Pharmacy::class,
             'pharmacies_saved',
             'user_id',
             'pharmacy_id'

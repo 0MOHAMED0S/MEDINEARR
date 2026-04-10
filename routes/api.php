@@ -43,8 +43,10 @@ Route::prefix('pharmacy')->middleware(['auth:sanctum', 'role:user'])
         Route::get('/{id}/inventory', [PharmacyController::class, 'getInventory']);
         Route::get('/search', [PharmacySearchController::class, 'index']);
         Route::get('/search/recent', [PharmacySearchController::class, 'recentSearches']);
-        Route::post('/save/medicine/{id}', [SaveMedicinesController::class, 'toggleMedicine']);
-        Route::post('/save/pharmacy/{id}', [SavePharmaciesController::class, 'togglePharmacy']);
+        Route::post('/save/medicine', [SaveMedicinesController::class, 'toggleMedicine']);
+        Route::get('/medicine/saved', [SaveMedicinesController::class, 'index']);
+        Route::post('/save/pharmacy', [SavePharmaciesController::class, 'togglePharmacy']);
+        Route::get('/pharmacy/saved', [SavePharmaciesController::class, 'index']);
     });
 
 Route::prefix('data-analysis')
