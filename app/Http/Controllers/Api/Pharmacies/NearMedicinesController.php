@@ -32,7 +32,7 @@ class NearMedicinesController extends Controller
             $lng = $user->longitude;
 
             $radius = 6371; // Earth's radius in kilometers
-            $perPage = (int) $request->input('per_page', 10);
+            $perPage = min((int)$request->input('per_page', 5),50);
 
             // Fetching Pharmacies ordered by distance
             $pharmacies = Pharmacy::with(['medicines'])
