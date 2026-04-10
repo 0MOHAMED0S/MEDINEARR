@@ -44,6 +44,14 @@
             <span class="{{ request()->routeIs('pharmacy.medicines.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">أدويتي ومخزوني</span>
         </a>
 
+
+        <a href="{{ route('pharmacy.profile.index') }}"
+            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+            {{ request()->routeIs('pharmacy.profile.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-user w-5 text-center {{ request()->routeIs('pharmacy.profile.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('pharmacy.profile.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">ملفي الشخصي</span>
+        </a>
+
         <div class="my-4 border-t border-white/10 w-full"></div>
 
         <form method="POST" action="{{ route('pharmacy.logout') }}" class="mt-4">

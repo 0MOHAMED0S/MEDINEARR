@@ -71,16 +71,7 @@ class GoogleApiController extends Controller
                         return [
                             'error' => true,
                             'type'  => 'FORBIDDEN',
-                            'msg'   => 'عذراً، تم إيقاف حسابك مؤقتاً. يرجى التواصل مع الإدارة.'
-                        ];
-                    }
-
-                    // SECURITY CHECK 2: Ensure the user's role is strictly 'user'
-                    if ($existingUser->role !== 'user') {
-                        return [
-                            'error' => true,
-                            'type'  => 'FORBIDDEN',
-                            'msg'   => 'Access denied. This application is restricted to standard users only.'
+                            'msg'   => 'Sorry, your account has been temporarily suspended. Please contact the administration.'
                         ];
                     }
 
@@ -111,7 +102,7 @@ class GoogleApiController extends Controller
                     'avatar'            => $googleUser->getAvatar(),
                     'provider_id'       => $googleUser->getId(),
                     'provider_type'     => 'google',
-                    'role'              => 'user', // Forced to be 'user'
+                    'role'              => 'user', // Defaults to 'user', but any role can log in once created
                     'email_verified_at' => $email ? now() : null, // Verify only if an email is present
                 ]);
 
@@ -148,8 +139,8 @@ class GoogleApiController extends Controller
                         'role'           => $user->role,
                         'provider_type'  => $user->provider_type,
                         'provider_id'    => $user->provider_id,
-                        'latitude'       => $user->latitude,      // Added location
-                        'longitude'      => $user->longitude,     // Added location
+                        'latitude'       => $user->latitude,       // Added location
+                        'longitude'      => $user->longitude,      // Added location
                         'email_verified' => !is_null($user->email_verified_at),
                         'joined_at'      => $user->created_at ? $user->created_at->format('Y-m-d') : null,
                     ],

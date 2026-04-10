@@ -28,11 +28,45 @@ class UpdateProfileRequest extends FormRequest
                 'sometimes',
                 'nullable',
                 'string',
-                // Strict Egyptian Mobile Number Validation
-                'regex:/^01[0125][0-9]{8}$/',
                 Rule::unique('users', 'phone')->ignore($this->user()?->id),
+
+                // ✨ Professional Smart Phone Validation ✨
+                function ($attribute, $value, $fail) {
+                    if (!$value) return; // Skip if null
+
+                    // 1. Egypt (+20): Must be exactly 11 digits after country code, starting with 10, 11, 12, or 15
+                    if (str_starts_with($value, '+20')) {
+                        if (!preg_match('/^\+201[0125]\d{8}$/', $value)) {
+                            $fail('Please provide a valid Egyptian mobile number (e.g., +2010..., +2011...).');
+                        }
+                    }
+                    // 2. Saudi Arabia (+966): Must start with 5 and have 9 digits after country code
+                    elseif (str_starts_with($value, '+966')) {
+                        if (!preg_match('/^\+9665\d{8}$/', $value)) {
+                            $fail('Please provide a valid Saudi mobile number (e.g., +9665...).');
+                        }
+                    }
+                    // 3. UAE (+971): Must start with 5 and have 9 digits after country code
+                    elseif (str_starts_with($value, '+971')) {
+                        if (!preg_match('/^\+9715\d{8}$/', $value)) {
+                            $fail('Please provide a valid UAE mobile number (e.g., +9715...).');
+                        }
+                    }
+                    // 4. Kuwait (+965): Must start with 5, 6, or 9 and have 8 digits after country code
+                    elseif (str_starts_with($value, '+965')) {
+                        if (!preg_match('/^\+965[569]\d{7}$/', $value)) {
+                            $fail('Please provide a valid Kuwait mobile number (e.g., +9655...).');
+                        }
+                    }
+                    // 5. Generic Fallback for all other countries (E.164 Standard)
+                    else {
+                        if (!preg_match('/^\+[1-9]\d{7,14}$/', $value)) {
+                            $fail('Please provide a valid international phone number starting with the country code.');
+                        }
+                    }
+                },
             ],
-            'photo' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'photo' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'], // Max 5MB
         ];
     }
 
@@ -50,13 +84,13 @@ class UpdateProfileRequest extends FormRequest
 
             // Phone Messages
             'phone.string'  => 'The phone number format is invalid.',
-            'phone.regex'   => 'Please provide a valid 11-digit Egyptian mobile number (e.g., 010..., 011..., 012..., 015...).',
             'phone.unique'  => 'This phone number is already registered to another account.',
+            // Note: The specific format error messages are handled directly inside the closure above.
 
             // Photo Messages
             'photo.image'   => 'The uploaded file must be a valid image format.',
             'photo.mimes'   => 'The profile photo must be a file of type: jpeg, png, jpg, webp.',
-            'photo.max'     => 'The profile photo must not be larger than 2MB.',
+            'photo.max'     => 'The profile photo must not be larger than 5MB.',
         ];
     }
 

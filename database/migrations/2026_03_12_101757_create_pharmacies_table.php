@@ -23,7 +23,11 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->string('working_hours')->nullable();
             $table->string('license_number')->nullable();
+
+            // ✨ Here are the image and cover columns ✨
             $table->string('image')->nullable();
+            $table->string('cover')->nullable();
+
             $table->string('license_document')->nullable();
             $table->decimal('lat', 10, 8)->nullable();
             $table->decimal('lng', 11, 8)->nullable();

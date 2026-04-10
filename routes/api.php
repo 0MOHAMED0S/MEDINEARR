@@ -21,7 +21,7 @@ Route::post('/auth/google/login', [GoogleApiController::class, 'loginWithGoogle'
 Route::post('/auth/facebook/login', [FacebookApiController::class, 'loginWithFacebook']);
 
 // 2. Protected Routes (المسارات المحمية)
-Route::middleware(['auth:sanctum', 'role:user'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     // Profile Management
     Route::get('/profile', [AuthController::class, 'getProfile']);
     Route::post('/profile/update', [AuthController::class, 'updateProfile']);
@@ -32,7 +32,7 @@ Route::middleware(['auth:sanctum', 'role:user'])->group(function () {
     Route::post('/profile/location', [AuthController::class, 'updateLocation']);
 });
 
-Route::prefix('pharmacy')->middleware(['auth:sanctum', 'role:user'])
+Route::prefix('pharmacy')->middleware(['auth:sanctum'])
     ->group(function () {
         Route::get('/pharmacies', [PharmacyController::class, 'index']);
         Route::get('/ads', [AdController::class, 'index']);

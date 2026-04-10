@@ -34,7 +34,7 @@ class NearPharmaciesController extends Controller
 
             // Fetching active Pharmacies ordered by distance
             $pharmacies = DB::table('pharmacies')
-                ->where('is_active', true) // 🔥 Security Check: Only active pharmacies
+                ->where('is_active', true)
                 ->whereNotNull('lat')
                 ->whereNotNull('lng')
                 ->selectRaw("
@@ -43,6 +43,8 @@ class NearPharmaciesController extends Controller
                 address,
                 phone,
                 working_hours,
+                image,
+                cover,
                 lat,
                 lng,
                 (
@@ -57,6 +59,19 @@ class NearPharmaciesController extends Controller
             ", [$lat, $lng, $lat])
                 ->orderBy('distance', 'asc')
                 ->paginate($perPage);
+
+            // ✨ إضافة التنسيق الذكي للمسافات (Smart Distance Formatter) ✨
+            $pharmacies->getCollection()->transform(function ($pharmacy) {
+                if ($pharmacy->distance < 1) {
+                    $pharmacy->distance_text = round($pharmacy->distance * 1000) . ' m';
+                } else {
+                    $pharmacy->distance_text = round($pharmacy->distance, 2) . ' km';
+                }
+
+                $pharmacy->distance = round($pharmacy->distance, 2);
+
+                return $pharmacy;
+            });
 
             // 2. Case: No pharmacies found
             if ($pharmacies->isEmpty()) {

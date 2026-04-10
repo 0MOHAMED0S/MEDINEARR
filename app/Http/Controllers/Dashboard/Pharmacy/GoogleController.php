@@ -26,29 +26,26 @@ class GoogleController extends Controller
             })->orWhere('email', $googleUser->getEmail())->first();
 
             if ($user) {
-                if ($user->role !== 'pharmacy') {
-                    return redirect('/')->with('error', 'عفواً، هذا البريد الإلكتروني مسجل كحساب مستخدم عادي أو مدير. الدخول من هنا مخصص للصيدليات فقط.');
-                }
-
+                // منع الدخول إذا كان البريد مسجلاً مسبقاً بطريقة أخرى (مثل فيسبوك أو آبل)
                 if ($user->provider_type !== null && $user->provider_type !== 'google') {
-                    return redirect('/')->with('error', "هذا البريد مسجل مسبقاً بواسطة {$user->provider_type}. يرجى تسجيل الدخول بنفس الطريقة.");
+                    return redirect('/login')->with('error', "هذا البريد مسجل مسبقاً بواسطة {$user->provider_type}. يرجى تسجيل الدخول بنفس الطريقة.");
                 }
 
-                // تحديث بيانات الصيدلية إذا كان كل شيء سليم
+                // تحديث بيانات المستخدم (في حال تغيرت صورة حسابه على جوجل مثلاً)
                 $user->update([
                     'provider_id'   => $googleUser->getId(),
                     'provider_type' => 'google',
                     'avatar'        => $googleUser->getAvatar(),
                 ]);
             } else {
-                // ✅ إنشاء حساب جديد بصلاحية "صيدلية" فقط
+                // ✅ إنشاء حساب جديد بصلاحية "مستخدم عادي" بشكل افتراضي
                 $user = User::create([
                     'name'              => $googleUser->getName(),
                     'email'             => $googleUser->getEmail(),
                     'avatar'            => $googleUser->getAvatar(),
                     'provider_id'       => $googleUser->getId(),
                     'provider_type'     => 'google',
-                    'role'              => 'pharmacy', // إجبار الصلاحية كصيدلية
+                    'role'              => 'user', // الصلاحية الافتراضية
                     'password'          => null,
                     'email_verified_at' => now(),
                 ]);
@@ -57,18 +54,21 @@ class GoogleController extends Controller
             // تسجيل الدخول
             Auth::login($user);
 
-            // التوجيه إلى صفحة التقديم أو لوحة تحكم الصيدلية مع رسالة نجاح
-            return redirect()->intended('/pharmacy/pharmacyApplication')->with('success', 'تم تسجيل الدخول بنجاح كصيدلية.');
+            // ✨ التوجيه الذكي (Smart Redirect) بناءً على صلاحية المستخدم الحالية ✨
+            if ($user->role === 'pharmacy') {
+                return redirect()->intended('/pharmacy/dashboard')->with('success', 'تم تسجيل الدخول بنجاح. أهلاً بك في لوحة تحكم الصيدلية.');
+            }
 
+            // التوجيه للمستخدم العادي (يمكنك تغيير المسار '/' إلى مسار الصفحة الرئيسية أو لوحة المستخدم الخاصة بك)
+            return redirect()->intended('/')->with('success', 'تم تسجيل الدخول بنجاح.');
         } catch (\Exception $e) {
-            Log::error('Pharmacy Web Google Auth Error: ' . $e->getMessage(), [
+            Log::error('Web Google Auth Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return redirect('/')->with('error', 'فشل تسجيل الدخول بواسطة جوجل، يرجى المحاولة مجدداً.');
+            return redirect('/login')->with('error', 'فشل تسجيل الدخول بواسطة جوجل، يرجى المحاولة مجدداً.');
         }
     }
-
     /**
      * Secure Web Logout
      *
@@ -83,7 +83,6 @@ class GoogleController extends Controller
             $request->session()->invalidate();
             $request->session()->regenerateToken();
             return redirect('/')->with('success', 'تم تسجيل الخروج بنجاح، ننتظر عودتك قريباً!');
-
         } catch (\Throwable $e) {
             Log::error('Web Logout Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()

@@ -41,16 +41,16 @@ class MedicineController extends Controller
                     'category_id'
                 )
                 ->latest()
-                ->paginate($perPage)
-                ->through(function ($medicine) {
+                ->get() // ✨ تم التغيير من paginate إلى get ✨
+                ->map(function ($medicine) { // ✨ تم التغيير من through إلى map ✨
                     return [
-                        'id' => $medicine->id,
-                        'name' => $medicine->name,
+                        'id'          => $medicine->id,
+                        'name'        => $medicine->name,
                         'description' => $medicine->description,
-                        // 'price' => $medicine->price,
-                        'image' => $medicine->image ? asset('storage/' . $medicine->image) : null,
-                        'category' => $medicine->category ? [
-                            'id' => $medicine->category->id,
+                        // 'price'       => $medicine->price,
+                        'image'       => $medicine->image ? asset('storage/' . $medicine->image) : null,
+                        'category'    => $medicine->category ? [
+                            'id'   => $medicine->category->id,
                             'name' => $medicine->category->name
                         ] : null
                     ];
@@ -59,14 +59,14 @@ class MedicineController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Medicines retrieved successfully',
-                'data' => $medicines
+                'data'    => $medicines // سيتم إرجاع مصفوفة (Array) مباشرة هنا
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error retrieving medicines',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }

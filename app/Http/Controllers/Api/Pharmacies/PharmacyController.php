@@ -93,6 +93,7 @@ class PharmacyController extends Controller
      * @param int $id
      * @return JsonResponse
      */
+
     public function getInventory($id): JsonResponse
     {
         try {
@@ -143,24 +144,74 @@ class PharmacyController extends Controller
                 ];
             })->values()->all();
 
-            // 4. Build the final response payload
+            // ✨ 4. Calculate Distance using PHP (Haversine Formula) ✨
+            $distance = null;
+            $distance_text = null;
+            $user = auth()->guard('sanctum')->user(); // Use your correct auth guard
+
+            if ($user && $user->latitude && $user->longitude && $pharmacy->lat && $pharmacy->lng) {
+                $lat1 = $user->latitude;
+                $lng1 = $user->longitude;
+                $lat2 = $pharmacy->lat;
+                $lng2 = $pharmacy->lng;
+
+                $earthRadius = 6371; // Radius of the earth in km
+                $dLat = deg2rad($lat2 - $lat1);
+                $dLng = deg2rad($lng2 - $lng1);
+
+                $a = sin($dLat / 2) * sin($dLat / 2) +
+                     cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+                     sin($dLng / 2) * sin($dLng / 2);
+
+                $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+                $rawDistance = $earthRadius * $c;
+
+                // Smart Formatter
+                if ($rawDistance < 1) {
+                    $distance_text = round($rawDistance * 1000) . ' m';
+                } else {
+                    $distance_text = round($rawDistance, 2) . ' km';
+                }
+                $distance = round($rawDistance, 2);
+            }
+
+            // 5. Build the final response payload
             $responseData = [
                 'pharmacy_info' => [
-                    'id'             => $pharmacy->id,
-                    'name'           => $pharmacy->pharmacy_name,
-                    'address'        => $pharmacy->address,
-                    'phone'          => $pharmacy->phone,
-                    'working_hours'  => $pharmacy->working_hours,
+                    // ✨ Returning ALL data of the pharmacy ✨
+                    'id'                      => $pharmacy->id,
+                    'user_id'                 => $pharmacy->user_id,
+                    'pharmacy_application_id' => $pharmacy->pharmacy_application_id,
+                    'pharmacy_name'           => $pharmacy->pharmacy_name,
+                    'owner_name'              => $pharmacy->owner_name,
+                    'phone'                   => $pharmacy->phone,
+                    'email'                   => $pharmacy->email,
+                    'city'                    => $pharmacy->city,
+                    'address'                 => $pharmacy->address,
+                    'working_hours'           => $pharmacy->working_hours,
+                    'license_number'          => $pharmacy->license_number,
+                    'image'                   => $pharmacy->image,
+                    'cover'                   => $pharmacy->cover,
+                    'license_document'        => $pharmacy->license_document,
                     'location' => [
-                        'lat' => (float) $pharmacy->lat,
-                        'lng' => (float) $pharmacy->lng,
+                        'lat' => $pharmacy->lat ? (float) $pharmacy->lat : null,
+                        'lng' => $pharmacy->lng ? (float) $pharmacy->lng : null,
                     ],
-                    'services'       => $pharmacy->services,
+                    // ✨ Distance Fields Added ✨
+                    'distance'                => $distance,
+                    'distance_text'           => $distance_text,
+
+                    'services'                => $pharmacy->services,
+                    'has_collaboration'       => (bool) $pharmacy->has_collaboration,
+                    'is_active'               => (bool) $pharmacy->is_active,
+                    'is_big_pharmacy'         => (bool) $pharmacy->is_big_pharmacy,
+                    'created_at'              => $pharmacy->created_at,
+                    'updated_at'              => $pharmacy->updated_at,
                 ],
                 'inventory' => $groupedInventory
             ];
 
-            // 5. Success Handling: Check if inventory is actually empty to provide a precise message
+            // 6. Success Handling: Check if inventory is actually empty to provide a precise message
             $message = empty($groupedInventory)
                 ? 'Pharmacy details retrieved successfully, but the inventory is empty.'
                 : 'Pharmacy inventory retrieved successfully.';
@@ -171,7 +222,7 @@ class PharmacyController extends Controller
                 'data'    => $responseData
             ], 200);
         } catch (Exception $e) {
-            // 6. Server Error Handling
+            // 7. Server Error Handling
             Log::error('API Pharmacy Inventory Error (ID: ' . $id . '): ' . $e->getMessage());
 
             return response()->json([
