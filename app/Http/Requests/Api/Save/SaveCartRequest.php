@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Http\Requests\Api\Save;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class SaveCartRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'medicine_id' => 'required|exists:medicines,id',
+            'pharmacy_id' => 'required|exists:pharmacies,id',
+            'quantity' => 'nullable|integer|min:1'
+        ];
+    }
+}

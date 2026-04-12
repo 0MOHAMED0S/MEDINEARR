@@ -6,26 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('medicines_saved', function (Blueprint $table) {
+        Schema::create('cart_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('cart_id')->constrained()->cascadeOnDelete();
             $table->foreignId('medicine_id')->constrained()->cascadeOnDelete();
             $table->foreignId('pharmacy_id')->constrained()->cascadeOnDelete();
-            $table->unique(['user_id', 'medicine_id', 'pharmacy_id']);
+            $table->integer('quantity')->default(1);
+            $table->decimal('price', 8, 2);
+            $table->unique(['cart_id', 'medicine_id', 'pharmacy_id']);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('medicines_saved');
+        Schema::dropIfExists('cart_items');
     }
 };

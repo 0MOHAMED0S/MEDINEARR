@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Pharmacies\NearPharmaciesController;
 use App\Http\Controllers\Api\Pharmacies\PharmacySearchController;
 use App\Http\Controllers\Api\Pharmacies\SavePharmaciesController;
 use App\Http\Controllers\Api\Pharmacies\SaveMedicinesController;
+use App\Http\Controllers\Api\Pharmacies\SaveCartController;
 use Illuminate\Support\Facades\Route;
 
 // 1. Authentication Routes (مسارات تسجيل الدخول لا تحتاج لتوكن)
@@ -47,6 +48,9 @@ Route::prefix('pharmacy')->middleware(['auth:sanctum'])
         Route::get('/medicine/saved', [SaveMedicinesController::class, 'index']);
         Route::post('/save/pharmacy', [SavePharmaciesController::class, 'togglePharmacy']);
         Route::get('/pharmacy/saved', [SavePharmaciesController::class, 'index']);
+        Route::post('/save/cart', [SaveCartController::class, 'toggleItem']);
+        Route::get('/save/cart/pharmacies', [SaveCartController::class, 'CartPharmacies']);
+        Route::post('/save/cart/items', [SaveCartController::class, 'PharmacyCartItems']);
     });
 
 Route::prefix('data-analysis')
