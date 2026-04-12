@@ -149,18 +149,43 @@ class SaveCartController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Cart is empty.',
-                    'data' => []
+                    'data' => [
+                        'items' => [],
+                        'total' => 0
+                    ]
                 ], 200);
             }
 
             $items = CartItem::where('cart_id', $cart->id)
                 ->where('pharmacy_id', $request->pharmacy_id)
-                ->with('medicine:id,name,official_price') 
+                ->with('medicine:id,name,official_price')
                 ->get();
+
+            $formattedItems = $items->map(function ($item) {
+                $itemTotal = $item->price * $item->quantity;
+
+                return [
+                    'id' => $item->id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->price,
+                    'item_total' => round($itemTotal, 2),
+                    'medicine' => [
+                        'id' => $item->medicine?->id,
+                        'name' => $item->medicine?->name,
+                        'official_price' => $item->medicine?->official_price,
+                    ]
+                ];
+            });
+
+            $total = $formattedItems->sum('item_total');
+
             return response()->json([
                 'success' => true,
                 'message' => 'Cart items fetched successfully.',
-                'data' => $items
+                'data' => [
+                    'items' => $formattedItems,
+                    'total' => round($total, 2),
+                ]
             ], 200);
 
         } catch (\Exception $e) {
