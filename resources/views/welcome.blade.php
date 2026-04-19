@@ -692,7 +692,7 @@
                     <i class="fa-solid fa-circle-check text-xl"></i>
                 </div>
                 <div class="flex-1 text-right">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">تمت العملية</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1" data-i18n="alertSuccessTitle">تمت العملية</p>
                     <p class="text-sm font-black text-slate-800 leading-tight">{{ session('success') }}</p>
                 </div>
                 <button onclick="this.parentElement.remove()"
@@ -709,7 +709,7 @@
                     <i class="fa-solid fa-circle-exclamation text-xl"></i>
                 </div>
                 <div class="flex-1 text-right">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">تنبيه من النظام</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1" data-i18n="alertErrorTitle">تنبيه من النظام</p>
                     <p class="text-sm font-black text-slate-800 leading-tight">
                         {{ session('error') ?? $errors->first() }}
                     </p>
@@ -749,7 +749,7 @@
             class="loader-text-wrapper bg-white/60 backdrop-blur-md px-8 py-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 mt-4 relative z-10">
             <h2 class="loader-brand-name">Medi<span>Near</span></h2>
             <div class="loader-status">
-                جاري التحميل
+                <span data-i18n="loaderText">جاري التحميل</span>
                 <div class="loading-dots">
                     <span></span><span></span><span></span>
                 </div>
@@ -828,10 +828,16 @@
                                     <span data-i18n="navPharmacies">للصيدليات</span>
                                 </button>
                             @else
-                                {{-- للمسجلين: يذهب لصفحة التقديم مباشرة --}}
-                                <a href="{{ route('pharmacy.application.index') }}"
-                                    class="text-gray-500 hover:text-primary transition nav-link desktop-nav-link relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
-                                    id="nav-pharmacies" data-section="pharmacies" data-i18n="navPharmacies">للصيدليات</a>
+                                @if (Auth::user()->role === 'pharmacy' && \App\Models\Pharmacy::where('user_id', Auth::id())->exists())
+                                    <a href="{{ route('pharmacy.dashboard') }}"
+                                        class="text-gray-500 hover:text-primary transition nav-link desktop-nav-link relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
+                                        id="nav-pharmacies" data-i18n="navDashboard">لوحة التحكم</a>
+                                @else
+                                    {{-- للمسجلين: يذهب لصفحة التقديم مباشرة --}}
+                                    <a href="{{ route('pharmacy.application.index') }}"
+                                        class="text-gray-500 hover:text-primary transition nav-link desktop-nav-link relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
+                                        id="nav-pharmacies" data-section="pharmacies" data-i18n="navPharmacies">للصيدليات</a>
+                                @endif
                             @endguest
                         @endif
                     </nav>
@@ -853,7 +859,7 @@
                                         <div class="font-bold text-sm text-darkText leading-none">
                                             {{ auth()->user()->name }}</div>
                                         <div class="text-[10px] text-gray-500 mt-1">
-                                            {{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}
+                                            <span {!! auth()->user()->role === 'admin' ? 'data-i18n="roleAdmin"' : '' !!}>{{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}</span>
                                         </div>
                                     </div>
                                     <i
@@ -929,6 +935,9 @@
                             <a href="{{ route('admin.dashboard') }}" data-i18n="navDashboard"
                                 class="block w-full px-4 py-3 text-primary font-bold bg-teal-50 rounded-xl transition-colors">لوحة
                                 التحكم</a>
+                        @elseif (Auth::user()->role === 'pharmacy' && \App\Models\Pharmacy::where('user_id', Auth::id())->exists())
+                            <a href="{{ route('pharmacy.dashboard') }}" data-i18n="navDashboard"
+                                class="block w-full px-4 py-3 text-primary font-bold bg-teal-50 rounded-xl transition-colors text-center">لوحة التحكم</a>
                         @else
                             <a href="{{ route('pharmacy.application.index') }}" data-i18n="navPharmacies"
                                 class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors text-center">للصيدليات</a>
@@ -941,7 +950,7 @@
                             <div class="text-center mt-2">
                                 <div class="font-bold text-lg text-darkText">{{ auth()->user()->name }}</div>
                                 <div class="text-xs text-gray-500">
-                                    {{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}</div>
+                                    <span {!! auth()->user()->role === 'admin' ? 'data-i18n="roleAdmin"' : '' !!}>{{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}</span></div>
                             </div>
                             <div class="w-full px-4 mt-4">
                                 <form
@@ -950,7 +959,7 @@
                                     @csrf
                                     <button type="submit"
                                         class="w-full text-red-500 bg-red-50 hover:bg-red-100 px-4 py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
-                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل الخروج
+                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> <span data-i18n="navLogout">تسجيل الخروج</span>
                                     </button>
                                 </form>
                             </div>
@@ -961,7 +970,7 @@
                         <button onclick="window.location.href='{{ route('google.login') }}'"
                             class="w-full bg-gradient-custom text-white px-6 py-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-shadow flex items-center justify-center gap-2 hover:-translate-y-0.5">
                             <i class="fa-brands fa-google text-xl -mt-0.5"></i>
-                            <span data-i18n="btnRegPharmacy">تسجيل الدخول</span>
+                            <span data-i18n="btnGoogleLogin">تسجيل الدخول</span>
                         </button>
                     @endauth
                 </div>
@@ -1011,7 +1020,14 @@
                             </button>
                         @endguest
                         @auth
-                            @if (Auth::user()->role != 'admin')
+                            @if (Auth::user()->role === 'pharmacy' && \App\Models\Pharmacy::where('user_id', Auth::id())->exists())
+                                <button onclick="window.location.href='{{ route('pharmacy.dashboard') }}'"
+                                    class="w-full sm:w-auto bg-white border-2 border-gray-100 hover:border-primary text-primary px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 group">
+                                    <span data-i18n="navDashboard">لوحة التحكم</span>
+                                    <i
+                                        class="fa-solid fa-arrow-left rtl:rotate-0 ltr:rotate-180 transition-transform duration-300 group-hover:-translate-x-1 rtl:group-hover:-translate-x-1 ltr:group-hover:translate-x-1"></i>
+                                </button>
+                            @elseif (Auth::user()->role != 'admin')
                                 <button onclick="window.location.href='{{ route('pharmacy.application.index') }}'"
                                     class="w-full sm:w-auto bg-white border-2 border-gray-100 hover:border-primary text-primary px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 group">
                                     <span data-i18n="btnRegPharmacyAndIcon">سجل كصيدلية شريكة</span>
@@ -1117,7 +1133,7 @@
                                     <h3 class="font-bold text-xs sm:text-sm text-darkText" data-i18n="uiNearPharm">
                                         أقرب
                                         صيدلية</h3>
-                                    <span class="text-[9px] sm:text-[10px] text-primary font-bold">عرض الكل</span>
+                                    <span class="text-[9px] sm:text-[10px] text-primary font-bold cursor-pointer" data-i18n="uiSeeAll">عرض الكل</span>
                                 </div>
                                 <div
                                     class="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-3 shadow-sm border border-gray-100 flex gap-2 sm:gap-3 items-center">
@@ -1488,10 +1504,11 @@
             <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div class="text-center reveal reveal-bottom mb-14 md:mb-20">
                     <h2
-                        class="inline-block text-sm md:text-base font-bold text-accent tracking-widest uppercase mb-4 px-4 py-1.5 rounded-full border border-accent/30 bg-accent/10">
+                        class="inline-block text-sm md:text-base font-bold text-accent tracking-widest uppercase mb-4 px-4 py-1.5 rounded-full border border-accent/30 bg-accent/10"
+                        data-i18n="statsBadge">
                         أرقام نفخر بها</h2>
                     <h3 class="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight">
-                        ثقتكم هي <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary">سر
+                        <span data-i18n="statsTitleStart">ثقتكم هي</span> <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary" data-i18n="statsTitleEnd">سر
                             نجاحنا</span>
                     </h3>
                 </div>
@@ -1511,7 +1528,7 @@
                             </div>
                             <h3
                                 class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-1.5 md:mb-3 tracking-tight flex items-baseline justify-center gap-1">
-                                <span class="stat-number" data-target="100" data-suffix="K">+0K</span>
+                                <span class="stat-number" data-target="100" data-i18n-suffix="suffixK" data-suffix="K">+0K</span>
                             </h3>
                             <p class="text-gray-400 font-medium text-[9px] sm:text-xs md:text-base uppercase tracking-wider"
                                 data-i18n="stat1">مستخدم نشط</p>
@@ -1553,7 +1570,7 @@
                             </div>
                             <h3
                                 class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-1.5 md:mb-3 tracking-tight flex items-baseline justify-center gap-1">
-                                <span class="stat-number" data-target="50" data-suffix="K">+0K</span>
+                                <span class="stat-number" data-target="50" data-i18n-suffix="suffixK" data-suffix="K">+0K</span>
                             </h3>
                             <p class="text-gray-400 font-medium text-[9px] sm:text-xs md:text-base uppercase tracking-wider"
                                 data-i18n="stat3">طلب ناجح</p>
@@ -2119,7 +2136,7 @@
         </section>
 
     </div>
-
+@include('chat.chat')
     <footer
         class="bg-footerBg text-gray-300 pt-16 md:pt-20 pb-6 md:pb-8 mt-auto border-t-[6px] md:border-t-[8px] border-primary">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -2413,6 +2430,10 @@
                 btnDownloadApp: "حمل التطبيق الآن",
                 btnGetItOn: "احصل عليه من",
                 btnGooglePlay: "Google Play",
+                roleAdmin: "مدير النظام",
+                loaderText: "جاري التحميل",
+                alertSuccessTitle: "تمت العملية",
+                alertErrorTitle: "تنبيه من النظام",
 
                 heroTitle: "دوائك أقرب <br> مما <span class='text-gradient'>تتخيل</span>",
                 heroDesc: "MediNear هو تطبيق ذكي يساعدك في العثور على الأدوية المتوفرة في أقرب صيدلية وطلبها بسهولة مع توصيل سريع وخدمات ذكية متقدمة.",
@@ -2446,6 +2467,11 @@
                 how2Title: "اختر أقرب صيدلية",
                 how3Title: "اختر طريقة الدفع",
                 how4Title: "استلم طلبك",
+                suffixK: "ألف",
+
+                statsBadge: "أرقام نفخر بها",
+                statsTitleStart: "ثقتكم هي",
+                statsTitleEnd: "سر نجاحنا",
 
                 stat1: "مستخدم نشط",
                 stat2: "صيدلية شريكة",
@@ -2545,6 +2571,10 @@
                 btnDownloadApp: "Download App Now",
                 btnGetItOn: "GET IT ON",
                 btnGooglePlay: "Google Play",
+                roleAdmin: "System Admin",
+                loaderText: "Loading",
+                alertSuccessTitle: "Operation Successful",
+                alertErrorTitle: "System Alert",
 
                 heroTitle: "Your Medicine Is Closer<br>Than You <span class='text-gradient'>Think</span>",
                 heroDesc: "MediNear is a smart app that helps you find available medicines in the nearest pharmacy and order them easily with fast delivery and advanced smart services.",
@@ -2578,6 +2608,11 @@
                 how2Title: "Choose nearest pharmacy",
                 how3Title: "Select payment method",
                 how4Title: "Receive your order",
+                suffixK: "K",
+
+                statsBadge: "Numbers to Be Proud Of",
+                statsTitleStart: "Your Trust is",
+                statsTitleEnd: "Our Success",
 
                 stat1: "Active Users",
                 stat2: "Partner Pharmacies",
@@ -2739,11 +2774,38 @@
             }, 50);
 
             // Re-check progress loader line to re-animate correctly
+            const sectionHowWork = document.getElementById('how-it-works');
+            if (sectionHowWork && sectionHowWork.classList.contains('active')) {
+                const line = document.getElementById("progress-line");
+                if (line) line.classList.replace('scale-x-0', 'scale-x-100');
+            }
+
+            // Update stats suffixes dynamically without re-triggering animations
+            document.querySelectorAll('.stat-number').forEach(stat => {
+                const target = stat.getAttribute('data-target');
+                const suffixKey = stat.getAttribute('data-i18n-suffix');
+                let suffix = '';
+                if (suffixKey && i18n[currentLang] && i18n[currentLang][suffixKey]) {
+                    suffix = i18n[currentLang][suffixKey];
+                } else {
+                    suffix = stat.getAttribute('data-suffix') || '';
+                }
+                const hasCounted = stat.classList.contains('counted');
+                if (hasCounted) {
+                    stat.innerText = '+' + target + suffix;
+                } else {
+                    stat.innerText = '+0' + suffix;
+                }
+            });
             const line = document.getElementById("progress-line");
             if (line) {
                 line.classList.remove('scale-x-100');
                 line.classList.add('scale-x-0');
                 setTimeout(() => line.classList.replace('scale-x-0', 'scale-x-100'), 500);
+            }
+
+            if (typeof updateChatLanguage === 'function') {
+                updateChatLanguage(currentLang);
             }
         }
 
@@ -2852,7 +2914,13 @@
         // --- 5. Intersection Observer Animations ---
         function animateCounter(el) {
             const target = parseInt(el.getAttribute('data-target'));
-            const suffix = el.getAttribute('data-suffix') || '';
+            const suffixKey = el.getAttribute('data-i18n-suffix');
+            let suffix = '';
+            if (suffixKey && typeof i18n !== 'undefined' && i18n[currentLang] && i18n[currentLang][suffixKey]) {
+                suffix = i18n[currentLang][suffixKey];
+            } else {
+                suffix = el.getAttribute('data-suffix') || '';
+            }
             const duration = 2500;
             const start = 0;
             let startTimestamp = null;

@@ -397,9 +397,21 @@
                         <a href="{{ url('/') }}#contact"
                             class="text-gray-500 hover:text-primary transition relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
                             data-i18n="navContact">اتصل بنا</a>
-                        <a href="{{ route('pharmacy.application.index') ?? '#' }}"
-                            class="text-primary transition relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-100 after:transition-transform"
-                            data-i18n="navPharmacies">للصيدليات</a>
+                        @auth
+                            @if (Auth::user()->role === 'pharmacy' && \App\Models\Pharmacy::where('user_id', Auth::id())->exists())
+                                <a href="{{ route('pharmacy.dashboard') }}"
+                                    class="text-primary transition relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-100 after:transition-transform"
+                                    data-i18n="navDashboard">لوحة التحكم</a>
+                            @else
+                                <a href="{{ route('pharmacy.application.index') ?? '#' }}"
+                                    class="text-primary transition relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-100 after:transition-transform"
+                                    data-i18n="navPharmacies">للصيدليات</a>
+                            @endif
+                        @else
+                            <a href="{{ route('pharmacy.application.index') ?? '#' }}"
+                                class="text-primary transition relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:scale-x-100 after:transition-transform"
+                                data-i18n="navPharmacies">للصيدليات</a>
+                        @endauth
                     </nav>
 
                     <div class="hidden lg:flex items-center gap-6">
@@ -418,7 +430,7 @@
                                         <div class="font-bold text-sm text-darkText leading-none">
                                             {{ auth()->user()->name }}</div>
                                         <div class="text-[10px] text-gray-500 mt-1">
-                                            {{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}
+                                            <span {!! auth()->user()->role === 'admin' ? 'data-i18n="roleAdmin"' : '' !!}>{{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}</span>
                                         </div>
                                     </div>
                                     <i
@@ -487,9 +499,21 @@
                     <a href="{{ url('/') }}#contact" onclick="closeMobileMenu();"
                         class="block w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors"
                         data-i18n="navContact">اتصل بنا</a>
-                    <a href="{{ route('pharmacy.application.index') ?? '#' }}" onclick="closeMobileMenu();"
-                        class="block w-full px-4 py-3 text-primary font-bold bg-secondary rounded-xl transition-colors hover:bg-teal-100"
-                        data-i18n="navPharmacies">للصيدليات</a>
+                    @auth
+                        @if (Auth::user()->role === 'pharmacy' && \App\Models\Pharmacy::where('user_id', Auth::id())->exists())
+                            <a href="{{ route('pharmacy.dashboard') }}" onclick="closeMobileMenu();"
+                                class="block w-full px-4 py-3 text-primary font-bold bg-secondary rounded-xl transition-colors hover:bg-teal-100"
+                                data-i18n="navDashboard">لوحة التحكم</a>
+                        @else
+                            <a href="{{ route('pharmacy.application.index') ?? '#' }}" onclick="closeMobileMenu();"
+                                class="block w-full px-4 py-3 text-primary font-bold bg-secondary rounded-xl transition-colors hover:bg-teal-100"
+                                data-i18n="navPharmacies">للصيدليات</a>
+                        @endif
+                    @else
+                        <a href="{{ route('pharmacy.application.index') ?? '#' }}" onclick="closeMobileMenu();"
+                            class="block w-full px-4 py-3 text-primary font-bold bg-secondary rounded-xl transition-colors hover:bg-teal-100"
+                            data-i18n="navPharmacies">للصيدليات</a>
+                    @endauth
                     <hr class="my-4 border-gray-100">
 
                     @auth
@@ -506,7 +530,7 @@
                             <div class="text-center mt-2">
                                 <div class="font-bold text-lg text-darkText">{{ auth()->user()->name }}</div>
                                 <div class="text-xs text-gray-500">
-                                    {{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}
+                                    <span {!! auth()->user()->role === 'admin' ? 'data-i18n="roleAdmin"' : '' !!}>{{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}</span>
                                 </div>
                             </div>
                             <div class="w-full px-4 mt-4">
@@ -1254,6 +1278,7 @@
         </section>
 
     </div>
+@include('chat.chat')
 
     <footer
         class="bg-footerBg text-gray-300 pt-16 md:pt-20 pb-6 md:pb-8 mt-auto border-t-[6px] md:border-t-[8px] border-primary">
@@ -1641,6 +1666,7 @@
                 footTerms: "الشروط والأحكام",
                 footData: "سياسة حماية البيانات",
                 footCopy: "2026 MediNear جميع الحقوق محفوظة.",
+                roleAdmin: "مدير النظام",
                 navDashboard: "لوحة التحكم",
                 navLogout: "تسجيل الخروج",
                 statusReviewTitle: "طلبك قيد المراجعة حالياً",
@@ -1714,6 +1740,7 @@
                 footTerms: "Terms & Conditions",
                 footData: "Data Protection Policy",
                 footCopy: "2026 MediNear All rights reserved.",
+                roleAdmin: "System Admin",
                 navDashboard: "Dashboard",
                 navLogout: "Logout",
                 statusReviewTitle: "Application Under Review",
@@ -1756,6 +1783,10 @@
                 '<i class="fa-solid fa-globe"></i> EN' : '<i class="fa-solid fa-globe"></i> AR';
 
             if (map) setTimeout(() => map.invalidateSize(), 400);
+
+            if (typeof updateChatLanguage === 'function') {
+                updateChatLanguage(currentLang);
+            }
         }
 
         // --- 3. Other Interactions ---

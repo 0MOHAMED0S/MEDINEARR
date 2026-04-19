@@ -7,6 +7,7 @@ use App\Models\Pharmacy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminPharmacyController extends Controller
 {
@@ -143,6 +144,89 @@ public function index(Request $request)
                 'success' => false,
                 'message' => 'حدث خطأ أثناء تغيير التصنيف.'
             ], 500);
+        }
+    }
+
+
+    /**
+     * Show the form for editing the specified pharmacy.
+     */
+    public function edit($id)
+    {
+        try {
+            $pharmacy = Pharmacy::findOrFail($id);
+            return view('dashboard.pharmacies.edit', compact('pharmacy')); // تأكد من إنشاء هذا الملف في الـ Views
+        } catch (\Exception $e) {
+            Log::error('Admin Pharmacy Edit Error: ' . $e->getMessage());
+            return redirect()->route('admin.pharmacies.index')->with('error', 'الصيدلية غير موجودة أو حدث خطأ.');
+        }
+    }
+
+    /**
+     * Update the specified pharmacy in storage.
+     */
+public function update(Request $request, $id)
+    {
+        // 1. Validation using 'sometimes' for flexible partial updates
+        $validated = $request->validate([
+            'pharmacy_name'  => 'sometimes|required|string|max:255',
+            'owner_name'     => 'sometimes|required|string|max:255',
+            'phone'          => 'sometimes|required|string|max:20',
+            'email'          => 'sometimes|required|email|max:255|unique:pharmacies,email,' . $id,
+            'city'           => 'sometimes|nullable|string|max:100',
+            'address'        => 'sometimes|nullable|string|max:500',
+            'working_hours'  => 'sometimes|nullable|string|max:100',
+            'license_number' => 'sometimes|nullable|string|max:100',
+            'image'          => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // 2MB Max
+            'cover'          => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:4096', // 4MB Max
+        ], [
+            'image.image'  => 'يجب أن يكون شعار الصيدلية صورة صالحة.',
+            'image.mimes'  => 'شعار الصيدلية يجب أن يكون بصيغة: jpeg, png, jpg, webp.',
+            'cover.image'  => 'يجب أن تكون صورة الغلاف صورة صالحة.',
+            'cover.mimes'  => 'صورة الغلاف يجب أن تكون بصيغة: jpeg, png, jpg, webp.',
+            'email.unique' => 'هذا البريد الإلكتروني مسجل لصيدلية أخرى بالفعل.'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $pharmacy = Pharmacy::findOrFail($id);
+
+            // ✨ الطريقة الاحترافية: أخذ جميع البيانات الموثوقة واستبعاد الصور فقط ✨
+            $dataToUpdate = \Illuminate\Support\Arr::except($validated, ['image', 'cover']);
+
+            // 2. تحديث صورة الشعار (Logo/Image)
+            if ($request->hasFile('image')) {
+                // مسح الصورة القديمة إذا كانت موجودة
+                if ($pharmacy->image && Storage::disk('public')->exists($pharmacy->image)) {
+                    Storage::disk('public')->delete($pharmacy->image);
+                }
+                // رفع وحفظ المسار الجديد
+                $dataToUpdate['image'] = $request->file('image')->store('pharmacies/images', 'public');
+            }
+
+            // 3. تحديث صورة الغلاف (Cover)
+            if ($request->hasFile('cover')) {
+                // مسح الغلاف القديم إذا كان موجوداً
+                if ($pharmacy->cover && Storage::disk('public')->exists($pharmacy->cover)) {
+                    Storage::disk('public')->delete($pharmacy->cover);
+                }
+                // رفع وحفظ المسار الجديد
+                $dataToUpdate['cover'] = $request->file('cover')->store('pharmacies/covers', 'public');
+            }
+
+            // 4. تنفيذ التحديث في قاعدة البيانات (فقط إذا كان هناك بيانات للتحديث)
+            if (!empty($dataToUpdate)) {
+                $pharmacy->update($dataToUpdate);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'تم تحديث بيانات الصيدلية بنجاح.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin Pharmacy Update Error: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'حدث خطأ غير متوقع أثناء الحفظ. يرجى المحاولة مرة أخرى.');
         }
     }
 }
