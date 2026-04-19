@@ -261,6 +261,10 @@
                                         <button type="button" onclick="openViewModal({{ json_encode($pharmacy) }})" class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:text-primary hover:bg-teal-50 hover:border-teal-200 transition-all flex items-center justify-center shadow-sm tooltip" title="عرض الملف الكامل">
                                             <i class="fa-solid fa-eye text-sm"></i>
                                         </button>
+
+                                        <button type="button" onclick="openEditModal({{ json_encode($pharmacy) }})" class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all flex items-center justify-center shadow-sm tooltip" title="تعديل بيانات الصيدلية">
+                                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                        </button>
                                     </div>
                                 </td>
 
@@ -495,6 +499,103 @@
         </div>
     </div>
 
+    <div id="editPharmacyModal" class="fixed inset-0 z-[120] hidden flex-col items-center justify-center p-4 sm:p-6">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="toggleModal('editPharmacyModal')"></div>
+        <div class="relative bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl overflow-hidden animate-scale-up flex flex-col max-h-full">
+            <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-blue-50/50 shrink-0">
+                <h3 class="text-xl font-black text-slate-800 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    تعديل بيانات الصيدلية
+                </h3>
+                <button type="button" onclick="toggleModal('editPharmacyModal')" class="w-8 h-8 rounded-full bg-white text-slate-400 hover:text-rose-500 transition-all flex items-center justify-center shadow-sm border border-gray-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 md:p-8 overflow-y-auto scrollbar-thin">
+                <form id="editPharmacyForm" method="POST" enctype="multipart/form-data" action="">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6 text-right">
+
+                        <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 bg-slate-50 p-5 rounded-[1.5rem] border border-gray-100 mb-2">
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-3">شعار الصيدلية (Logo)</label>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-16 h-16 rounded-full border border-gray-200 bg-white overflow-hidden shrink-0">
+                                        <img id="edit_image_preview" src="" class="w-full h-full object-cover">
+                                    </div>
+                                    <input type="file" name="image" id="edit_image" accept="image/*" onchange="previewEditImage(this, 'edit_image_preview')" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-3">صورة الغلاف (Cover)</label>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-24 h-16 rounded-xl border border-gray-200 bg-white overflow-hidden shrink-0 flex items-center justify-center">
+                                        <img id="edit_cover_preview" src="" class="w-full h-full object-cover hidden">
+                                        <i id="edit_cover_icon" class="fa-solid fa-image text-gray-300 text-xl"></i>
+                                    </div>
+                                    <input type="file" name="cover" id="edit_cover" accept="image/*" onchange="previewEditImage(this, 'edit_cover_preview')" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-bold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-700 mb-2">اسم الصيدلية</label>
+                            <input type="text" name="pharmacy_name" id="edit_pharmacy_name" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-700 mb-2">اسم المالك / المدير</label>
+                            <input type="text" name="owner_name" id="edit_owner_name" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-700 mb-2">رقم الهاتف</label>
+                            <input type="text" name="phone" id="edit_phone" dir="ltr" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-mono text-left">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-700 mb-2">البريد الإلكتروني</label>
+                            <input type="email" name="email" id="edit_email" dir="ltr" required class="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-mono text-left">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-700 mb-2">المحافظة / المدينة</label>
+                            <input type="text" name="city" id="edit_city" class="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-700 mb-2">رقم الترخيص</label>
+                            <input type="text" name="license_number" id="edit_license_number" class="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-mono">
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-black text-slate-700 mb-2">ساعات العمل</label>
+                            <input type="text" name="working_hours" id="edit_working_hours" class="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none">
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-black text-slate-700 mb-2">العنوان التفصيلي</label>
+                            <input type="text" name="address" id="edit_address" class="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none">
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-end gap-3 pt-5 border-t border-gray-100">
+                        <button type="button" onclick="toggleModal('editPharmacyModal')" class="px-6 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors text-sm">إلغاء</button>
+                        <button type="submit" class="px-8 py-3 rounded-xl bg-blue-600 text-white font-black hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all text-sm flex items-center gap-2">
+                            حفظ التعديلات
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentToggleId = null;
         let currentToggleState = null;
@@ -709,6 +810,60 @@
             }
 
             toggleModal('viewProfileModal');
+        }
+
+        // ✨ الدوال الخاصة بتعديل بيانات الصيدلية (Edit Modal) ✨
+        function openEditModal(pharmacy) {
+            const form = document.getElementById('editPharmacyForm');
+            // تأكد من صحة مسار التعديل ليتناسب مع الـ Routes الخاصة بك
+            form.action = `/admin/pharmacies/${pharmacy.id}/update`;
+
+            // تعبئة الحقول النصية
+            document.getElementById('edit_pharmacy_name').value = pharmacy.pharmacy_name || '';
+            document.getElementById('edit_owner_name').value = pharmacy.owner_name || '';
+            document.getElementById('edit_phone').value = pharmacy.phone || '';
+            document.getElementById('edit_email').value = pharmacy.email || '';
+            document.getElementById('edit_city').value = pharmacy.city || '';
+            document.getElementById('edit_address').value = pharmacy.address || '';
+            document.getElementById('edit_working_hours').value = pharmacy.working_hours || '';
+            document.getElementById('edit_license_number').value = pharmacy.license_number || '';
+
+            // تصفير حقول رفع الملفات وإعداد معاينة الصور
+            document.getElementById('edit_image').value = '';
+            document.getElementById('edit_cover').value = '';
+
+            const imgPreview = document.getElementById('edit_image_preview');
+            imgPreview.src = pharmacy.image ? `/storage/${pharmacy.image}` : `https://ui-avatars.com/api/?name=${encodeURI(pharmacy.pharmacy_name)}&background=0d9488&color=fff`;
+
+            const coverPreview = document.getElementById('edit_cover_preview');
+            const coverIcon = document.getElementById('edit_cover_icon');
+            if(pharmacy.cover) {
+                coverPreview.src = `/storage/${pharmacy.cover}`;
+                coverPreview.classList.remove('hidden');
+                coverIcon.classList.add('hidden');
+            } else {
+                coverPreview.src = '';
+                coverPreview.classList.add('hidden');
+                coverIcon.classList.remove('hidden');
+            }
+
+            toggleModal('editPharmacyModal');
+        }
+
+        function previewEditImage(input, previewId) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    let previewImage = document.getElementById(previewId);
+                    previewImage.src = e.target.result;
+                    previewImage.classList.remove('hidden');
+
+                    if (previewId === 'edit_cover_preview') {
+                        document.getElementById('edit_cover_icon').classList.add('hidden');
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
         }
 
         // ==================== TOGGLE ACTIVE STATUS ====================
