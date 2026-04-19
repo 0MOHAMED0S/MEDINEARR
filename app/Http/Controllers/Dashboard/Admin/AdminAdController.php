@@ -67,7 +67,7 @@ class AdminAdController extends Controller
             'bg_color' => 'required_if:type,banner|nullable|string|max:20',
             'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
             'coupon_id' => 'nullable|exists:coupons,id',
-            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:8120',
         ]);
 
         $data = $request->except(['banner_image', 'cover_image']);
