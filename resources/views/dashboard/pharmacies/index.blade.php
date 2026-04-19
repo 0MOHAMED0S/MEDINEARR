@@ -816,7 +816,7 @@
         function openEditModal(pharmacy) {
             const form = document.getElementById('editPharmacyForm');
             // تأكد من صحة مسار التعديل ليتناسب مع الـ Routes الخاصة بك
-            form.action = `/admin/pharmacies/${pharmacy.id}/update`;
+            form.action = `/admin/pharmacies/${pharmacy.id}`;
 
             // تعبئة الحقول النصية
             document.getElementById('edit_pharmacy_name').value = pharmacy.pharmacy_name || '';

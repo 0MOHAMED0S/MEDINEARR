@@ -192,16 +192,8 @@ public function update(Request $request, $id)
 
             $pharmacy = Pharmacy::findOrFail($id);
 
-            // تجهيز البيانات النصية للتحديث بناءً على ما تم إرساله فقط
-            $dataToUpdate = [];
-
-            $textFields = ['pharmacy_name', 'owner_name', 'phone', 'email', 'city', 'address', 'working_hours', 'license_number'];
-
-            foreach ($textFields as $field) {
-                if ($request->has($field)) {
-                    $dataToUpdate[$field] = $validated[$field];
-                }
-            }
+            // ✨ الطريقة الاحترافية: أخذ جميع البيانات الموثوقة واستبعاد الصور فقط ✨
+            $dataToUpdate = \Illuminate\Support\Arr::except($validated, ['image', 'cover']);
 
             // 2. تحديث صورة الشعار (Logo/Image)
             if ($request->hasFile('image')) {
@@ -229,7 +221,7 @@ public function update(Request $request, $id)
             }
 
             DB::commit();
-            return redirect()->route('admin.pharmacies.index')->with('success', 'تم تحديث بيانات الصيدلية بنجاح.');
+            return redirect()->back()->with('success', 'تم تحديث بيانات الصيدلية بنجاح.');
 
         } catch (\Exception $e) {
             DB::rollBack();
