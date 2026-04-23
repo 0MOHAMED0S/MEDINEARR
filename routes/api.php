@@ -40,6 +40,7 @@ Route::prefix('pharmacy')->middleware(['auth:sanctum'])
         Route::get('/ads', [AdController::class, 'index']);
         Route::get('/categories', [CategoryController::class, 'index']);
         Route::get('/medicines', [MedicineController::class, 'index']);
+        Route::post('/medicine-pharmacy', [MedicineController::class, 'show']);
         Route::get('/near-pharmacies', [NearPharmaciesController::class, 'index']);
         Route::get('/near-medicines', [NearMedicinesController::class, 'index']);
         Route::get('/{id}/inventory', [PharmacyController::class, 'getInventory']);

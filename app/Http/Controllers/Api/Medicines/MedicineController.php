@@ -70,5 +70,73 @@ class MedicineController extends Controller
             ], 500);
         }
     }
+  
+
+
+    public function show(Request $request)
+    {
+        try {
+            $request->validate([
+                'medicine_id' => 'required|exists:medicines,id',
+                'pharmacy_id' => 'required|exists:pharmacies,id',
+            ]);
+
+            $medicineId = $request->input('medicine_id');
+            $pharmacyId = $request->input('pharmacy_id');
+
+            $medicine = Medicine::where('id', $medicineId)
+                ->where('status', 1)
+                ->whereHas('pharmacies', function ($query) use ($pharmacyId) {
+                    $query->where('pharmacies.id', $pharmacyId);
+                })
+                ->with([
+                    'category',
+                    'pharmacies' => function ($query) use ($pharmacyId) {
+                        $query->where('pharmacies.id', $pharmacyId);
+                    }
+                ])
+                ->first();
+
+            if (!$medicine) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Medicine not found in this pharmacy'
+                ], 404);
+            }
+
+            $pharmacy = $medicine->pharmacies->first();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Medicine retrieved successfully',
+                'data' => [
+                    'id'          => $medicine->id,
+                    'name'        => $medicine->name,
+                    'description' => $medicine->description,
+                    'image'       => $medicine->image ? asset('storage/' . $medicine->image) : null,
+
+                    'category'    => $medicine->category ? [
+                        'id'   => $medicine->category->id,
+                        'name' => $medicine->category->name
+                    ] : null,
+
+                    'pharmacy' => $pharmacy ? [
+                        'id'       => $pharmacy->id,
+                        'name'     => $pharmacy->name,
+                        'price'    => $pharmacy->pivot->price ?? null,
+                        'quantity' => $pharmacy->pivot->quantity ?? null,
+                    ] : null
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving medicine',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
     
 }
