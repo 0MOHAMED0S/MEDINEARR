@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Pharmacies\PharmacySearchController;
 use App\Http\Controllers\Api\Pharmacies\SavePharmaciesController;
 use App\Http\Controllers\Api\Pharmacies\SaveMedicinesController;
 use App\Http\Controllers\Api\Pharmacies\SaveCartController;
+use App\Http\Controllers\Api\Pharmacies\PacketController;
 use Illuminate\Support\Facades\Route;
 
 // 1. Authentication Routes (مسارات تسجيل الدخول لا تحتاج لتوكن)
@@ -51,6 +52,14 @@ Route::prefix('pharmacy')->middleware(['auth:sanctum'])
         Route::post('/save/cart', [SaveCartController::class, 'toggleItem']);
         Route::get('/save/cart/pharmacies', [SaveCartController::class, 'CartPharmacies']);
         Route::post('/save/cart/items', [SaveCartController::class, 'PharmacyCartItems']);
+        
+        Route::prefix('packet')->group(function () {
+        Route::post('/addpacket', [PacketController::class, 'store']);
+        Route::get('/show', [PacketController::class, 'index']);
+        Route::post('/update', [PacketController::class, 'update']);
+        Route::post('/delete', [PacketController::class, 'delete']);
+        });
+
     });
 
 Route::prefix('data-analysis')
