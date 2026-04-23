@@ -11,6 +11,7 @@ class SavedMedicine extends Model
     protected $fillable = [
         'user_id',
         'medicine_id',
+        'pharmacy_id',
     ];
 
     public function savedByUsers()
