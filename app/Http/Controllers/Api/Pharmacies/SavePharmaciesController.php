@@ -4,54 +4,67 @@ namespace App\Http\Controllers\Api\Pharmacies;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Save\SavePharmaciesRequest;
+use App\Models\Pharmacy;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
-
 class SavePharmaciesController extends Controller
 {
-
-
-    public function togglePharmacy(SavePharmaciesRequest $request)
+    /**
+     * حفظ / إزالة صيدلية من المفضلة
+     */
+public function togglePharmacy(SavePharmaciesRequest $request)
     {
         try {
             $user = auth()->user();
 
-            // 1. التحقق من المصادقة (الأمان)
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthenticated access.',
+                    'message' => 'Please log in to manage your saved pharmacies.',
                     'data'    => null
                 ], 401);
             }
 
-            // 2. تنفيذ عملية الـ Toggle في قاعدة البيانات
-            $pharmacyId = $request->input('pharmacy_id');
+            $pharmacyId = (int) $request->input('pharmacy_id');
+
+            // ✨ Security/Logic Check: Ensure the pharmacy actually exists AND is active ✨
+            $pharmacy = Pharmacy::find($pharmacyId);
+
+            if (!$pharmacy || !$pharmacy->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This pharmacy is currently inactive or unavailable.',
+                    'data'    => null
+                ], 403); // 403 Forbidden or 404 Not Found depending on your API standards
+            }
+
+            // Proceed with the toggle action since the pharmacy is active
             $result = $user->savedPharmacies()->toggle($pharmacyId);
 
-            // 3. تحديد حالة الصيدلية بعد العملية وتجهيز الرسالة
             $isSaved = count($result['attached']) > 0;
-            $message = $isSaved ? 'Pharmacy saved successfully.' : 'Pharmacy removed from saved list.';
+
+            $message = $isSaved
+                ? 'Pharmacy has been successfully added to your saved list.'
+                : 'Pharmacy has been successfully removed from your saved list.';
 
             return response()->json([
                 'success' => true,
                 'message' => $message,
                 'data'    => [
-                    'pharmacy_id' => (int) $pharmacyId,
+                    'pharmacy_id' => $pharmacyId,
                     'is_saved'    => $isSaved
                 ]
             ], 200);
+
         } catch (\Exception $e) {
-            // 4. التقاط الأخطاء وتسجيلها
             Log::error('API Toggle Saved Pharmacy Error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'An unexpected error occurred while toggling the pharmacy.',
+                'message' => 'We encountered an issue while processing your request. Please try again.',
                 'error'   => config('app.debug') ? $e->getMessage() : null,
                 'data'    => null
-            ], 500); // 500 Internal Server Error
+            ], 500);
         }
     }
 
@@ -66,65 +79,90 @@ class SavePharmaciesController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthenticated access.',
+                    'message' => 'Please log in to view your saved pharmacies.',
                     'data'    => null
                 ], 401);
             }
 
             $perPage = (int) $request->input('per_page', 10);
 
-            // 1. جلب الصيدليات المحفوظة بشرط أن تكون مفعلة
             $query = $user->savedPharmacies()->where('pharmacies.is_active', true);
 
-            // 2. حساب المسافة ذكياً إذا كان موقع المستخدم متاحاً
             if ($user->latitude && $user->longitude) {
                 $lat = $user->latitude;
                 $lng = $user->longitude;
-                $radius = 6371; // Earth's radius in kilometers
+                $radius = 6371;
 
-                $haversineRaw = "( $radius * acos( cos(radians(?)) * cos(radians(lat)) * cos(radians(lng) - radians(?)) + sin(radians(?)) * sin(radians(lat)) ) )";
+                $haversineRaw = "( $radius * acos( cos(radians(?)) * cos(radians(pharmacies.lat)) * cos(radians(pharmacies.lng) - radians(?)) + sin(radians(?)) * sin(radians(pharmacies.lat)) ) )";
                 $bindings = [$lat, $lng, $lat];
 
                 $query->selectRaw("pharmacies.*, $haversineRaw AS distance", $bindings)
-                    ->orderBy('distance', 'asc'); // الترتيب من الأقرب للأبعد
+                    ->orderBy('distance', 'asc');
             } else {
-                // إذا لم يكن هناك موقع، نرتبها حسب الأحدث إضافة للمفضلة
                 $query->select('pharmacies.*')->orderBy('saved_pharmacies.created_at', 'desc');
             }
 
-            // 3. تطبيق التقسيم (Pagination)
             $pharmacies = $query->paginate($perPage)->withQueryString();
 
-            // 4. تهيئة المسافات للـ Mobile (Smart Distance Formatter)
+            // ✨ التعديل الأمني: Explicit Mapping ✨
             $pharmacies->getCollection()->transform(function ($pharmacy) {
+
+                // حساب المسافة
+                $distanceValue = null;
+                $distanceText = null;
+
                 if (isset($pharmacy->distance)) {
-                    if ($pharmacy->distance < 1) {
-                        $pharmacy->distance_text = round($pharmacy->distance * 1000) . ' m';
-                    } else {
-                        $pharmacy->distance_text = round($pharmacy->distance, 2) . ' km';
-                    }
-                    $pharmacy->distance = round($pharmacy->distance, 2);
-                } else {
-                    $pharmacy->distance = null;
-                    $pharmacy->distance_text = null;
+                    $distanceValue = round($pharmacy->distance, 2);
+                    $distanceText = $pharmacy->distance < 1
+                        ? round($pharmacy->distance * 1000) . ' m'
+                        : $distanceValue . ' km';
                 }
 
-                // إزالة بيانات الجدول الوسيط (Pivot) لتنظيف استجابة الـ JSON
-                unset($pharmacy->pivot);
+                // معالجة الصور
+                $imageUrl = null;
+                if (!empty($pharmacy->image)) {
+                    $imageUrl = str_starts_with($pharmacy->image, 'http') ? $pharmacy->image : asset('storage/' . $pharmacy->image);
+                }
 
-                return $pharmacy;
+                $coverUrl = null;
+                if (!empty($pharmacy->cover)) {
+                    $coverUrl = str_starts_with($pharmacy->cover, 'http') ? $pharmacy->cover : asset('storage/' . $pharmacy->cover);
+                }
+
+                // ✨ إرجاع الحقول العامة (الآمنة) فقط وإخفاء الباقي ✨
+                return [
+                    'pharmacy_id'       => $pharmacy->id, // بدلاً من id لسهولة الاستخدام في الموبايل
+                    'pharmacy_name'     => $pharmacy->pharmacy_name,
+                    'owner_name'        => $pharmacy->owner_name,
+                    'city'              => $pharmacy->city,
+                    'address'           => $pharmacy->address,
+                    'phone'             => $pharmacy->phone,
+                    'working_hours'     => $pharmacy->working_hours,
+                    'image'             => $imageUrl,
+                    'cover'             => $coverUrl,
+                    'location'          => [
+                        'lat' => $pharmacy->lat ? (float) $pharmacy->lat : null,
+                        'lng' => $pharmacy->lng ? (float) $pharmacy->lng : null,
+                    ],
+                    'distance'          => $distanceValue,
+                    'distance_text'     => $distanceText,
+                    'services'          => is_string($pharmacy->services) ? json_decode($pharmacy->services) : $pharmacy->services,
+                    'has_collaboration' => (bool) $pharmacy->has_collaboration,
+                    'is_big_pharmacy'   => (bool) $pharmacy->is_big_pharmacy,
+                    'is_saved'          => true, // حقل تأكيدي
+                ];
             });
 
-            // 5. تجهيز الرسالة النهائية
             $message = $pharmacies->isEmpty()
-                ? 'You have no saved pharmacies yet.'
-                : 'Saved pharmacies fetched successfully.';
+                ? 'You haven\'t saved any pharmacies to your favorites yet.'
+                : 'Saved pharmacies retrieved successfully.';
 
             return response()->json([
                 'success' => true,
                 'message' => $message,
                 'data'    => $pharmacies
             ], 200);
+
         } catch (\Exception $e) {
             Log::error('API Fetch Saved Pharmacies Error: ' . $e->getMessage());
 

@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Api\Pharmacies;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Save\SaveMedicinesRequest;
 use App\Models\SavedMedicine;
+use App\Models\Pharmacy; // ✨ تمت إضافة استدعاء موديل الصيدلية
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class SaveMedicinesController extends Controller
 {
     /**
-     * Toggle medicine (save / unsave)
+     * حفظ / إزالة دواء من المفضلة (مرتبط بصيدلية معينة)
      */
     public function toggleMedicine(SaveMedicinesRequest $request)
     {
@@ -22,15 +23,27 @@ class SaveMedicinesController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthenticated access.',
+                    'message' => 'Unauthenticated access. Please log in.',
                     'data'    => null
                 ], 401);
             }
 
-            $medicineId = $request->medicine_id;
-            $pharmacyId = $request->pharmacy_id;
+            // ضمان أن البيانات أرقام صحيحة (Casting)
+            $medicineId = (int) $request->input('medicine_id');
+            $pharmacyId = (int) $request->input('pharmacy_id');
 
-            // 2. Manual toggle (عشان عندنا pharmacy_id)
+            // ✨ 2. Business Logic Check: التحقق من أن الصيدلية موجودة ومفعلة ✨
+            $pharmacy = Pharmacy::find($pharmacyId);
+
+            if (!$pharmacy || !$pharmacy->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This pharmacy is currently inactive or unavailable.',
+                    'data'    => null
+                ], 403); // 403 Forbidden
+            }
+
+            // 3. Manual toggle check
             $existing = SavedMedicine::where('user_id', $user->id)
                 ->where('medicine_id', $medicineId)
                 ->where('pharmacy_id', $pharmacyId)
@@ -43,15 +56,15 @@ class SaveMedicinesController extends Controller
                     'success' => true,
                     'message' => 'Medicine removed from saved list.',
                     'data'    => [
-                        'medicine_id' => (int) $medicineId,
-                        'pharmacy_id' => (int) $pharmacyId,
+                        'medicine_id' => $medicineId,
+                        'pharmacy_id' => $pharmacyId,
                         'is_saved'    => false
                     ]
                 ], 200);
             }
 
             SavedMedicine::create([
-                'user_id' => $user->id,
+                'user_id'     => $user->id,
                 'medicine_id' => $medicineId,
                 'pharmacy_id' => $pharmacyId,
             ]);
@@ -60,8 +73,8 @@ class SaveMedicinesController extends Controller
                 'success' => true,
                 'message' => 'Medicine saved successfully.',
                 'data'    => [
-                    'medicine_id' => (int) $medicineId,
-                    'pharmacy_id' => (int) $pharmacyId,
+                    'medicine_id' => $medicineId,
+                    'pharmacy_id' => $pharmacyId,
                     'is_saved'    => true
                 ]
             ], 200);
@@ -96,57 +109,80 @@ class SaveMedicinesController extends Controller
 
             $perPage = (int) $request->input('per_page', 10);
 
-            // 1. query
-            $query = SavedMedicine::with(['medicine', 'pharmacy'])
-                ->where('user_id', $user->id);
+            // 1. Query: Eager load relations
+            $query = SavedMedicine::with(['medicine.category', 'pharmacy'])
+                ->where('medicines_saved.user_id', $user->id);
 
-            // 2. distance (لو عايز تحسب بناء على الصيدلية)
+            // 2. Distance Calculation
             if ($user->latitude && $user->longitude) {
-
                 $lat = $user->latitude;
                 $lng = $user->longitude;
                 $radius = 6371;
 
                 $haversineRaw = "( $radius * acos( cos(radians(?)) * cos(radians(pharmacies.lat)) * cos(radians(pharmacies.lng) - radians(?)) + sin(radians(?)) * sin(radians(pharmacies.lat)) ) )";
 
-                $query->join('pharmacies', 'saved_medicines.pharmacy_id', '=', 'pharmacies.id')
-                    ->selectRaw("saved_medicines.*, $haversineRaw AS distance", [$lat, $lng, $lat])
+                $query->join('pharmacies', 'medicines_saved.pharmacy_id', '=', 'pharmacies.id')
+                    ->selectRaw("medicines_saved.*, $haversineRaw AS distance", [$lat, $lng, $lat])
                     ->orderBy('distance', 'asc');
-
             } else {
-                $query->orderBy('created_at', 'desc');
+                $query->select('medicines_saved.*')->orderBy('medicines_saved.created_at', 'desc');
             }
 
-            // 3. pagination
+            // 3. Pagination
             $medicines = $query->paginate($perPage)->withQueryString();
 
-            // 4. transform
+            // 4. Transform Data (Professional Restructuring)
             $medicines->getCollection()->transform(function ($item) {
 
-                if (isset($item->distance)) {
-                    if ($item->distance < 1) {
-                        $item->distance_text = round($item->distance * 1000) . ' m';
-                    } else {
-                        $item->distance_text = round($item->distance, 2) . ' km';
-                    }
+                $distanceText = null;
+                $distanceValue = null;
 
-                    $item->distance = round($item->distance, 2);
-                } else {
-                    $item->distance = null;
-                    $item->distance_text = null;
+                if (isset($item->distance)) {
+                    $distanceValue = round($item->distance, 2);
+                    $distanceText = $item->distance < 1
+                        ? round($item->distance * 1000) . ' m'
+                        : $distanceValue . ' km';
                 }
 
+                $med = $item->medicine;
+                $pharm = $item->pharmacy;
+
                 return [
-                    'id' => $item->id,
-                    'medicine' => $item->medicine,
-                    'pharmacy' => $item->pharmacy,
-                    'distance' => $item->distance,
-                    'distance_text' => $item->distance_text,
-                    'created_at' => $item->created_at,
+                    'save_id'  => $item->id,
+                    'is_saved' => true,
+                    'saved_at' => $item->created_at,
+
+                    'medicine' => $med ? [
+                        'id'          => $med->id,
+                        'name'        => $med->name,
+                        'description' => $med->description,
+                        // التعامل السليم مع مسارات الصور
+                        'image'       => $med->image ? (str_starts_with($med->image, 'http') ? $med->image : asset('storage/' . $med->image)) : null,
+                        'category'    => $med->category ? [
+                            'id'   => $med->category->id,
+                            'name' => $med->category->name
+                        ] : null
+                    ] : null,
+
+                    'pharmacy' => $pharm ? [
+                        'id'            => $pharm->id,
+                        'pharmacy_name' => $pharm->pharmacy_name,
+                        'address'       => $pharm->address,
+                        'phone'         => $pharm->phone,
+                        'working_hours' => $pharm->working_hours,
+                        'image'         => $pharm->image ? (str_starts_with($pharm->image, 'http') ? $pharm->image : asset('storage/' . $pharm->image)) : null,
+                        'location'      => [
+                            'lat' => $pharm->lat ? (float) $pharm->lat : null,
+                            'lng' => $pharm->lng ? (float) $pharm->lng : null,
+                        ],
+                        // ✨ نقل المسافة لتكون هنا، جزءاً من بيانات الصيدلية الجغرافية ✨
+                        'distance'      => $distanceValue,
+                        'distance_text' => $distanceText,
+                    ] : null,
                 ];
             });
 
-            // 5. message
+            // 5. Response Message
             $message = $medicines->isEmpty()
                 ? 'You have no saved medicines yet.'
                 : 'Saved medicines fetched successfully.';
