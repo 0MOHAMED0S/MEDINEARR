@@ -54,4 +54,9 @@ class SavedMedicine extends Model
             'user_id'
         );
     }
+
+
+
+
+    
 }
