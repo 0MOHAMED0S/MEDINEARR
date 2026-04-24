@@ -47,8 +47,8 @@ class SaveCartController extends Controller
 
             // ✨ Security Check 2: Ensure the Pharmacy actually stocks this Medicine
             $stock = PharmacyMedicine::where('pharmacy_id', $pharmacyId)
-                                     ->where('medicine_id', $medicineId)
-                                     ->first();
+                ->where('medicine_id', $medicineId)
+                ->first();
 
             if (!$stock) {
                 return response()->json([
@@ -109,7 +109,6 @@ class SaveCartController extends Controller
                     ]
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('API Toggle Cart Item Error: ' . $e->getMessage());
 
@@ -172,7 +171,6 @@ class SaveCartController extends Controller
                 'message' => $message,
                 'data'    => $pharmacies
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('API Get Cart Pharmacies Error: ' . $e->getMessage());
 
@@ -188,7 +186,7 @@ class SaveCartController extends Controller
     /**
      * Get items in the cart belonging to a specific pharmacy
      */
-public function PharmacyCartItems(CartItemsRequest $request): JsonResponse
+    public function PharmacyCartItems(CartItemsRequest $request): JsonResponse
     {
         try {
             $user = auth()->user();
@@ -262,7 +260,6 @@ public function PharmacyCartItems(CartItemsRequest $request): JsonResponse
                     'items'       => $formattedItems,
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('API Get Pharmacy Cart Items Error: ' . $e->getMessage());
 
