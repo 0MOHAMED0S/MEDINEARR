@@ -128,9 +128,11 @@ public function getInventory($id): \Illuminate\Http\JsonResponse
                 // التحقق مما إذا كان المستخدم قد حفظ هذه الصيدلية
                 $is_saved_pharmacy = $user->savedPharmacies()->where('pharmacy_id', $pharmacy->id)->exists();
 
-                // جلب مصفوفة تحتوي على كل أرقام الأدوية (IDs) المحفوظة لدى هذا المستخدم
-                // (نفترض أن لديك علاقة اسمها savedMedicines في موديل الـ User)
-                $savedMedicineIds = $user->savedMedicines()->allRelatedIds()->toArray();
+                // ✨ تم الحل هنا: جلب الأدوية المحفوظة للمستخدم في "هذه الصيدلية المحددة فقط" بدلاً من كل الصيدليات ✨
+                $savedMedicineIds = \App\Models\SavedMedicine::where('user_id', $user->id)
+                    ->where('pharmacy_id', $pharmacy->id)
+                    ->pluck('medicine_id')
+                    ->toArray();
 
                 // حساب المسافة
                 if ($user->latitude && $user->longitude && $pharmacy->lat && $pharmacy->lng) {

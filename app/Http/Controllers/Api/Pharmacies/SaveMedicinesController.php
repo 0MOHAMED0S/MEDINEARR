@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class SaveMedicinesController extends Controller
 {
-    /**
+/**
      * حفظ / إزالة دواء من المفضلة (مرتبط بصيدلية معينة)
      */
     public function toggleMedicine(SaveMedicinesRequest $request)
@@ -33,7 +33,7 @@ class SaveMedicinesController extends Controller
             $pharmacyId = (int) $request->input('pharmacy_id');
 
             // ✨ 2. Business Logic Check: التحقق من أن الصيدلية موجودة ومفعلة ✨
-            $pharmacy = Pharmacy::find($pharmacyId);
+            $pharmacy = \App\Models\Pharmacy::find($pharmacyId);
 
             if (!$pharmacy || !$pharmacy->is_active) {
                 return response()->json([
@@ -43,7 +43,21 @@ class SaveMedicinesController extends Controller
                 ], 403); // 403 Forbidden
             }
 
-            // 3. Manual toggle check
+            // ✨ 3. Security/Stock Check: التحقق من أن الدواء موجود في هذه الصيدلية وحالته نشطة ✨
+            $stock = \App\Models\PharmacyMedicine::where('pharmacy_id', $pharmacyId)
+                ->where('medicine_id', $medicineId)
+                ->first();
+
+            // إذا لم يكن الدواء موجوداً في الصيدلية، أو كانت حالته مخفية (hidden)
+            if (!$stock || $stock->status === 'hidden') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This medicine is not available or currently inactive at the selected pharmacy.',
+                    'data'    => null
+                ], 404); // 404 Not Found
+            }
+
+            // 4. Manual toggle check
             $existing = SavedMedicine::where('user_id', $user->id)
                 ->where('medicine_id', $medicineId)
                 ->where('pharmacy_id', $pharmacyId)
@@ -92,9 +106,6 @@ class SaveMedicinesController extends Controller
     }
 
     /**
-     * Get saved medicines with pharmacy
-     */
-/**
      * Get saved medicines with pharmacy
      */
     public function index(Request $request)
