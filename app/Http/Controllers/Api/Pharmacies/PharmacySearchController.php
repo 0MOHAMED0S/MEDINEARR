@@ -15,10 +15,7 @@ class PharmacySearchController extends Controller
     /**
      * Unified Search Endpoint (Pharmacies & Medicines)
      */
-/**
-     * Unified Search Endpoint (Pharmacies & Medicines)
-     */
-    public function index(Request $request)
+public function index(Request $request)
     {
         // 1. Input Validation
         $validator = Validator::make($request->all(), [
@@ -86,6 +83,15 @@ class PharmacySearchController extends Controller
                         $pharmacy->distance_text = round($pharmacy->distance, 2) . ' km';
                     }
                     $pharmacy->distance = round($pharmacy->distance, 2);
+
+                    // ✨ معالجة روابط صور الصيدلية لتكون Full URL ✨
+                    if (!empty($pharmacy->image) && !str_starts_with($pharmacy->image, 'http')) {
+                        $pharmacy->image = asset('storage/' . $pharmacy->image);
+                    }
+                    if (!empty($pharmacy->cover) && !str_starts_with($pharmacy->cover, 'http')) {
+                        $pharmacy->cover = asset('storage/' . $pharmacy->cover);
+                    }
+
                     return $pharmacy;
                 });
 
@@ -124,6 +130,11 @@ class PharmacySearchController extends Controller
 
                 // Get the requested medicine with its category
                 $medicine = Medicine::with('category:id,name')->find($request->medicine_id);
+
+                // ✨ معالجة رابط صورة الدواء ليكون Full URL ✨
+                if ($medicine && !empty($medicine->image) && !str_starts_with($medicine->image, 'http')) {
+                    $medicine->image = asset('storage/' . $medicine->image);
+                }
 
                 // Get pharmacies that have the medicine (or Big Pharmacies always)
                 $pharmacies = Pharmacy::where('is_active', true)
@@ -170,6 +181,14 @@ class PharmacySearchController extends Controller
                         'quantity' => $pivotData ? (int) $pivotData->quantity : 0,
                     ];
 
+                    // ✨ معالجة روابط صور الصيدلية ليكون Full URL ✨
+                    if (!empty($pharmacy->image) && !str_starts_with($pharmacy->image, 'http')) {
+                        $pharmacy->image = asset('storage/' . $pharmacy->image);
+                    }
+                    if (!empty($pharmacy->cover) && !str_starts_with($pharmacy->cover, 'http')) {
+                        $pharmacy->cover = asset('storage/' . $pharmacy->cover);
+                    }
+
                     // Remove the medicines array to clean up the JSON response
                     unset($pharmacy->medicines);
 
@@ -207,6 +226,7 @@ class PharmacySearchController extends Controller
             ], 500);
         }
     }
+    
     /**
      * Get the authenticated user's recent search history (Suggestions)
      */
