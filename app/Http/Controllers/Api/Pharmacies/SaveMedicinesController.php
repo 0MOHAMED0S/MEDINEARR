@@ -94,6 +94,9 @@ class SaveMedicinesController extends Controller
     /**
      * Get saved medicines with pharmacy
      */
+/**
+     * Get saved medicines with pharmacy
+     */
     public function index(Request $request)
     {
         try {
@@ -153,12 +156,14 @@ class SaveMedicinesController extends Controller
                     'saved_at' => $item->created_at,
 
                     'medicine' => $med ? [
-                        'id'          => $med->id,
-                        'name'        => $med->name,
-                        'description' => $med->description,
+                        'id'             => $med->id,
+                        'name'           => $med->name,
+                        'description'    => $med->description,
+                        // ✨ تمت إضافة السعر الرسمي هنا ✨
+                        'official_price' => $med->official_price ? (float) $med->official_price : null,
                         // التعامل السليم مع مسارات الصور
-                        'image'       => $med->image ? (str_starts_with($med->image, 'http') ? $med->image : asset('storage/' . $med->image)) : null,
-                        'category'    => $med->category ? [
+                        'image'          => $med->image ? (str_starts_with($med->image, 'http') ? $med->image : asset('storage/' . $med->image)) : null,
+                        'category'       => $med->category ? [
                             'id'   => $med->category->id,
                             'name' => $med->category->name
                         ] : null
