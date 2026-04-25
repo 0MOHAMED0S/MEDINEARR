@@ -12,10 +12,10 @@ use Exception;
 
 class PharmacySearchController extends Controller
 {
-    /**
+/**
      * Unified Search Endpoint (Pharmacies & Medicines)
      */
-public function index(Request $request)
+    public function index(Request $request)
     {
         // 1. Input Validation
         $validator = Validator::make($request->all(), [
@@ -69,7 +69,6 @@ public function index(Request $request)
                     ->when($request->filled('q'), function ($query) use ($request) {
                         $query->where('pharmacy_name', 'LIKE', '%' . $request->q . '%');
                     })
-                    // ✨ تم التعديل هنا لجلب كل الأعمدة (pharmacies.*) ✨
                     ->selectRaw("pharmacies.*, $haversineRaw AS distance", $bindings)
                     ->orderBy('distance', 'asc')
                     ->paginate($perPage)
@@ -84,7 +83,6 @@ public function index(Request $request)
                     }
                     $pharmacy->distance = round($pharmacy->distance, 2);
 
-                    // ✨ معالجة روابط صور الصيدلية لتكون Full URL ✨
                     if (!empty($pharmacy->image) && !str_starts_with($pharmacy->image, 'http')) {
                         $pharmacy->image = asset('storage/' . $pharmacy->image);
                     }
@@ -92,10 +90,13 @@ public function index(Request $request)
                         $pharmacy->cover = asset('storage/' . $pharmacy->cover);
                     }
 
+                    // ✨ إخفاء البيانات الحساسة من الاستجابة ✨
+                    $pharmacy->makeHidden(['license_number', 'license_document']);
+
                     return $pharmacy;
                 });
 
-                // ✨ Save search history in the background (first 10 results) ✨
+                // Save search history in the background (first 10 results)
                 $returnedIds = $pharmacies->take(10)->pluck('id')->toArray();
                 \App\Jobs\LogSearchHistoryJob::dispatchAfterResponse([
                     'user_id'               => $user->id,
@@ -131,7 +132,6 @@ public function index(Request $request)
                 // Get the requested medicine with its category
                 $medicine = Medicine::with('category:id,name')->find($request->medicine_id);
 
-                // ✨ معالجة رابط صورة الدواء ليكون Full URL ✨
                 if ($medicine && !empty($medicine->image) && !str_starts_with($medicine->image, 'http')) {
                     $medicine->image = asset('storage/' . $medicine->image);
                 }
@@ -141,7 +141,6 @@ public function index(Request $request)
                     ->whereNotNull('lat')
                     ->whereNotNull('lng')
                     ->where(function ($query) use ($medicine) {
-
                         // Pharmacy has the medicine and it's available
                         $query->whereHas('medicines', function ($subQuery) use ($medicine) {
                             $subQuery->where('pharmacy_medicines.medicine_id', $medicine->id)
@@ -154,7 +153,6 @@ public function index(Request $request)
                     ->with(['medicines' => function ($query) use ($medicine) {
                         $query->where('medicines.id', $medicine->id);
                     }])
-                    // ✨ تم التعديل هنا لجلب كل الأعمدة (pharmacies.*) ✨
                     ->selectRaw("pharmacies.*, $haversineRaw AS distance", $bindings)
                     ->orderBy('distance', 'asc')
                     ->paginate($perPage)
@@ -181,7 +179,6 @@ public function index(Request $request)
                         'quantity' => $pivotData ? (int) $pivotData->quantity : 0,
                     ];
 
-                    // ✨ معالجة روابط صور الصيدلية ليكون Full URL ✨
                     if (!empty($pharmacy->image) && !str_starts_with($pharmacy->image, 'http')) {
                         $pharmacy->image = asset('storage/' . $pharmacy->image);
                     }
@@ -189,13 +186,16 @@ public function index(Request $request)
                         $pharmacy->cover = asset('storage/' . $pharmacy->cover);
                     }
 
+                    // ✨ إخفاء البيانات الحساسة من الاستجابة ✨
+                    $pharmacy->makeHidden(['license_number', 'license_document']);
+
                     // Remove the medicines array to clean up the JSON response
                     unset($pharmacy->medicines);
 
                     return $pharmacy;
                 });
 
-                // ✨ Save search history in the background (first 10 results) ✨
+                // Save search history in the background (first 10 results)
                 $returnedIds = $pharmacies->take(10)->pluck('id')->toArray();
                 \App\Jobs\LogSearchHistoryJob::dispatchAfterResponse([
                     'user_id'               => $user->id,
@@ -226,7 +226,7 @@ public function index(Request $request)
             ], 500);
         }
     }
-    
+
     /**
      * Get the authenticated user's recent search history (Suggestions)
      */

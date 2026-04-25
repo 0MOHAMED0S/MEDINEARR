@@ -21,7 +21,7 @@ class MedicineController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             }
 
@@ -33,13 +33,13 @@ class MedicineController extends Controller
             $perPage = min($request->input('per_page', 10), 50);
 
             $medicines = $query->select(
-                    'id',
-                    'name',
-                    'description',
-                    // 'price',
-                    'image',
-                    'category_id'
-                )
+                'id',
+                'name',
+                'description',
+                // 'price',
+                'image',
+                'category_id'
+            )
                 ->latest()
                 ->get() // ✨ تم التغيير من paginate إلى get ✨
                 ->map(function ($medicine) { // ✨ تم التغيير من through إلى map ✨
@@ -61,7 +61,6 @@ class MedicineController extends Controller
                 'message' => 'Medicines retrieved successfully',
                 'data'    => $medicines // سيتم إرجاع مصفوفة (Array) مباشرة هنا
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -71,7 +70,7 @@ class MedicineController extends Controller
         }
     }
 
-public function show(Request $request)
+    public function show(Request $request)
     {
         try {
             // 1. Validation with Standardized Response
@@ -98,9 +97,9 @@ public function show(Request $request)
                     $query->where('pharmacies.id', $pharmacyId);
                 }
             ])
-            ->where('id', $medicineId)
-            ->where('status', 1)
-            ->first();
+                ->where('id', $medicineId)
+                ->where('status', 1)
+                ->first();
 
             // 3. Business Logic Check
             if (!$medicine || $medicine->pharmacies->isEmpty()) {
@@ -177,7 +176,6 @@ public function show(Request $request)
                     'is_saved' => $isSaved
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('API Get Medicine Details Error: ' . $e->getMessage());
 
@@ -189,5 +187,4 @@ public function show(Request $request)
             ], 500);
         }
     }
-
 }
