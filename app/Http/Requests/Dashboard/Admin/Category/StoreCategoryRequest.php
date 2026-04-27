@@ -25,7 +25,7 @@ class StoreCategoryRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:9048',
             'status' => 'nullable|in:0,1',
         ];
     }
@@ -62,7 +62,7 @@ class StoreCategoryRequest extends FormRequest
             'image.required' => 'يرجى رفع :attribute، فهو حقل إجباري.',
             'image.image' => 'الملف المرفوع يجب أن يكون صورة صالحة.',
             'image.mimes' => 'يجب أن تكون :attribute بأحد الصيغ التالية: jpeg, png, jpg, gif, svg.',
-            'image.max' => 'حجم :attribute يجب ألا يتجاوز 2 ميجابايت (2048 كيلوبايت).',
+            'image.max' => 'حجم :attribute يجب ألا يتجاوز 9 ميجابايت (9048 كيلوبايت).',
 
             // رسائل حقل الحالة
             'status.in' => 'القيمة المحددة في :attribute غير صالحة، يجب أن تكون نشطة أو متوقفة فقط.',

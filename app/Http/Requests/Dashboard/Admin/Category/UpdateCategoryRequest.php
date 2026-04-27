@@ -23,7 +23,7 @@ class UpdateCategoryRequest extends FormRequest
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             // جعلنا الصورة nullable لكي لا نجبر المستخدم على رفعها مجدداً إذا أراد تغيير الاسم فقط
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:9048',
             'status' => 'nullable|in:0,1',
         ];
     }
@@ -59,7 +59,7 @@ class UpdateCategoryRequest extends FormRequest
             // رسائل حقل الصورة (التي ستظهر فقط إذا قام برفع ملف خاطئ)
             'image.image' => 'الملف المرفوع يجب أن يكون صورة صالحة.',
             'image.mimes' => 'يجب أن تكون :attribute بأحد الصيغ التالية: jpeg, png, jpg, gif, svg.',
-            'image.max' => 'حجم :attribute يجب ألا يتجاوز 2 ميجابايت (2048 كيلوبايت).',
+            'image.max' => 'حجم :attribute يجب ألا يتجاوز 9 ميجابايت (9048 كيلوبايت).',
 
             // رسائل حقل الحالة
             'status.in' => 'القيمة المحددة في :attribute غير صالحة، يجب أن تكون نشطة أو متوقفة فقط.',
