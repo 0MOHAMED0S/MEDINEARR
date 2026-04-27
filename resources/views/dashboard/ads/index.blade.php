@@ -203,9 +203,9 @@
                      data-active="{{ $isActive ? '1' : '0' }}"
                      data-ad-info="{{ json_encode($adDataForJs) }}">
 
-                    <div class="absolute top-3 left-3 right-3 flex justify-between items-start z-30 pointer-events-none">
+                    <div class="absolute top-3 left-3 right-3 flex justify-between items-start z-30 pointer-events-none status-badge-container">
                         @if(!$isActive)
-                            <div class="bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-md border border-white/20 flex items-center gap-1.5">
+                            <div class="bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-md border border-white/20 flex items-center gap-1.5 js-status-badge">
                                 <i class="fa-solid fa-ban text-[8px]"></i> متوقف
                             </div>
                         @else
@@ -228,7 +228,7 @@
                             <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl p-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.15)] border border-white/40 mb-3 relative z-20 transform rotate-3 group-hover/banner:rotate-0 group-hover/banner:scale-110 transition-all duration-500 ease-out">
                                 <img src="{{ $ad->image_url ?? 'https://ui-avatars.com/api/?name=Ad&background=fff' }}" class="w-full h-full object-cover rounded-xl">
                             </div>
-                            <h4 class="font-black text-base text-center truncate w-full relative z-20 drop-shadow-md px-2" style="color: {{ $ad->bg_color && hexdec(str_replace('#','',$ad->bg_color)) < 0x888888 ? '#ffffff' : '#1e293b' }}">
+                            <h4 class="font-black text-base text-center truncate w-full relative z-20 drop-shadow-md px-2" style="color: {{ !empty($ad->bg_color) && hexdec(str_replace('#','', $ad->bg_color)) < 0x888888 ? '#ffffff' : '#1e293b' }}">
                                 {{ $ad->title }}
                             </h4>
                         </div>
@@ -249,12 +249,12 @@
                             </span>
                         </div>
 
-                        @if($ad->type === 'banner' && $ad->description)
+                        @if($ad->type === 'banner' && !empty($ad->description))
                             <p class="text-xs text-slate-500 font-medium line-clamp-2 mb-4 leading-relaxed">{{ $ad->description }}</p>
                         @endif
 
                         <div class="mt-auto">
-                            @if($ad->link)
+                            @if(!empty($ad->link))
                                 <a href="{{ $ad->link }}" target="_blank" class="group/link flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-primary/5 border border-slate-100 hover:border-primary/20 transition-all text-left" dir="ltr">
                                     <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover/link:text-primary transition-colors shrink-0">
                                         <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
@@ -294,7 +294,7 @@
                             <button type="button" onclick="openAdModal('edit', this.closest('.ad-card'))" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-all flex items-center justify-center shadow-sm tooltip" title="تعديل الإعلان">
                                 <i class="fa-solid fa-pen-to-square text-sm"></i>
                             </button>
-                            <button type="button" onclick="openDeleteModal({{ $ad->id }}, '{{ $ad->title }}')" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition-all flex items-center justify-center shadow-sm tooltip" title="حذف نهائي">
+                            <button type="button" onclick="openDeleteModal({{ $ad->id }}, '{{ addslashes($ad->title) }}')" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition-all flex items-center justify-center shadow-sm tooltip" title="حذف نهائي">
                                 <i class="fa-solid fa-trash-can text-sm"></i>
                             </button>
                         </div>
@@ -479,6 +479,13 @@
                         document.getElementById('adForm').action = "{{ route('ads.store') }}";
                         document.getElementById('modalTitle').innerText = 'إضافة إعلان جديد';
                         document.getElementById('type_banner').checked = true;
+
+                        // Clear text fields explicitly to avoid cross-browser cache issues
+                        document.getElementById('ad_title').value = '';
+                        document.getElementById('ad_link').value = '';
+                        document.getElementById('ad_description').value = '';
+                        document.getElementById('ad_coupon_id').value = '';
+
                         toggleFormFields();
 
                         document.getElementById('bannerPreviewContainer').classList.add('hidden');
@@ -526,9 +533,15 @@
             }
         }
 
-        document.getElementById('ad_bg_color').addEventListener('input', function() {
-            document.getElementById('ad_bg_color_text').value = this.value;
-        });
+        // Cross-browser safe event listeners for color picker
+        const colorInput = document.getElementById('ad_bg_color');
+        const colorText = document.getElementById('ad_bg_color_text');
+
+        function updateColorText(e) {
+            colorText.value = e.target.value;
+        }
+        colorInput.addEventListener('input', updateColorText);
+        colorInput.addEventListener('change', updateColorText);
 
         function showToast(msg, success = true) {
             const container = document.getElementById('ajax-toast-container');
@@ -564,6 +577,16 @@
         let currentSlideIndex = 0;
         let totalSlidesCount = 0;
 
+        // Safer hex calculation function
+        function safeHexColorCheck(hexString) {
+            if (!hexString) return false;
+            let hex = hexString.replace('#', '');
+            if (hex.length === 3) {
+                hex = hex.split('').map(x => x + x).join('');
+            }
+            return parseInt(hex, 16) < 0x888888;
+        }
+
         function syncCarousel() {
             const carousel = document.getElementById('mobile-ads-carousel');
             const dotsContainer = document.getElementById('carousel-dots');
@@ -595,15 +618,18 @@
                 let slideHtml = '';
 
                 if (adData.type === 'banner') {
+                    const bgColor = adData.bg_color || '#0f172a';
+                    const textColor = safeHexColorCheck(bgColor) ? '#ffffff' : '#1e293b';
+
                     slideHtml = `
-                        <div id="mobile-slide-${index}" class="snap-center shrink-0 w-[90%] mx-[5%] h-[120px] rounded-2xl p-4 flex items-center gap-3 shadow-md border border-black/5 relative overflow-hidden" style="background-color: ${adData.bg_color || '#0f172a'}">
+                        <div id="mobile-slide-${index}" class="snap-center shrink-0 w-[90%] mx-[5%] h-[120px] rounded-2xl p-4 flex items-center gap-3 shadow-md border border-black/5 relative overflow-hidden" style="background-color: ${bgColor}">
                             ${couponBadge}
                             <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent z-0"></div>
                             <div class="w-14 h-14 bg-white/20 backdrop-blur-md border border-white/30 rounded-full p-1 shrink-0 shadow-inner z-10">
                                 <img src="${adData.image_url || 'https://ui-avatars.com/api/?name=Ad&background=fff'}" class="w-full h-full object-cover rounded-full">
                             </div>
-                            <div class="text-white min-w-0 text-right w-full z-10" style="color: ${adData.bg_color && hexdec(adData.bg_color.replace('#','')) < 0x888888 ? '#ffffff' : '#1e293b'}">
-                                <h4 class="font-black text-[13px] leading-tight mb-1 truncate drop-shadow-md">${adData.title}</h4>
+                            <div class="text-white min-w-0 text-right w-full z-10" style="color: ${textColor}">
+                                <h4 class="font-black text-[13px] leading-tight mb-1 truncate drop-shadow-md">${adData.title || ''}</h4>
                                 <p class="text-[9px] opacity-90 leading-tight truncate">${adData.description || ''}</p>
                             </div>
                         </div>
@@ -614,7 +640,7 @@
                             ${couponBadge}
                             <img src="${adData.image_url || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover opacity-90">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-4 z-10">
-                                <h4 class="font-black text-white text-[13px] w-full text-right drop-shadow-lg leading-tight truncate">${adData.title}</h4>
+                                <h4 class="font-black text-white text-[13px] w-full text-right drop-shadow-lg leading-tight truncate">${adData.title || ''}</h4>
                             </div>
                         </div>
                     `;
@@ -638,10 +664,17 @@
             const slide = document.getElementById(`mobile-slide-${index}`);
 
             if (carousel && slide) {
-                carousel.scrollTo({
-                    left: slide.offsetLeft - carousel.offsetLeft,
-                    behavior: 'smooth'
-                });
+                // Ensure proper scrolling alignment regardless of browser
+                const offsetLeft = slide.offsetLeft - carousel.offsetLeft;
+                try {
+                    carousel.scrollTo({
+                        left: offsetLeft,
+                        behavior: 'smooth'
+                    });
+                } catch(e) {
+                    // Fallback for older browsers
+                    carousel.scrollLeft = offsetLeft;
+                }
 
                 currentSlideIndex = index;
                 updateDotsUI();
@@ -697,6 +730,12 @@
                 method.value = 'POST';
                 document.getElementById('type_banner').checked = true;
 
+                // Reset Explicitly
+                document.getElementById('ad_title').value = '';
+                document.getElementById('ad_link').value = '';
+                document.getElementById('ad_description').value = '';
+                document.getElementById('ad_coupon_id').value = '';
+
                 document.getElementById('bannerPreviewContainer').classList.add('hidden');
                 document.getElementById('bannerDefaultIcon').classList.remove('hidden');
                 document.getElementById('coverPreviewContainer').classList.add('hidden');
@@ -708,12 +747,12 @@
                 form.action = `/admin/ads/${data.id}`;
                 method.value = 'PUT';
 
-                document.getElementById('ad_title').value = data.title;
-                document.getElementById('ad_link').value = data.link;
+                document.getElementById('ad_title').value = data.title || '';
+                document.getElementById('ad_link').value = data.link || '';
 
                 if(data.type === 'banner') {
                     document.getElementById('type_banner').checked = true;
-                    document.getElementById('ad_description').value = data.description;
+                    document.getElementById('ad_description').value = data.description || '';
                     document.getElementById('ad_bg_color').value = data.bg_color || '#0f172a';
                     document.getElementById('ad_bg_color_text').value = data.bg_color || '#0f172a';
                     document.getElementById('ad_coupon_id').value = data.coupon_id || '';
@@ -757,7 +796,13 @@
                     }
                 });
 
-                const data = await response.json();
+                // Safe parsing in case of server error pages
+                let data;
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    throw new Error('Invalid JSON response from server');
+                }
 
                 btnEl.innerHTML = originalHTML;
                 btnEl.disabled = false;
@@ -791,16 +836,18 @@
                 card.classList.remove('opacity-75', 'grayscale-[40%]');
                 card.classList.add('hover:-translate-y-1.5', 'hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)]', 'hover:border-primary/20');
                 btn.className = "action-btn-toggle w-10 h-10 rounded-xl border border-gray-200 transition-all flex items-center justify-center shadow-sm bg-white text-emerald-500 hover:border-emerald-300 hover:bg-emerald-50";
-                const badge = card.querySelector('.bg-rose-500\\/90');
+
+                // Safe query selector
+                const badge = card.querySelector('.js-status-badge');
                 if(badge) badge.remove();
             } else {
                 card.classList.add('opacity-75', 'grayscale-[40%]');
                 card.classList.remove('hover:-translate-y-1.5', 'hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)]', 'hover:border-primary/20');
                 btn.className = "action-btn-toggle w-10 h-10 rounded-xl border border-gray-200 transition-all flex items-center justify-center shadow-sm bg-white text-slate-400 hover:bg-slate-100";
 
-                const badgeContainer = card.querySelector('.absolute.top-3.left-3.right-3');
-                if(badgeContainer && !badgeContainer.querySelector('.bg-rose-500\\/90')) {
-                    badgeContainer.insertAdjacentHTML('afterbegin', '<div class="bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-md border border-white/20 flex items-center gap-1.5"><i class="fa-solid fa-ban text-[8px]"></i> متوقف</div>');
+                const badgeContainer = card.querySelector('.status-badge-container');
+                if(badgeContainer && !badgeContainer.querySelector('.js-status-badge')) {
+                    badgeContainer.insertAdjacentHTML('afterbegin', '<div class="bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-md border border-white/20 flex items-center gap-1.5 js-status-badge"><i class="fa-solid fa-ban text-[8px]"></i> متوقف</div>');
                 }
             }
         }
@@ -830,10 +877,6 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
             btn.classList.add('opacity-75', 'cursor-not-allowed');
         });
-
-        function hexdec(hexString) {
-            return parseInt(hexString, 16);
-        }
     </script>
 
     <style>
