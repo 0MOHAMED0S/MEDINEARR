@@ -38,7 +38,11 @@ Route::prefix('pharmacy')->middleware(['auth:sanctum'])
     ->group(function () {
         Route::get('/pharmacies', [PharmacyController::class, 'index']);
         Route::get('/ads', [AdController::class, 'index']);
+
         Route::get('/categories', [CategoryController::class, 'index']);
+        Route::get('/categories/{id}/medicines', [CategoryController::class, 'getCategoryMedicines']);
+        Route::get('/categories/{id}/medicines/details', [CategoryController::class, 'getMedicineDetails']);
+
         Route::get('/medicines', [MedicineController::class, 'index']);
         Route::post('/medicine-details', [MedicineController::class, 'show']);
         Route::get('/near-pharmacies', [NearPharmaciesController::class, 'index']);
