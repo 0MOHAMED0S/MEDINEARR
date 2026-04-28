@@ -128,7 +128,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-4">
                                     <div class="w-12 h-12 rounded-2xl bg-white border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-sm">
-                                        <img src="{{ $item->image_url ?? asset('Dashboard/images/logo.png') }}" alt="{{ $item->name }}" class="w-full h-full object-contain rounded-xl">
+                                        <img src="{{ $item->image_url ?? asset('Dashboard/images/logo2.png') }}" alt="{{ $item->name }}" class="w-full h-full object-contain rounded-xl">
                                     </div>
                                     <div>
                                         <h4 class="text-sm font-black text-slate-800 med-name">{{ $item->name }}</h4>

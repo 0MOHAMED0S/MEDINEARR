@@ -69,7 +69,7 @@
                                 onchange="previewImage(this, 'avatarPreview', 'avatarOverlay')" class="hidden">
 
                             <img id="avatarPreview"
-                                src="{{ $pharmacy->image ? asset('storage/' . $pharmacy->image) : asset('Dashboard/images/logo.png') }}"
+                                src="{{ $pharmacy->image ? asset('storage/' . $pharmacy->image) : asset('Dashboard/images/logo2.png') }}"
                                 class="w-full h-full object-cover bg-slate-50 p-2">
 
                             <div id="avatarOverlay"

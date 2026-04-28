@@ -19,7 +19,7 @@
 
     <meta name="theme-color" content="#0d9488">
 
-    <link rel="icon" type="image/x-icon" href="{{ asset('assets/images/logo.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/images/logo2.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/images/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/favicon-16x16.png') }}">
 
@@ -30,7 +30,7 @@
     <meta property="og:title" content="انضم كصيدلية مع MediNear - ضاعف مبيعاتك">
     <meta property="og:description"
         content="سجل صيدليتك الآن في منصة MediNear وابدأ في الوصول لعملاء أكثر في منطقتك بكل سهولة وموثوقية. انضم لشركاء النجاح!">
-    <meta property="og:image" content="{{ asset('assets/images/logo.png') }}">
+    <meta property="og:image" content="{{ asset('assets/images/logo2.png') }}">
     <meta property="og:site_name" content="MediNear Partners">
 
     <meta property="twitter:card" content="summary_large_image">
@@ -38,7 +38,7 @@
     <meta property="twitter:title" content="انضم كصيدلية مع MediNear - ضاعف مبيعاتك">
     <meta property="twitter:description"
         content="سجل صيدليتك الآن في منصة MediNear وابدأ في الوصول لعملاء أكثر في منطقتك بكل سهولة وموثوقية.">
-    <meta property="twitter:image" content="{{ asset('assets/images/logo.png') }}">
+    <meta property="twitter:image" content="{{ asset('assets/images/logo2.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -87,8 +87,8 @@
     <style>
         :root {
             --main-font: 'Tajawal', sans-serif;
-            --grad-start: #0d9488;
-            --grad-end: #65a30d;
+            --grad-start: #00965E;
+            --grad-end: #00965E;
         }
 
         html[lang="en"] {
