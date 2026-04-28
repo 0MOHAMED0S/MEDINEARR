@@ -17,7 +17,7 @@
 
     <meta name="theme-color" content="#0d9488">
 
-    <link rel="icon" type="image/x-icon" href="{{ asset('Dashboard/images/logo.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('Dashboard/images/logo2.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/images/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/favicon-16x16.png') }}">
 
@@ -26,7 +26,7 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="لوحة تحكم | MediNear">
     <meta property="og:description" content="النظام الإداري الشامل لمنصة MediNear الطبية.">
-    <meta property="og:image" content="{{ asset('Dashboard/images/logo.png') }}">
+    <meta property="og:image" content="{{ asset('Dashboard/images/logo2.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
