@@ -23,4 +23,6 @@ protected $fillable = [
         'expiry_date' => 'date',
         'is_active' => 'boolean',
     ];
+
+    public function orders() { return $this->hasMany(Order::class); }
 }

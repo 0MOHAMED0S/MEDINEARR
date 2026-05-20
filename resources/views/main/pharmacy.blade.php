@@ -430,7 +430,8 @@
                                         <div class="font-bold text-sm text-darkText leading-none">
                                             {{ auth()->user()->name }}</div>
                                         <div class="text-[10px] text-gray-500 mt-1">
-                                            <span {!! auth()->user()->role === 'admin' ? 'data-i18n="roleAdmin"' : '' !!}>{{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}</span>
+                                            <span
+                                                {!! auth()->user()->role === 'admin' ? 'data-i18n="roleAdmin"' : '' !!}>{{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}</span>
                                         </div>
                                     </div>
                                     <i
@@ -518,7 +519,8 @@
 
                     @auth
                         @if (Auth::user()->role === 'admin')
-                            <a href="{{ route('admin.dashboard') }}" data-i18n="navDashboard" onclick="closeMobileMenu();"
+                            <a href="{{ route('admin.dashboard') }}" data-i18n="navDashboard"
+                                onclick="closeMobileMenu();"
                                 class="block w-full px-4 py-3 text-primary font-bold bg-teal-50 rounded-xl transition-colors">لوحة
                                 التحكم</a>
                         @endif
@@ -530,7 +532,8 @@
                             <div class="text-center mt-2">
                                 <div class="font-bold text-lg text-darkText">{{ auth()->user()->name }}</div>
                                 <div class="text-xs text-gray-500">
-                                    <span {!! auth()->user()->role === 'admin' ? 'data-i18n="roleAdmin"' : '' !!}>{{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}</span>
+                                    <span
+                                        {!! auth()->user()->role === 'admin' ? 'data-i18n="roleAdmin"' : '' !!}>{{ auth()->user()->role === 'admin' ? 'مدير النظام' : auth()->user()->email }}</span>
                                 </div>
                             </div>
                             <div class="w-full px-4 mt-4">
@@ -540,7 +543,8 @@
                                     @csrf
                                     <button type="submit"
                                         class="w-full text-red-500 bg-red-50 hover:bg-red-100 px-4 py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
-                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> <span data-i18n="navLogout">تسجيل الخروج</span>
+                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> <span
+                                            data-i18n="navLogout">تسجيل الخروج</span>
                                     </button>
                                 </form>
                             </div>
@@ -600,7 +604,8 @@
                         class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-secondary to-teal-50 text-primary rounded-2xl sm:rounded-3xl flex items-center justify-center text-xl sm:text-2xl md:text-3xl mx-auto mb-3 sm:mb-5 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12 group-hover:shadow-[0_10px_25px_rgba(13,148,136,0.2)]">
                         <i class="fa-solid fa-arrow-trend-up"></i>
                     </div>
-                    <h3 class="font-black text-xs sm:text-sm md:text-base text-darkText tracking-wide" data-i18n="pharmBen1">
+                    <h3 class="font-black text-xs sm:text-sm md:text-base text-darkText tracking-wide"
+                        data-i18n="pharmBen1">
                         زيادة المبيعات</h3>
                 </div>
                 <div class="bg-white p-4 md:p-6 lg:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-gray-100/50 text-center w-[calc(50%-8px)] sm:w-[calc(50%-12px)] lg:w-[calc(20%-20px)] card-hover group reveal reveal-scale relative backdrop-blur-sm bg-white/90"
@@ -609,7 +614,8 @@
                         class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-secondary to-teal-50 text-primary rounded-2xl sm:rounded-3xl flex items-center justify-center text-xl sm:text-2xl md:text-3xl mx-auto mb-3 sm:mb-5 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12 group-hover:shadow-[0_10px_25px_rgba(13,148,136,0.2)]">
                         <i class="fa-solid fa-users"></i>
                     </div>
-                    <h3 class="font-black text-xs sm:text-sm md:text-base text-darkText tracking-wide" data-i18n="pharmBen2">
+                    <h3 class="font-black text-xs sm:text-sm md:text-base text-darkText tracking-wide"
+                        data-i18n="pharmBen2">
                         الوصول لعملاء جدد</h3>
                 </div>
                 <div class="bg-white p-4 md:p-6 lg:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-gray-100/50 text-center w-[calc(50%-8px)] sm:w-[calc(50%-12px)] lg:w-[calc(20%-20px)] card-hover group reveal reveal-scale relative backdrop-blur-sm bg-white/90"
@@ -618,7 +624,8 @@
                         class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-secondary to-teal-50 text-primary rounded-2xl sm:rounded-3xl flex items-center justify-center text-xl sm:text-2xl md:text-3xl mx-auto mb-3 sm:mb-5 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12 group-hover:shadow-[0_10px_25px_rgba(13,148,136,0.2)]">
                         <i class="fa-solid fa-boxes-stacked"></i>
                     </div>
-                    <h3 class="font-black text-xs sm:text-sm md:text-base text-darkText tracking-wide" data-i18n="pharmBen3">
+                    <h3 class="font-black text-xs sm:text-sm md:text-base text-darkText tracking-wide"
+                        data-i18n="pharmBen3">
                         إدارة الطلبات بسهولة</h3>
                 </div>
                 <div class="bg-white p-4 md:p-6 lg:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-gray-100/50 text-center w-[calc(50%-8px)] sm:w-[calc(50%-12px)] lg:w-[calc(20%-20px)] card-hover group reveal reveal-scale relative backdrop-blur-sm bg-white/90"
@@ -627,7 +634,8 @@
                         class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-secondary to-teal-50 text-primary rounded-2xl sm:rounded-3xl flex items-center justify-center text-xl sm:text-2xl md:text-3xl mx-auto mb-3 sm:mb-5 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12 group-hover:shadow-[0_10px_25px_rgba(13,148,136,0.2)]">
                         <i class="fa-solid fa-chart-pie"></i>
                     </div>
-                    <h3 class="font-black text-xs sm:text-sm md:text-base text-darkText tracking-wide" data-i18n="pharmBen4">
+                    <h3 class="font-black text-xs sm:text-sm md:text-base text-darkText tracking-wide"
+                        data-i18n="pharmBen4">
                         الوصول للوحة التحليلات</h3>
                 </div>
                 <div class="bg-white p-4 md:p-6 lg:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-gray-100/50 text-center w-[calc(50%-8px)] sm:w-[calc(50%-12px)] lg:w-[calc(20%-20px)] card-hover group reveal reveal-scale relative backdrop-blur-sm bg-white/90"
@@ -636,7 +644,8 @@
                         class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-secondary to-teal-50 text-primary rounded-2xl sm:rounded-3xl flex items-center justify-center text-xl sm:text-2xl md:text-3xl mx-auto mb-3 sm:mb-5 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12 group-hover:shadow-[0_10px_25px_rgba(13,148,136,0.2)]">
                         <i class="fa-solid fa-file-signature"></i>
                     </div>
-                    <h3 class="font-black text-xs sm:text-sm md:text-base text-darkText tracking-wide" data-i18n="pharmBen5">
+                    <h3 class="font-black text-xs sm:text-sm md:text-base text-darkText tracking-wide"
+                        data-i18n="pharmBen5">
                         عملية تسجيل بسيطة</h3>
                 </div>
             </div>
@@ -888,7 +897,8 @@
                                             </div>
                                             <span data-i18n="lblMap">تحديد الموقع على الخريطة *</span>
                                         </label>
-                                        <p class="text-xs sm:text-sm text-gray-500 font-medium" data-i18n="lblMapDesc">اضغط على
+                                        <p class="text-xs sm:text-sm text-gray-500 font-medium"
+                                            data-i18n="lblMapDesc">اضغط على
                                             الخريطة لتحديد موقع الصيدلية بدقة أو استخدم التحديد التلقائي.</p>
                                     </div>
                                 </div>
@@ -1278,7 +1288,7 @@
         </section>
 
     </div>
-@include('chat.chat')
+    @include('chat.chat')
 
     <footer
         class="bg-footerBg text-gray-300 pt-16 md:pt-20 pb-6 md:pb-8 mt-auto border-t-[6px] md:border-t-[8px] border-primary">
