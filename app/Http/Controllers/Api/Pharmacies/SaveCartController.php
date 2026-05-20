@@ -11,6 +11,7 @@ use App\Models\PharmacyMedicine; // ✨ Added for stock validation
 use App\Http\Requests\Api\Save\SaveCartRequest;
 use App\Http\Requests\Api\Save\CartItemsRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class SaveCartController extends Controller
@@ -266,6 +267,123 @@ class SaveCartController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve cart items for this pharmacy.',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+                'data'    => null
+            ], 500);
+        }
+    }
+
+    /**
+     * تحديث كمية دواء معين داخل العربة (زيادة أو نقصان)
+     */
+
+    public function updateQuantity(Request $request): JsonResponse
+    {
+        // 1. التحقق من صحة البيانات (أقل كمية مسموحة هي 1)
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'cart_item_id' => 'required|exists:cart_items,id',
+            'quantity'     => 'required|integer|min:1' // ✨ تم التعديل لمنع الصفر
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'data'    => null
+            ], 422);
+        }
+
+        try {
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please log in to manage your cart.',
+                    'data'    => null
+                ], 401);
+            }
+
+            // 2. جلب سلة المستخدم الحالي أولاً (لضمان الأمان وتجنب أخطاء العلاقات)
+            $cart = \App\Models\Cart::where('user_id', $user->id)->first();
+
+            if (!$cart) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cart not found.',
+                    'data'    => null
+                ], 404);
+            }
+
+            // 3. جلب العنصر والتأكد أنه داخل سلة هذا المستخدم
+            $cartItem = CartItem::where('id', $request->cart_item_id)
+                ->where('cart_id', $cart->id)
+                ->first();
+
+            if (!$cartItem) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Item not found in your cart.',
+                    'data'    => null
+                ], 404);
+            }
+
+            // 4. التحقق من المخزون الفعلي للصيدلية (Stock Validation)
+            $stockRecord = \App\Models\PharmacyMedicine::where('pharmacy_id', $cartItem->pharmacy_id)
+                ->where('medicine_id', $cartItem->medicine_id)
+                ->first();
+
+            // افترضنا أن اسم عمود الكمية في جدول PharmacyMedicine هو 'quantity'
+            $availableStock = $stockRecord ? $stockRecord->quantity : 0;
+
+            if (!$stockRecord || $request->quantity > $availableStock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Sorry, only {$availableStock} items are available in stock at this pharmacy.",
+                    'data'    => [
+                        'available_stock' => $availableStock
+                    ]
+                ], 400);
+            }
+
+            // 5. المخزون يسمح -> قم بتحديث الكمية
+            $cartItem->update([
+                'quantity' => $request->quantity
+            ]);
+
+            // 6. جلب بيانات الدواء المحدثة لإرجاع الحسبة الجديدة للموبايل
+            $cartItem->load('medicine:id,name,official_price,image');
+            $med = $cartItem->medicine;
+
+            $imageUrl = null;
+            if ($med && !empty($med->image)) {
+                $imageUrl = str_starts_with($med->image, 'http') ? $med->image : asset('storage/' . $med->image);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Quantity updated successfully.',
+                'data'    => [
+                    'action'       => 'updated',
+                    'cart_item_id' => $cartItem->id,
+                    'quantity'     => $cartItem->quantity,
+                    'unit_price'   => $cartItem->price,
+                    'item_total'   => round($cartItem->quantity * $cartItem->price, 2),
+                    'medicine'     => $med ? [
+                        'id'             => $med->id,
+                        'name'           => $med->name,
+                        'official_price' => $med->official_price,
+                        'image'          => $imageUrl
+                    ] : null
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('API Update Cart Quantity Error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while updating the quantity.',
                 'error'   => config('app.debug') ? $e->getMessage() : null,
                 'data'    => null
             ], 500);

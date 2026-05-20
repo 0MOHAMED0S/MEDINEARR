@@ -4,221 +4,176 @@ namespace App\Http\Controllers\Api\Pharmacies;
 
 use App\Http\Controllers\Controller;
 use App\Models\Packet;
-use App\Models\PacketItem;
-use App\Http\Requests\Api\Packet\PacketItemRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class PacketController extends Controller
 {
-    //add packet 
-    public function store(PacketItemRequest $request): JsonResponse
+    /**
+     * جلب جميع الحقائب الخاصة بالمستخدم (مع Pagination)
+     */
+    public function index(Request $request): JsonResponse
     {
         try {
-            $user = auth()->user();
+            $perPage = (int) $request->input('per_page', 10);
 
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthenticated access.',
-                    'data' => null
-                ], 401);
-            }
-
-            $packet = Packet::firstOrCreate([
-                'user_id' => $user->id
-            ]);
-
-            $data = [
-                'packet_id' => $packet->id,
-                'type' => $request->type,
-                'note' => $request->note,
-                'medicine_id' => $request->medicine_id,
-            ];
-
-            // upload image
-            if ($request->hasFile('image')) {
-                $data['image'] = $request->file('image')->store('packets', 'public');
-            }
-
-            $item = PacketItem::create($data);
+            $packets = Packet::where('user_id', auth()->id())
+                ->latest()
+                ->paginate($perPage)
+                ->withQueryString();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Item added successfully.',
-                'data' => $item
+                'message' => 'Packets retrieved successfully.',
+                'data'    => $packets
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('API Get Packets Error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving packets.',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+                'data'    => null
+            ], 500);
+        }
+    }
+
+    /**
+     * إنشاء حقيبة جديدة
+     */
+    public function store(Request $request): JsonResponse
+    {
+        // 1. Validation
+        $validator = Validator::make($request->all(), [
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'data'    => null
+            ], 422);
+        }
+
+        try {
+            // 2. Create Packet
+            $packet = Packet::create([
+                'user_id'     => auth()->id(),
+                'title'       => $request->title,
+                'description' => $request->description
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Packet created successfully.',
+                'data'    => $packet
             ], 201);
 
         } catch (\Exception $e) {
-            Log::error('API Store Packet Item Error: ' . $e->getMessage());
+            Log::error('API Store Packet Error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to add item.',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-                'data' => null
+                'message' => 'Failed to create packet.',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+                'data'    => null
             ], 500);
         }
     }
 
-    // 🔹 get all packet items
-    public function index(): JsonResponse
+    /**
+     * تعديل بيانات الحقيبة
+     */
+    public function update(Request $request, $id): JsonResponse
     {
+        // 1. Validation
+        $validator = Validator::make($request->all(), [
+            'title'       => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'data'    => null
+            ], 422);
+        }
+
         try {
-            $user = auth()->user();
-
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthenticated access.',
-                    'data' => null
-                ], 401);
-            }
-
-            $packet = Packet::where('user_id', $user->id)->first();
+            // 2. Find Packet ensuring it belongs to the authenticated user
+            $packet = Packet::where('user_id', auth()->id())->find($id);
 
             if (!$packet) {
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Packet is empty.',
-                    'data' => []
-                ], 200);
-            }
-
-            $items = PacketItem::where('packet_id', $packet->id)
-                ->with('medicine:id,name,official_price')
-                ->latest()
-                ->get();
-
-            $formatted = $items->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'type' => $item->type,
-                    'note' => $item->note,
-                    'image' => $item->image ? asset('storage/' . $item->image) : null,
-                    'medicine' => $item->medicine ? [
-                        'id' => $item->medicine->id,
-                        'name' => $item->medicine->name,
-                        'official_price' => $item->medicine->official_price
-                    ] : null
-                ];
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Packet items fetched successfully.',
-                'data' => $formatted
-            ], 200);
-
-        } catch (\Exception $e) {
-            Log::error('API Get Packet Items Error: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch packet items.',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-                'data' => null
-            ], 500);
-        }
-    }
-
-    public function update(PacketItemRequest $request): JsonResponse
-    {
-        try {
-            $user = auth()->user();
-
-            if (!$user) {
-                return response()->json([
                     'success' => false,
-                    'message' => 'Unauthenticated access.',
-                    'data' => null
-                ], 401);
-            }
-
-            $item = PacketItem::find($request->id);
-
-            if (!$item) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Item not found.',
-                    'data' => null
+                    'message' => 'Packet not found or access denied.',
+                    'data'    => null
                 ], 404);
             }
 
-            $data = [
-                'type' => $request->type,
-                'note' => $request->note,
-                'medicine_id' => $request->medicine_id,
-            ];
-
-            if ($request->hasFile('image')) {
-                $data['image'] = $request->file('image')->store('packets', 'public');
-            }
-
-            $item->update($data);
+            // 3. Update Packet
+            $packet->update($request->only(['title', 'description']));
 
             return response()->json([
                 'success' => true,
-                'message' => 'Item updated successfully.',
-                'data' => $item
+                'message' => 'Packet updated successfully.',
+                'data'    => $packet
             ], 200);
 
         } catch (\Exception $e) {
-            Log::error('API Update Packet Item Error: ' . $e->getMessage());
+            Log::error('API Update Packet Error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update item.',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-                'data' => null
+                'message' => 'Failed to update packet.',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+                'data'    => null
             ], 500);
         }
     }
 
-
-    // 🔹 delete item مباشر
-    public function delete(Request $request): JsonResponse
+    /**
+     * حذف الحقيبة بالكامل
+     */
+    public function destroy($id): JsonResponse
     {
         try {
-            $user = auth()->user();
+            // 1. Find Packet ensuring it belongs to the authenticated user
+            $packet = Packet::where('user_id', auth()->id())->find($id);
 
-            if (!$user) {
+            if (!$packet) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthenticated access.',
-                    'data' => null
-                ], 401);
-            }
-
-            $item = PacketItem::find($request->id);
-
-            if (!$item) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Item not found.',
-                    'data' => null
+                    'message' => 'Packet not found or access denied.',
+                    'data'    => null
                 ], 404);
             }
 
-            $item->delete();
+            // 2. Delete Packet (Cascade delete will handle packet_items if configured in migration)
+            $packet->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Item deleted successfully.',
-                'data' => null
+                'message' => 'Packet deleted successfully.',
+                'data'    => null
             ], 200);
 
         } catch (\Exception $e) {
-            Log::error('API Delete Packet Item Error: ' . $e->getMessage());
+            Log::error('API Delete Packet Error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete item.',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-                'data' => null
+                'message' => 'Failed to delete packet.',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+                'data'    => null
             ], 500);
         }
     }
-    
 }

@@ -8,14 +8,16 @@ use App\Http\Controllers\Api\Auth\SocialLogoutController;
 use App\Http\Controllers\Api\Categories\CategoryController;
 use App\Http\Controllers\Api\DataAnalysis\DataAnalysisController;
 use App\Http\Controllers\Api\Medicines\MedicineController;
+use App\Http\Controllers\Api\Orders\CheckoutController;
+use App\Http\Controllers\Api\Pharmacies\PacketItemController;
 use App\Http\Controllers\Api\Pharmacies\PharmacyController;
 use App\Http\Controllers\Api\Pharmacies\NearMedicinesController;
 use App\Http\Controllers\Api\Pharmacies\NearPharmaciesController;
+use App\Http\Controllers\Api\Pharmacies\PacketController;
 use App\Http\Controllers\Api\Pharmacies\PharmacySearchController;
 use App\Http\Controllers\Api\Pharmacies\SavePharmaciesController;
 use App\Http\Controllers\Api\Pharmacies\SaveMedicinesController;
 use App\Http\Controllers\Api\Pharmacies\SaveCartController;
-use App\Http\Controllers\Api\Pharmacies\PacketController;
 use Illuminate\Support\Facades\Route;
 
 // 1. Authentication Routes (مسارات تسجيل الدخول لا تحتاج لتوكن)
@@ -55,16 +57,24 @@ Route::prefix('pharmacy')->middleware(['auth:sanctum'])
         Route::post('/save/pharmacy', [SavePharmaciesController::class, 'togglePharmacy']);
         Route::get('/pharmacy/saved', [SavePharmaciesController::class, 'index']);
         Route::post('/save/cart', [SaveCartController::class, 'toggleItem']);
+        Route::put('/save/cart/update-quantity', [SaveCartController::class, 'updateQuantity']);
         Route::get('/save/cart/pharmacies', [SaveCartController::class, 'CartPharmacies']);
         Route::post('/save/cart/items', [SaveCartController::class, 'PharmacyCartItems']);
+        Route::apiResource('packets', PacketController::class);
+        // 1. عرض ملخص الطلب (السعر، التوصيل، الإجمالي)
+        Route::post('/cart/checkout', [CheckoutController::class, 'summary']);
 
-        Route::prefix('packet')->group(function () {
-        Route::post('/addpacket', [PacketController::class, 'store']);
-        Route::get('/show', [PacketController::class, 'index']);
-        Route::post('/update', [PacketController::class, 'update']);
-        Route::post('/delete', [PacketController::class, 'delete']);
+        // 2. التحقق من الكوبون وتطبيقه
+        Route::post('/cart/apply-coupon', [CheckoutController::class, 'applyCoupon']);
+
+
+        // 📄 CRUD الخاص بالعناصر داخل الحقيبة
+        Route::prefix('packets/{packet_id}/items')->group(function () {
+            Route::get('/', [PacketItemController::class, 'index']);
+            Route::post('/', [PacketItemController::class, 'store']);
+            Route::post('/{item_id}', [PacketItemController::class, 'update']); // نستخدم POST للـ Update بسبب ملفات الـ Image
+            Route::delete('/{item_id}', [PacketItemController::class, 'destroy']);
         });
-
     });
 
 Route::prefix('data-analysis')
