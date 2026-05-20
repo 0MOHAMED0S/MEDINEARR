@@ -44,6 +44,26 @@
             <span class="{{ request()->routeIs('pharmacy.medicines.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">أدويتي ومخزوني</span>
         </a>
 
+        <a href="{{ route('pharmacy.orders') }}"
+    class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+    {{ request()->routeIs('pharmacy.orders*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+    <i class="fa-solid fa-box-open w-5 text-center {{ request()->routeIs('pharmacy.orders*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+    <span class="{{ request()->routeIs('pharmacy.orders*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الطلبات</span>
+</a>
+
+<a href="{{ route('pharmacy.wallet') }}"
+    class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+    {{ request()->routeIs('pharmacy.wallet') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+    <i class="fa-solid fa-wallet w-5 text-center {{ request()->routeIs('pharmacy.wallet') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+    <span class="{{ request()->routeIs('pharmacy.wallet') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">محفظتي</span>
+</a>
+
+<a href="{{ route('pharmacy.chats') }}"
+    class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+    {{ request()->routeIs('pharmacy.chats*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+    <i class="fa-solid fa-comments w-5 text-center {{ request()->routeIs('pharmacy.chats*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+    <span class="{{ request()->routeIs('pharmacy.chats*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">المحادثات</span>
+</a>
 
         <a href="{{ route('pharmacy.profile.index') }}"
             class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl

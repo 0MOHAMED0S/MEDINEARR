@@ -82,6 +82,18 @@ Route::prefix('pharmacy')->name('pharmacy.')->middleware(['auth', 'role:pharmacy
     // 2. مسارات محمية بـ Middleware (مخصصة فقط للصيدليات المعتمدة)
     Route::middleware(['approved_pharmacy'])->group(function () {
 
+    Route::get('/orders', function () {
+    return view('pharmacy.orders.index');
+    })->name('orders');
+
+    // داخل Route::prefix('pharmacy')...
+Route::get('/wallet', function () {
+    return view('pharmacy.wallet.index');
+})->name('wallet');
+
+Route::get('/chats', function () {
+    return view('pharmacy.chat.index');
+})->name('chats');
         // لوحة التحكم الأساسية
         Route::get('/dashboard', [PharmacyMainController::class, 'index'])->name('dashboard');
 
@@ -102,3 +114,4 @@ Route::prefix('pharmacy')->name('pharmacy.')->middleware(['auth'])->group(functi
 });
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+
