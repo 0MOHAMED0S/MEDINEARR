@@ -76,5 +76,9 @@ class User extends Authenticatable
             'pharmacy_id'
         )->withTimestamps();
     }
+    public function conversations()
+    {
+        return $this->hasMany(ConversationParticipant::class);
+    }
 
 }

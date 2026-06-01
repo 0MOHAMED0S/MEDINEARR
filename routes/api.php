@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\FacebookApiController;
 use App\Http\Controllers\Api\Auth\GoogleApiController;
 use App\Http\Controllers\Api\Auth\SocialLogoutController;
 use App\Http\Controllers\Api\Categories\CategoryController;
+use App\Http\Controllers\Api\Chat\ChatController;
 use App\Http\Controllers\Api\DataAnalysis\DataAnalysisController;
 use App\Http\Controllers\Api\Medicines\MedicineController;
 use App\Http\Controllers\Api\Orders\CheckoutController;
@@ -68,8 +69,16 @@ Route::prefix('pharmacy')->middleware(['auth:sanctum'])
         Route::post('/cart/apply-coupon', [CheckoutController::class, 'applyCoupon']);
 
 
-        // 📄 CRUD الخاص بالعناصر داخل الحقيبة
-        Route::prefix('packets/{packet_id}/items')->group(function () {
+    //Chat 
+        Route::post('/chat/conversation', [ChatController::class, 'createConversation']);
+        Route::post('/chat/conversations-list', [ChatController::class, 'getConversations']);
+        Route::post('/chat/send-message', [ChatController::class, 'sendMessage']);
+        Route::post('/chat/messages', [ChatController::class, 'getMessages']);
+        Route::post('/chat/delete-message', [ChatController::class, 'deleteMessage']);
+
+    
+    // 📄 CRUD الخاص بالعناصر داخل الحقيبة
+    Route::prefix('packets/{packet_id}/items')->group(function () {
             Route::get('/', [PacketItemController::class, 'index']);
             Route::post('/', [PacketItemController::class, 'store']);
             Route::post('/{item_id}', [PacketItemController::class, 'update']); // نستخدم POST للـ Update بسبب ملفات الـ Image
@@ -77,13 +86,13 @@ Route::prefix('pharmacy')->middleware(['auth:sanctum'])
         });
     });
 
-Route::prefix('data-analysis')
-    ->middleware('api.key')
-    ->group(function () {
-        Route::get('/users', [DataAnalysisController::class, 'users']);
-        Route::get('/pharmacies', [DataAnalysisController::class, 'pharmacies']);
-        Route::get('/medicines', [DataAnalysisController::class, 'medicines']);
-        Route::get('/categories', [DataAnalysisController::class, 'categories']);
-        Route::get('/searchHistory', [DataAnalysisController::class, 'searchHistory']);
-        Route::get('/pharmacy-inventory', [DataAnalysisController::class, 'pharmacyInventory']);
-    });
+        Route::prefix('data-analysis')
+            ->middleware('api.key')
+            ->group(function () {
+                Route::get('/users', [DataAnalysisController::class, 'users']);
+                Route::get('/pharmacies', [DataAnalysisController::class, 'pharmacies']);
+                Route::get('/medicines', [DataAnalysisController::class, 'medicines']);
+                Route::get('/categories', [DataAnalysisController::class, 'categories']);
+                Route::get('/searchHistory', [DataAnalysisController::class, 'searchHistory']);
+                Route::get('/pharmacy-inventory', [DataAnalysisController::class, 'pharmacyInventory']);
+            });

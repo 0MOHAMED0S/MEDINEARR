@@ -64,4 +64,9 @@ class Pharmacy extends Model
             ->withPivot('id', 'price', 'quantity', 'status')
             ->withTimestamps();
     }
+    public function conversations()
+    {
+        return $this->hasMany(ConversationParticipant::class);
+    }
+    
 }
