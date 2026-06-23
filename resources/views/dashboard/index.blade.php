@@ -87,6 +87,100 @@
                 </div>
             </div>
 
+            <!-- Total Orders -->
+            <div class="stat-card bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-purple-200 group">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </div>
+                <div class="min-w-0 text-right">
+                    <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-1">إجمالي الطلبات الكلية</p>
+                    <h3 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">{{ number_format($stats['total_orders']) }}</h3>
+                </div>
+            </div>
+
+            <!-- Pending Orders -->
+            <div class="stat-card bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-orange-200 group">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+                <div class="min-w-0 text-right">
+                    <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-1">طلبات جديدة (قيد الانتظار)</p>
+                    <h3 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">{{ number_format($stats['pending_orders']) }}</h3>
+                </div>
+            </div>
+
+            <!-- Delivered Orders -->
+            <div class="stat-card bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-emerald-200 group">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <div class="min-w-0 text-right">
+                    <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-1">الطلبات المكتملة</p>
+                    <h3 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">{{ number_format($stats['delivered_orders']) }}</h3>
+                </div>
+            </div>
+
+            <!-- Total Order Value -->
+            <div class="stat-card bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-blue-200 group">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-money-bills"></i>
+                </div>
+                <div class="min-w-0 text-right">
+                    <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-1">حجم مبيعات الطلبات</p>
+                    <div class="flex items-end gap-1">
+                        <h3 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">{{ number_format($stats['total_order_value']) }}</h3>
+                        <span class="text-[10px] text-gray-500 font-bold pb-1 block">ج.م</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mb-8">
+            <h3 class="text-xl font-black text-slate-800 tracking-tight mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-vault text-primary"></i> التحليل المالي للمنصة
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <!-- Total Earnings -->
+                <div class="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[2rem] shadow-lg shadow-indigo-500/20 p-5 md:p-6 text-white relative overflow-hidden group">
+                    <div class="relative z-10">
+                        <p class="text-white/80 text-[11px] font-bold uppercase tracking-widest mb-1">إجمالي الأرباح الكلية</p>
+                        <h3 class="text-2xl md:text-3xl font-black mb-2">{{ number_format($stats['total_platform_earnings'], 2) }} <span class="text-sm font-normal">ج.م</span></h3>
+                        <p class="text-white/90 text-[10px]"><i class="fa-solid fa-chart-line"></i> أرباح الصيدليات من البداية</p>
+                    </div>
+                    <i class="fa-solid fa-coins absolute -left-4 -bottom-4 text-white/10 text-8xl group-hover:scale-110 transition-transform duration-500"></i>
+                </div>
+
+                <!-- Unrequested Balances -->
+                <div class="bg-gradient-to-br from-cyan-500 to-blue-500 rounded-[2rem] shadow-lg shadow-cyan-500/20 p-5 md:p-6 text-white relative overflow-hidden group">
+                    <div class="relative z-10">
+                        <p class="text-white/80 text-[11px] font-bold uppercase tracking-widest mb-1">أرصدة لم تُسحب</p>
+                        <h3 class="text-2xl md:text-3xl font-black mb-2">{{ number_format($stats['total_available_balances'], 2) }} <span class="text-sm font-normal">ج.م</span></h3>
+                        <p class="text-white/90 text-[10px]"><i class="fa-solid fa-wallet"></i> مبالغ متاحة في المحافظ</p>
+                    </div>
+                    <i class="fa-solid fa-piggy-bank absolute -left-4 -bottom-4 text-white/10 text-8xl group-hover:scale-110 transition-transform duration-500"></i>
+                </div>
+
+                <!-- Pending Amount -->
+                <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-[2rem] shadow-lg shadow-orange-500/20 p-5 md:p-6 text-white relative overflow-hidden group">
+                    <div class="relative z-10">
+                        <p class="text-white/80 text-[11px] font-bold uppercase tracking-widest mb-1">مسحوبات (قيد المراجعة)</p>
+                        <h3 class="text-2xl md:text-3xl font-black mb-2">{{ number_format($stats['total_pending_withdrawals'], 2) }} <span class="text-sm font-normal">ج.م</span></h3>
+                        <p class="text-white/90 text-[10px]"><i class="fa-solid fa-file-invoice"></i> طلبات سحب معلقة</p>
+                    </div>
+                    <i class="fa-solid fa-clock-rotate-left absolute -left-4 -bottom-4 text-white/10 text-8xl group-hover:scale-110 transition-transform duration-500"></i>
+                </div>
+
+                <!-- Approved Amount -->
+                <div class="bg-gradient-to-br from-[#00965e] to-[#007b4d] rounded-[2rem] shadow-lg shadow-[#00965e]/20 p-5 md:p-6 text-white relative overflow-hidden group">
+                    <div class="relative z-10">
+                        <p class="text-white/80 text-[11px] font-bold uppercase tracking-widest mb-1">المبالغ المحولة بنجاح</p>
+                        <h3 class="text-2xl md:text-3xl font-black mb-2">{{ number_format($stats['total_approved_withdrawals'], 2) }} <span class="text-sm font-normal">ج.م</span></h3>
+                        <p class="text-white/90 text-[10px]"><i class="fa-solid fa-check-double"></i> إجمالي التحويلات المكتملة</p>
+                    </div>
+                    <i class="fa-solid fa-money-bill-transfer absolute -left-4 -bottom-4 text-white/10 text-8xl group-hover:scale-110 transition-transform duration-500"></i>
+                </div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
@@ -147,6 +241,80 @@
                             <p class="font-bold text-sm text-slate-500">لا توجد طلبات حديثة</p>
                         </div>
                     @endforelse
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activities Tables (Orders & Withdrawals) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Recent Orders -->
+            <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+                <div class="p-5 border-b border-gray-50 flex justify-between items-center bg-slate-50/50">
+                    <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-bell text-orange-500 animate-pulse"></i> أحدث الطلبات على المنصة
+                    </h3>
+                    <a href="{{ route('orders.index') }}" class="text-xs text-blue-600 hover:text-blue-700 font-bold bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">عرض الكل</a>
+                </div>
+                <div class="p-0 flex-1 overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <tbody class="divide-y divide-gray-50">
+                            @forelse($recentOrders as $order)
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="p-4 font-black text-slate-700">#ORD-{{ $order->id }}</td>
+                                <td class="p-4 font-bold text-slate-600">
+                                    {{ $order->pharmacy->pharmacy_name ?? 'صيدلية محذوفة' }}
+                                </td>
+                                <td class="p-4 text-emerald-600 font-black" dir="ltr">{{ number_format($order->grand_total, 2) }} ج.م</td>
+                                <td class="p-4">
+                                    @if($order->status == 'pending')
+                                        <span class="bg-orange-50 text-orange-600 px-3 py-1.5 rounded-lg text-xs font-bold">جديد</span>
+                                    @elseif($order->status == 'delivered')
+                                        <span class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold">مكتمل</span>
+                                    @else
+                                        <span class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold">{{ $order->status }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="4" class="p-8 text-center text-gray-400 font-bold">لا توجد طلبات حديثة</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Withdrawals -->
+            <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+                <div class="p-5 border-b border-gray-50 flex justify-between items-center bg-slate-50/50">
+                    <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-money-bill-transfer text-[#00965e]"></i> أحدث طلبات السحب
+                    </h3>
+                    <a href="{{ route('admin.withdrawals.index') }}" class="text-xs text-blue-600 hover:text-blue-700 font-bold bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">إدارة السحوبات</a>
+                </div>
+                <div class="p-0 flex-1 overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <tbody class="divide-y divide-gray-50">
+                            @forelse($recentWithdrawals as $withdrawal)
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="p-4 font-bold text-slate-600">
+                                    {{ $withdrawal->pharmacy->pharmacy_name ?? 'غير معروف' }}
+                                </td>
+                                <td class="p-4 text-[#00965e] font-black" dir="ltr">{{ number_format($withdrawal->amount, 2) }} ج.م</td>
+                                <td class="p-4">
+                                    @if($withdrawal->status == 'pending')
+                                        <span class="text-orange-500 font-bold text-xs"><i class="fa-solid fa-clock"></i> قيد المراجعة</span>
+                                    @elseif($withdrawal->status == 'approved')
+                                        <span class="text-emerald-500 font-bold text-xs"><i class="fa-solid fa-check"></i> تم التحويل</span>
+                                    @else
+                                        <span class="text-red-500 font-bold text-xs"><i class="fa-solid fa-times"></i> مرفوض</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="3" class="p-8 text-center text-gray-400 font-bold">لا توجد طلبات سحب حديثة</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

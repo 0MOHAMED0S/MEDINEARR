@@ -19,8 +19,6 @@ return new class extends Migration
             $table->text('note')->nullable(); // للنوع note
             $table->string('image')->nullable(); // للنوع image
             $table->foreignId('medicine_id')->nullable()->constrained()->nullOnDelete(); // للنوع medicine
-
-            // ✨ حقل إضافي سحري للمستقبل (مثال: حفظ الجرعة، موعد التذكير، الخ)
             $table->json('meta')->nullable();
 
             $table->timestamps();

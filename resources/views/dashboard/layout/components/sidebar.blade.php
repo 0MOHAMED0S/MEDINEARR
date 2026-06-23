@@ -62,6 +62,10 @@
             {{ request()->routeIs('pharmaciesApplications.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
             <i class="fa-solid fa-clipboard-list w-5 text-center {{ request()->routeIs('pharmaciesApplications.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
             <span class="{{ request()->routeIs('pharmaciesApplications.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">طلبات الصيدليات</span>
+            @php $pendingApps = \App\Models\PharmacyApplication::where('status', 'under_review')->count(); @endphp
+            @if($pendingApps > 0)
+                <span class="mr-auto bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">{{ $pendingApps }}</span>
+            @endif
         </a>
 
         <hr class="border-white/10 my-2 mx-2">
@@ -101,6 +105,37 @@
             {{ request()->routeIs('delivery-companies.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
             <i class="fa-solid fa-ticket w-5 text-center {{ request()->routeIs('delivery-companies.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
             <span class="{{ request()->routeIs('delivery-companies.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">شركات التوصيل</span>
+        </a>
+
+        <hr class="border-white/10 my-2 mx-2">
+
+        <a href="{{ route('orders.index') }}"
+            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+            {{ request()->routeIs('orders.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-cart-shopping w-5 text-center {{ request()->routeIs('orders.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('orders.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">طلبات المنصة</span>
+            @php $pendingOrders = \App\Models\Order::where('status', 'pending')->count(); @endphp
+            @if($pendingOrders > 0)
+                <span class="mr-auto bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $pendingOrders }}</span>
+            @endif
+        </a>
+
+        <a href="{{ route('admin.withdrawals.index') }}"
+            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+            {{ request()->routeIs('admin.withdrawals.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-money-bill-transfer w-5 text-center {{ request()->routeIs('admin.withdrawals.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('admin.withdrawals.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">طلبات السحب</span>
+            @php $pendingWithdrawals = \App\Models\WithdrawalRequest::where('status', 'pending')->count(); @endphp
+            @if($pendingWithdrawals > 0)
+                <span class="mr-auto bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $pendingWithdrawals }}</span>
+            @endif
+        </a>
+
+        <a href="{{ route('admin.wallets.index') }}"
+            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+            {{ request()->routeIs('admin.wallets.*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-wallet w-5 text-center {{ request()->routeIs('admin.wallets.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('admin.wallets.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">مَحافظ الصيدليات</span>
         </a>
 
         <hr class="border-white/10 my-2 mx-2">

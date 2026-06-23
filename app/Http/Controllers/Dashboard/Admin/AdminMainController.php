@@ -8,6 +8,9 @@ use App\Models\User;
 use App\Models\Pharmacy;
 use App\Models\PharmacyApplication;
 use App\Models\Medicine;
+use App\Models\PharmacyWallet;
+use App\Models\WithdrawalRequest;
+use App\Models\Order;
 use Carbon\Carbon;
 
 class AdminMainController extends Controller
@@ -72,6 +75,18 @@ class AdminMainController extends Controller
             'new_pharmacies'    => $applyDateFilter(Pharmacy::query())->count(),
             'pending_apps'      => $applyDateFilter(PharmacyApplication::where('status', 'under_review'))->count(),
             'new_medicines'     => $applyDateFilter(Medicine::query())->count(),
+            
+            // Financial Stats
+            'total_platform_earnings' => PharmacyWallet::sum('total_earned'), // Absolute total
+            'total_available_balances' => PharmacyWallet::sum('balance'), // Absolute unrequested money
+            'total_pending_withdrawals' => $applyDateFilter(WithdrawalRequest::where('status', 'pending'))->sum('amount'),
+            'total_approved_withdrawals' => $applyDateFilter(WithdrawalRequest::where('status', 'approved'))->sum('amount'),
+
+            // Order Stats
+            'total_orders'      => $applyDateFilter(Order::query())->count(),
+            'pending_orders'    => $applyDateFilter(Order::where('status', 'pending'))->count(),
+            'delivered_orders'  => $applyDateFilter(Order::where('status', 'delivered'))->count(),
+            'total_order_value' => $applyDateFilter(Order::where('status', 'delivered'))->sum('grand_total'),
         ];
 
         $periodLabel = $this->getPeriodLabel($dateFilter, $queryStart, $queryEnd);
@@ -81,10 +96,15 @@ class AdminMainController extends Controller
             ->select('id', 'pharmacy_name', 'owner_name', 'phone', 'email', 'city', 'address', 'lat', 'lng', 'is_big_pharmacy', 'image', 'created_at')
             ->get();
 
-        // 4. أحدث الطلبات لجدول النشاطات السريعة
+        // 4. أحدث الطلبات والنشاطات السريعة
         $latestApplications = PharmacyApplication::latest()->take(5)->get();
+        $recentOrders = Order::latest()->take(5)->get();
+        $recentWithdrawals = WithdrawalRequest::latest()->take(5)->get();
 
-        return view('dashboard.index', compact('stats', 'periodLabel', 'dateFilter', 'startDate', 'endDate', 'mapPharmacies', 'latestApplications'));
+        return view('dashboard.index', compact(
+            'stats', 'periodLabel', 'dateFilter', 'startDate', 'endDate', 
+            'mapPharmacies', 'latestApplications', 'recentOrders', 'recentWithdrawals'
+        ));
     }
 
     private function getPeriodLabel($filter, $start, $end)
