@@ -12,7 +12,7 @@ use App\Models\Category;
 use App\Models\PharmacyApplication;
 use App\Models\PharmacyMedicine;
 use App\Models\SearchHistory;
-
+use App\Models\Order;
 class DataAnalysisController extends Controller
 {
     /**
@@ -298,6 +298,51 @@ class DataAnalysisController extends Controller
             return response()->json($history, 200);
         } catch (\Exception $e) {
             Log::error('Power BI Search History API Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
+        }
+    }
+    /**
+     * 7. API: بيانات الطلبات لـ Power BI
+     *
+     * @return JsonResponse
+     */
+    public function orders(): JsonResponse
+    {
+        try {
+            // جلب الطلبات مع العلاقات الأساسية فقط لتقليل الحمل
+            $orders = Order::with(['user:id,name', 'pharmacy:id,pharmacy_name,city', 'items'])
+                ->get()
+                ->map(function ($order) {
+                    return [
+                        'ID'                 => $order->id,
+                        'Order_Reference'    => $order->order_reference,
+                        'User_ID'            => $order->user_id,
+                        'User_Name'          => $order->user->name ?? 'Guest/Deleted',
+                        'Pharmacy_ID'        => $order->pharmacy_id,
+                        'Pharmacy_Name'      => $order->pharmacy->pharmacy_name ?? 'Unknown',
+                        'City'               => $order->pharmacy->city ?? 'Unknown',
+                        
+                        'Status'             => ucfirst($order->status),
+                        'Payment_Method'     => ucfirst($order->payment_method),
+                        'Payment_Status'     => ucfirst($order->payment_status),
+                        
+                        // المبالغ المالية
+                        'Subtotal'           => (float) $order->subtotal,
+                        'Delivery_Fee'       => (float) $order->delivery_fee,
+                        'Grand_Total'        => (float) $order->grand_total,
+                        
+                        'Items_Count'        => $order->items->count(),
+                        
+                        // توحيد التواريخ
+                        'Created_At'         => $order->created_at ? $order->created_at->format('Y-m-d H:i:s') : null,
+                        'Date'               => $order->created_at ? $order->created_at->format('Y-m-d') : null,
+                        'Month_Year'         => $order->created_at ? $order->created_at->format('Y-m') : null,
+                    ];
+                })->toArray();
+
+            return response()->json($orders, 200);
+        } catch (\Exception $e) {
+            Log::error('Power BI Orders API Error: ' . $e->getMessage());
             return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
         }
     }

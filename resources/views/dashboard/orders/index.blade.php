@@ -1,6 +1,6 @@
-@extends('pharmacy.layout.master')
+@extends('dashboard.layout.master')
 
-@section('title', 'إدارة الطلبات')
+@section('title', 'إدارة طلبات المنصة')
 
 @section('content')
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
@@ -38,18 +38,15 @@
 
     /* إعدادات الطباعة الاحترافية */
     @media print {
-        /* إجبار المتصفح على طباعة الألوان والخلفيات */
         * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
 
-        /* إخفاء كل محتويات الموقع الأساسية وقت الطباعة فقط */
         body.printing-mode > *:not(#active-print-section) {
             display: none !important;
         }
 
-        /* تنسيق الفاتورة المستنسخة لتملأ الورقة بالكامل */
         #active-print-section {
             display: block !important;
             position: absolute !important;
@@ -63,13 +60,12 @@
             direction: rtl !important;
         }
 
-        /* إخفاء أي زرار أو عنصر مش عايزينه يظهر في الورقة */
         .no-print {
             display: none !important;
         }
 
         @page {
-            margin: 1cm; /* هوامش الورقة */
+            margin: 1cm;
         }
     }
 </style>
@@ -78,8 +74,8 @@
 
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 no-print">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">إدارة الطلبات</h1>
-            <p class="text-sm text-gray-500 mt-1">تابع طلبات عملائك، حدث الحالات، وراجع المدفوعات.</p>
+            <h1 class="text-2xl font-bold text-gray-800">إدارة طلبات المنصة</h1>
+            <p class="text-sm text-gray-500 mt-1">تابع كافة الطلبات عبر جميع الصيدليات، راجع المدفوعات وحالات التوصيل.</p>
         </div>
         <div>
             <button class="bg-[#00965e] hover:bg-[#007b4d] text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm flex items-center gap-2">
@@ -94,10 +90,10 @@
         <!-- Total Orders -->
         <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-purple-200 group">
             <div class="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
-                <i class="fa-solid fa-cart-shopping"></i>
+                <i class="fa-solid fa-clipboard-list"></i>
             </div>
             <div class="min-w-0 text-right">
-                <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-1">إجمالي الطلبات الواردة</p>
+                <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-1">إجمالي الطلبات بالمنصة</p>
                 <h3 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">{{ number_format($totalOrders) }}</h3>
             </div>
         </div>
@@ -137,28 +133,26 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6 no-print">
-        <form action="{{ route('pharmacy.orders') ?? '#' }}" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{{ count($pharmacies) > 1 ? '8' : '7' }} gap-4">
+        <form action="{{ route('orders.index') ?? '#' }}" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4">
 
             <div class="lg:col-span-2">
-                <label class="block text-xs font-semibold text-gray-600 mb-1.5">البحث (رقم الطلب أو الهاتف)</label>
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5">البحث (الطلب، العميل، الهاتف)</label>
                 <div class="relative">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث عن أوردر..."
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث..."
                         class="w-full pl-3 pr-10 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#00965e]/20 focus:border-[#00965e] outline-none transition-all text-sm">
                     <i class="fa-solid fa-search absolute right-3 top-2.5 text-gray-400"></i>
                 </div>
             </div>
 
-            @if(count($pharmacies) > 1)
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">الصيدلية</label>
-                <select name="pharmacy_id" class="w-full text-sm" placeholder="ابحث باسم الصيدلية...">
-                    <option value="">كل صيدلياتي</option>
+                <select name="pharmacy_id" id="pharmacy-select" class="w-full text-sm" placeholder="ابحث باسم الصيدلية...">
+                    <option value="">كل الصيدليات</option>
                     @foreach($pharmacies as $pharmacy)
                         <option value="{{ $pharmacy->id }}" {{ request('pharmacy_id') == $pharmacy->id ? 'selected' : '' }}>{{ $pharmacy->pharmacy_name ?? 'صيدلية' }}</option>
                     @endforeach
                 </select>
             </div>
-            @endif
 
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">حالة الطلب</label>
@@ -174,11 +168,11 @@
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1.5">طريقة الدفع</label>
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5">الدفع</label>
                 <select name="payment_method" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#00965e]/20 focus:border-[#00965e] outline-none transition-all text-sm appearance-none">
                     <option value="">الكل</option>
-                    <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>الدفع عند الاستلام</option>
-                    <option value="paymob" {{ request('payment_method') == 'paymob' ? 'selected' : '' }}>Paymob (أونلاين)</option>
+                    <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>عند الاستلام</option>
+                    <option value="paymob" {{ request('payment_method') == 'paymob' ? 'selected' : '' }}>أونلاين</option>
                 </select>
             </div>
 
@@ -196,7 +190,7 @@
                 <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm">
                     تطبيق
                 </button>
-                <a href="{{ route('pharmacy.orders') ?? '#' }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-semibold transition-all flex items-center justify-center" title="إعادة ضبط">
+                <a href="{{ route('orders.index') ?? '#' }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-semibold transition-all flex items-center justify-center" title="إعادة ضبط">
                     <i class="fa-solid fa-rotate-right"></i>
                 </a>
             </div>
@@ -209,10 +203,10 @@
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-100">
                         <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase">الطلب والتاريخ</th>
-                        <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase">العميل</th>
+                        <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase">الصيدلية والعميل</th>
                         <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase">الإجمالي والدفع</th>
                         <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase">الحالة</th>
-                        <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase text-center">الإجراءات</th>
+                        <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase text-center">تفاصيل</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -227,7 +221,8 @@
                             </td>
                             <td class="py-3 px-4">
                                 <div class="flex flex-col">
-                                    <span class="font-semibold text-gray-800 text-sm">{{ $order->user->name ?? 'عميل' }}</span>
+                                    <span class="font-bold text-indigo-700 text-sm"><i class="fa-solid fa-house-medical text-[10px]"></i> {{ $order->pharmacy->pharmacy_name ?? 'صيدلية' }}</span>
+                                    <span class="text-xs font-semibold text-gray-600 mt-0.5"><i class="fa-solid fa-user text-[10px]"></i> {{ $order->user->name ?? 'عميل' }}</span>
                                     <span class="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                                         <i class="fa-solid fa-phone text-[10px]"></i> {{ $order->phone }}
                                     </span>
@@ -300,10 +295,6 @@
                                             class="p-2 text-gray-400 hover:text-[#00965e] hover:bg-emerald-50 rounded-lg transition-colors" title="عرض التفاصيل">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
-                                    <button onclick="openStatusModal('{{ $order->id }}', '{{ $order->order_reference }}', '{{ $order->status }}')"
-                                            class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="تحديث الحالة">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
                                     <button onclick="printOrder('{{ $order->order_reference }}', '{{ $order->user->name ?? 'عميل' }}', '{{ $order->phone }}', '{{ $order->address }}', '{{ number_format($order->grand_total, 2) }}', '{{ $paymentLabel }}', '{{ $label }}')"
                                             class="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors" title="طباعة">
                                         <i class="fa-solid fa-print"></i>
@@ -318,7 +309,7 @@
                                     <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
                                         <i class="fa-solid fa-box-open text-2xl text-gray-300"></i>
                                     </div>
-                                    <h3 class="text-sm font-bold text-gray-800">لا توجد طلبات</h3>
+                                    <h3 class="text-sm font-bold text-gray-800">لا توجد طلبات تطابق بحثك</h3>
                                     <p class="text-xs text-gray-500 mt-1">حاول تغيير إعدادات الفلتر أو البحث بكلمة مختلفة.</p>
                                 </div>
                             </td>
@@ -341,6 +332,7 @@
 
 </div>
 
+<!-- Details Modal & Print Section -->
 <div id="detailsModal" class="fixed inset-0 z-50 hidden no-print" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeDetailsModal()"></div>
 
@@ -408,51 +400,6 @@
     </div>
 </div>
 
-
-<div id="statusModal" class="fixed inset-0 z-50 hidden no-print" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeStatusModal()"></div>
-
-    <div class="fixed inset-0 z-10 overflow-y-auto">
-        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white text-right shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-gray-100">
-
-                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-800">تحديث حالة الطلب</h3>
-                    <button onclick="closeStatusModal()" class="text-gray-400 hover:text-red-500 transition-colors">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-
-                <form id="updateStatusForm" method="POST" action="">
-                    @csrf
-                    @method('PATCH')
-                    <div class="px-6 py-6">
-                        <p class="text-sm text-gray-600 mb-4">جاري تحديث حالة الطلب رقم <span id="status-mdl-ref" class="font-bold text-[#00965e]"></span></p>
-
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">اختر الحالة الجديدة:</label>
-                        <select name="status" id="status-select" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#00965e]/20 focus:border-[#00965e] outline-none transition-all text-sm font-semibold">
-                            <option value="pending">قيد الانتظار</option>
-                            <option value="accepted">تم القبول (جاري التجهيز)</option>
-                            <option value="out_for_delivery">في الطريق (مع المندوب)</option>
-                            <option value="delivered">مكتمل (تم التوصيل)</option>
-                            <option value="cancelled">إلغاء الطلب</option>
-                        </select>
-                    </div>
-
-                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
-                        <button type="button" onclick="closeStatusModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">
-                            إلغاء
-                        </button>
-                        <button type="submit" class="px-4 py-2 bg-[#00965e] text-white rounded-lg text-sm font-semibold hover:bg-[#007b4d] transition-all">
-                            حفظ التغييرات
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     function openDetailsModal(ref, name, phone, address, total, payment, status, btnElement) {
         document.getElementById('mdl-ref').innerText = ref;
@@ -500,36 +447,7 @@
         }, 200);
     }
 
-    function openStatusModal(orderId, ref, currentStatus) {
-        document.getElementById('status-mdl-ref').innerText = ref;
-        document.getElementById('status-select').value = currentStatus;
-
-        document.getElementById('updateStatusForm').action = `/pharmacy/orders/${orderId}/status`;
-
-        const modal = document.getElementById('statusModal');
-        const modalContent = modal.querySelector('.transform');
-
-        modal.classList.remove('hidden');
-        void modal.offsetWidth;
-
-        modalContent.classList.add('modal-enter-active');
-        modalContent.classList.remove('modal-enter', 'modal-leave-active', 'modal-leave');
-    }
-
-    function closeStatusModal() {
-        const modal = document.getElementById('statusModal');
-        const modalContent = modal.querySelector('.transform');
-
-        modalContent.classList.add('modal-leave-active');
-        modalContent.classList.remove('modal-enter-active');
-
-        setTimeout(() => {
-            modal.classList.add('hidden');
-        }, 200);
-    }
-
     function printOrder(ref, name, phone, address, total, payment, status) {
-        // 1. تحديث الداتا في القسم الخفي
         document.getElementById('mdl-ref').innerText = ref;
         document.getElementById('mdl-name').innerText = name;
         document.getElementById('mdl-phone').innerText = phone;
@@ -538,19 +456,15 @@
         document.getElementById('mdl-payment').innerText = payment;
         document.getElementById('mdl-status').innerText = status;
 
-        // 2. عمل Clone للقسم المستهدف
         const printContent = document.getElementById('print-section').cloneNode(true);
         printContent.id = 'active-print-section';
 
-        // 3. إزالة الأزرار من النسخة المطبوعة
         const noPrintElements = printContent.querySelectorAll('.no-print');
         noPrintElements.forEach(el => el.remove());
 
-        // 4. وضع النسخة في الـ body مباشرة
         document.body.appendChild(printContent);
         document.body.classList.add('printing-mode');
 
-        // 5. الطباعة والتنظيف
         setTimeout(() => {
             window.print();
             document.body.classList.remove('printing-mode');
@@ -570,5 +484,4 @@
         });
     });
 </script>
-
 @endsection

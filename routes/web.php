@@ -12,6 +12,7 @@ use App\Http\Controllers\Dashboard\Admin\AdminPharmacyApplicationController;
 use App\Http\Controllers\Dashboard\Admin\AdminPharmacyController;
 use App\Http\Controllers\Dashboard\Admin\AdminProfileController;
 use App\Http\Controllers\Dashboard\Admin\AdminUsersController;
+use App\Http\Controllers\Dashboard\Admin\AdminOrderController;
 use App\Http\Controllers\Dashboard\Admin\PharmacyApplicationController;
 use App\Http\Controllers\Dashboard\Pharmacy\GoogleController;
 use App\Http\Controllers\Dashboard\Pharmacy\PharmacyInventoryController;
@@ -69,6 +70,17 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     //delivery
     Route::patch('delivery-companies/{deliveryCompany}/toggle-status', [AdminDeliveryCompanyController::class, 'toggleStatus'])->name('delivery_companies.toggle_status');
     Route::resource('delivery-companies', AdminDeliveryCompanyController::class)->except(['create', 'show', 'edit']);
+
+    // Platform Orders (Admin View)
+    Route::resource('orders', AdminOrderController::class)->only(['index']);
+
+    // Pharmacy Wallets (Admin View)
+    Route::get('wallets', [\App\Http\Controllers\Dashboard\Admin\AdminWalletController::class, 'index'])->name('admin.wallets.index');
+
+    // Withdrawals (Admin View)
+    Route::get('withdrawals', [\App\Http\Controllers\Dashboard\Admin\AdminWithdrawalController::class, 'index'])->name('admin.withdrawals.index');
+    Route::patch('withdrawals/{withdrawal}/approve', [\App\Http\Controllers\Dashboard\Admin\AdminWithdrawalController::class, 'approve'])->name('admin.withdrawals.approve');
+    Route::patch('withdrawals/{withdrawal}/reject', [\App\Http\Controllers\Dashboard\Admin\AdminWithdrawalController::class, 'reject'])->name('admin.withdrawals.reject');
 });
 
 
@@ -82,14 +94,12 @@ Route::prefix('pharmacy')->name('pharmacy.')->middleware(['auth', 'role:pharmacy
     // 2. مسارات محمية بـ Middleware (مخصصة فقط للصيدليات المعتمدة)
     Route::middleware(['approved_pharmacy'])->group(function () {
 
-    Route::get('/orders', function () {
-    return view('pharmacy.orders.index');
-    })->name('orders');
+        // Orders Management
+        Route::get('/orders', [\App\Http\Controllers\Dashboard\Pharmacy\PharmacyOrderController::class, 'index'])->name('orders');
+        Route::patch('/orders/{order}/status', [\App\Http\Controllers\Dashboard\Pharmacy\PharmacyOrderController::class, 'updateStatus'])->name('orders.status');
 
-    // داخل Route::prefix('pharmacy')...
-Route::get('/wallet', function () {
-    return view('pharmacy.wallet.index');
-})->name('wallet');
+        Route::get('/wallet', [\App\Http\Controllers\Dashboard\Pharmacy\PharmacyWalletController::class, 'index'])->name('wallet');
+        Route::post('/wallet/withdraw', [\App\Http\Controllers\Dashboard\Pharmacy\PharmacyWalletController::class, 'requestWithdrawal'])->name('wallet.withdraw');
 
 Route::get('/chats', function () {
     return view('pharmacy.chat.index');

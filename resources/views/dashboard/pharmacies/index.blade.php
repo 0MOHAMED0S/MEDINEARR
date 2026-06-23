@@ -146,6 +146,7 @@
                             <th class="p-5">المالك والتواصل</th>
                             <th class="p-5 w-32 text-center">تاريخ الانضمام</th>
                             <th class="p-5 w-32 text-center">تفعيل / إيقاف</th>
+                            <th class="p-5 w-32 text-center">الرصيد المتاح</th>
                             <th class="p-5 w-32 text-center">صيدلية كبرى</th>
                             <th class="p-5 w-48 text-center text-center">الإجراءات</th>
                         </tr>
@@ -236,6 +237,12 @@
                                               class="inline-block h-4 w-4 transform rounded-full bg-white transition duration-300 ease-in-out {{ $pharmacy->is_active ? '-translate-x-7' : '-translate-x-1' }}">
                                         </span>
                                     </button>
+                                </td>
+
+                                <td class="p-5 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg {{ ($pharmacy->wallet->balance ?? 0) > 0 ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-600' }} font-bold text-xs border {{ ($pharmacy->wallet->balance ?? 0) > 0 ? 'border-blue-100' : 'border-gray-200' }}">
+                                        {{ number_format($pharmacy->wallet->balance ?? 0, 2) }} <span class="text-[9px]">ج.م</span>
+                                    </span>
                                 </td>
 
                                 <td class="p-5 text-center">

@@ -44,19 +44,31 @@
             <span class="{{ request()->routeIs('pharmacy.medicines.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">أدويتي ومخزوني</span>
         </a>
 
-        <a href="{{ route('pharmacy.orders') }}"
-    class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
-    {{ request()->routeIs('pharmacy.orders*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-    <i class="fa-solid fa-box-open w-5 text-center {{ request()->routeIs('pharmacy.orders*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-    <span class="{{ request()->routeIs('pharmacy.orders*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الطلبات</span>
-</a>
+        @php
+            $pharmacyIds = \App\Models\Pharmacy::where('user_id', auth()->id())->pluck('id')->toArray();
+            $pendingOrders = \App\Models\Order::whereIn('pharmacy_id', $pharmacyIds)->where('status', 'pending')->count();
+            $pendingWithdrawals = \App\Models\WithdrawalRequest::whereIn('pharmacy_id', $pharmacyIds)->where('status', 'pending')->count();
+        @endphp
 
-<a href="{{ route('pharmacy.wallet') }}"
-    class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
-    {{ request()->routeIs('pharmacy.wallet') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-    <i class="fa-solid fa-wallet w-5 text-center {{ request()->routeIs('pharmacy.wallet') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-    <span class="{{ request()->routeIs('pharmacy.wallet') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">محفظتي</span>
-</a>
+        <a href="{{ route('pharmacy.orders') }}"
+            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+            {{ request()->routeIs('pharmacy.orders*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-box-open w-5 text-center {{ request()->routeIs('pharmacy.orders*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('pharmacy.orders*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الطلبات</span>
+            @if($pendingOrders > 0)
+                <span class="mr-auto bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">{{ $pendingOrders }}</span>
+            @endif
+        </a>
+
+        <a href="{{ route('pharmacy.wallet') }}"
+            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+            {{ request()->routeIs('pharmacy.wallet') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-wallet w-5 text-center {{ request()->routeIs('pharmacy.wallet') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('pharmacy.wallet') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">محفظتي</span>
+            @if($pendingWithdrawals > 0)
+                <span class="mr-auto bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm" title="سحوبات قيد المراجعة"><i class="fa-solid fa-clock mr-1"></i>{{ $pendingWithdrawals }}</span>
+            @endif
+        </a>
 
 <a href="{{ route('pharmacy.chats') }}"
     class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl

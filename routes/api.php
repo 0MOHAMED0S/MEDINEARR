@@ -63,9 +63,14 @@ Route::prefix('pharmacy')->middleware(['auth:sanctum'])
         Route::apiResource('packets', PacketController::class);
         // 1. عرض ملخص الطلب (السعر، التوصيل، الإجمالي)
         Route::post('/cart/checkout', [CheckoutController::class, 'summary']);
-
         // 2. التحقق من الكوبون وتطبيقه
         Route::post('/cart/apply-coupon', [CheckoutController::class, 'applyCoupon']);
+        // 3. إتمام الطلب (الدفع)
+        Route::post('/cart/place-order', [CheckoutController::class, 'placeOrder']);
+
+        // 4. جلب الطلبات السابقة للمستخدم
+        Route::get('/orders', [\App\Http\Controllers\Api\Orders\OrderController::class, 'index']);
+        Route::get('/orders/pharmacy/{id}', [\App\Http\Controllers\Api\Orders\OrderController::class, 'pharmacyOrders']);
 
 
         // 📄 CRUD الخاص بالعناصر داخل الحقيبة
@@ -86,4 +91,9 @@ Route::prefix('data-analysis')
         Route::get('/categories', [DataAnalysisController::class, 'categories']);
         Route::get('/searchHistory', [DataAnalysisController::class, 'searchHistory']);
         Route::get('/pharmacy-inventory', [DataAnalysisController::class, 'pharmacyInventory']);
+        Route::get('/orders', [DataAnalysisController::class, 'orders']);
     });
+
+// 3. Webhook Route for Paymob (يجب أن يكون بدون حماية ليتمكن Paymob من الوصول إليه)
+Route::post('/paymob/callback', [\App\Http\Controllers\Api\Orders\PaymobController::class, 'callback']);
+Route::get('/paymob/response', [\App\Http\Controllers\Api\Orders\PaymobController::class, 'responseCallback']);

@@ -13,7 +13,7 @@ class AdminPharmacyController extends Controller
 {
 public function index(Request $request)
     {
-        $query = Pharmacy::query();
+        $query = Pharmacy::with('wallet');
 
         // 1. الفلترة حسب الحالة (نشط / موقوف)
         if ($request->filled('status') && $request->status !== 'all') {

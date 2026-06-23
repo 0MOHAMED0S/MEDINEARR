@@ -46,6 +46,12 @@ class Pharmacy extends Model
         return $this->belongsTo(User::class);
     }
 
+    // Relationship to the Wallet
+    public function wallet()
+    {
+        return $this->hasOne(PharmacyWallet::class);
+    }
+
     // Relationship to the Application
     public function application()
     {

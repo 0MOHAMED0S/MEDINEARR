@@ -1,242 +1,227 @@
 @extends('pharmacy.layout.master')
 
-@section('title', 'لوحة التحكم والتحليلات')
+@section('title', 'الرئيسية والتحليلات')
 
 @section('content')
-<style>
-    .dashboard-container {
-        padding: 1.5rem;
-        font-family: 'Cairo', 'Tajawal', sans-serif; /* خطوط عربية احترافية */
-    }
+<div class="p-4 md:p-6 lg:p-8 font-cairo">
 
-    /* رسالة الترحيب */
-    .welcome-banner {
-        background: linear-gradient(135deg, #00965e 0%, #00b370 100%);
-        border-radius: 16px;
-        padding: 2rem;
-        color: white;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 15px rgba(0, 150, 94, 0.2);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .welcome-text h2 { margin: 0; font-size: 1.5rem; font-weight: bold; }
-    .welcome-text p { margin: 0.5rem 0 0; opacity: 0.9; font-size: 0.95rem; }
-
-    /* شبكة الإحصائيات */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    .stat-card {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 1.5rem;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-        border: 1px solid #f0f2f5;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .stat-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-    }
-    .stat-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: 1rem; /* RTL */
-        font-size: 1.5rem;
-    }
-    .icon-green { background: #e6f5ef; color: #00965e; }
-    .icon-blue { background: #e6f0ff; color: #0066ff; }
-    .icon-orange { background: #fff0e6; color: #ff8800; }
-    .icon-purple { background: #f0e6ff; color: #8800ff; }
-
-    .stat-details h4 {
-        margin: 0;
-        font-size: 0.9rem;
-        color: #6b7280;
-        font-weight: 600;
-    }
-    .stat-details h3 {
-        margin: 0.25rem 0 0;
-        font-size: 1.5rem;
-        color: #111827;
-        font-weight: bold;
-    }
-
-    /* جدول الطلبات الأخيرة */
-    .recent-orders-section {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-        border: 1px solid #f0f2f5;
-    }
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-    .section-header h3 { margin: 0; font-size: 1.2rem; color: #111827; font-weight: bold; }
-    .view-all-btn {
-        color: #00965e;
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-    .view-all-btn:hover { text-decoration: underline; }
-
-    .custom-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .custom-table th {
-        background: #f8fafc;
-        color: #6b7280;
-        font-weight: 600;
-        font-size: 0.85rem;
-        padding: 1rem;
-        text-align: right; /* RTL */
-        border-bottom: 1px solid #e5e7eb;
-    }
-    .custom-table td {
-        padding: 1rem;
-        border-bottom: 1px solid #f3f4f6;
-        color: #374151;
-        font-size: 0.9rem;
-        vertical-align: middle;
-    }
-    .custom-table tr:last-child td { border-bottom: none; }
-    .custom-table tr:hover td { background: #fdfdfd; }
-
-    /* الحالات (Badges) */
-    .badge {
-        padding: 0.35rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: bold;
-    }
-    .badge-pending { background: #fff3cd; color: #856404; }
-    .badge-accepted { background: #cce5ff; color: #004085; }
-    .badge-delivered { background: #d4edda; color: #155724; }
-
-    /* زر الإجراء */
-    .action-btn {
-        background: #f3f4f6;
-        color: #374151;
-        border: none;
-        padding: 0.4rem 0.8rem;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.8rem;
-        transition: 0.2s;
-        text-decoration: none;
-    }
-    .action-btn:hover { background: #e5e7eb; color: #00965e; }
-</style>
-
-<div class="dashboard-container">
-
-    <div class="welcome-banner">
-        <div class="welcome-text">
-            <h2>مرحباً بك مجدداً يا دكتور! 👋</h2>
-            <p>إليك ملخص سريع لأداء صيدليتك اليوم، دعنا نحقق المزيد من المبيعات.</p>
+    <!-- Welcome Banner -->
+    <div class="bg-gradient-to-r from-[#00965e] to-[#00b370] rounded-[2rem] p-6 md:p-8 text-white mb-8 shadow-lg shadow-[#00965e]/20 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+            <h2 class="text-2xl md:text-3xl font-black mb-2 flex items-center gap-2">
+                مرحباً بك في لوحة القيادة الخاصة بك! <span class="animate-bounce inline-block">👋</span>
+            </h2>
+            <p class="text-white/90 text-sm md:text-base font-medium">
+                إليك ملخص شامل ومباشر لأداء مبيعاتك، أرباحك، وكل ما يخص صيدليتك عبر منصة MediNear.
+            </p>
         </div>
-        </div>
-
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon icon-orange">
-                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-            </div>
-            <div class="stat-details">
-                <h4>طلبات قيد الانتظار</h4>
-                <h3>12</h3> </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-icon icon-green">
-                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-            <div class="stat-details">
-                <h4>أرباح المحفظة</h4>
-                <h3>4,520 ج.م</h3> </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-icon icon-blue">
-                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-            </div>
-            <div class="stat-details">
-                <h4>أدوية المخزن</h4>
-                <h3>845</h3> </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-icon icon-purple">
-                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-            <div class="stat-details">
-                <h4>طلبات مكتملة (اليوم)</h4>
-                <h3>28</h3> </div>
+        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-sm">
+            <i class="fa-solid fa-chart-pie text-3xl"></i>
         </div>
     </div>
 
-    <div class="recent-orders-section">
-        <div class="section-header">
-            <h3>أحدث الطلبات (تحتاج لاتخاذ إجراء)</h3>
-            <a href="#" class="view-all-btn">عرض الكل &larr;</a>
+    <!-- Financial Analytics Section -->
+    <div class="mb-10">
+        <h3 class="text-xl font-black text-slate-800 tracking-tight mb-5 flex items-center gap-2">
+            <i class="fa-solid fa-vault text-[#00965e]"></i> التحليل المالي والمحفظة
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <!-- Available Balance -->
+            <div class="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[2rem] shadow-lg shadow-indigo-500/20 p-5 md:p-6 text-white relative overflow-hidden group">
+                <div class="relative z-10">
+                    <p class="text-white/80 text-[11px] font-bold uppercase tracking-widest mb-1">الرصيد المتاح للسحب</p>
+                    <h3 class="text-2xl md:text-3xl font-black mb-2">{{ number_format($stats['available_balance'], 2) }} <span class="text-sm font-normal">ج.م</span></h3>
+                    <p class="text-white/90 text-[10px]"><i class="fa-solid fa-wallet"></i> متوفر الآن في محفظتك</p>
+                </div>
+                <i class="fa-solid fa-piggy-bank absolute -left-4 -bottom-4 text-white/10 text-8xl group-hover:scale-110 transition-transform duration-500"></i>
+            </div>
+
+            <!-- Total Earnings -->
+            <div class="bg-gradient-to-br from-cyan-500 to-blue-500 rounded-[2rem] shadow-lg shadow-cyan-500/20 p-5 md:p-6 text-white relative overflow-hidden group">
+                <div class="relative z-10">
+                    <p class="text-white/80 text-[11px] font-bold uppercase tracking-widest mb-1">إجمالي الأرباح الكلية</p>
+                    <h3 class="text-2xl md:text-3xl font-black mb-2">{{ number_format($stats['total_earnings'], 2) }} <span class="text-sm font-normal">ج.م</span></h3>
+                    <p class="text-white/90 text-[10px]"><i class="fa-solid fa-chart-line"></i> أرباحك منذ الانضمام</p>
+                </div>
+                <i class="fa-solid fa-coins absolute -left-4 -bottom-4 text-white/10 text-8xl group-hover:scale-110 transition-transform duration-500"></i>
+            </div>
+
+            <!-- Pending Withdrawals -->
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-[2rem] shadow-lg shadow-orange-500/20 p-5 md:p-6 text-white relative overflow-hidden group">
+                <div class="relative z-10">
+                    <p class="text-white/80 text-[11px] font-bold uppercase tracking-widest mb-1">مبالغ قيد المراجعة</p>
+                    <h3 class="text-2xl md:text-3xl font-black mb-2">{{ number_format($stats['pending_withdrawals'], 2) }} <span class="text-sm font-normal">ج.م</span></h3>
+                    <p class="text-white/90 text-[10px]"><i class="fa-solid fa-clock"></i> طلبات سحب في انتظار الموافقة</p>
+                </div>
+                <i class="fa-solid fa-clock-rotate-left absolute -left-4 -bottom-4 text-white/10 text-8xl group-hover:scale-110 transition-transform duration-500"></i>
+            </div>
+
+            <!-- Approved Withdrawals -->
+            <div class="bg-gradient-to-br from-[#00965e] to-[#007b4d] rounded-[2rem] shadow-lg shadow-[#00965e]/20 p-5 md:p-6 text-white relative overflow-hidden group">
+                <div class="relative z-10">
+                    <p class="text-white/80 text-[11px] font-bold uppercase tracking-widest mb-1">المبالغ المسحوبة بنجاح</p>
+                    <h3 class="text-2xl md:text-3xl font-black mb-2">{{ number_format($stats['approved_withdrawals'], 2) }} <span class="text-sm font-normal">ج.م</span></h3>
+                    <p class="text-white/90 text-[10px]"><i class="fa-solid fa-check-double"></i> إجمالي التحويلات المكتملة لك</p>
+                </div>
+                <i class="fa-solid fa-money-bill-transfer absolute -left-4 -bottom-4 text-white/10 text-8xl group-hover:scale-110 transition-transform duration-500"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Analytics Section -->
+    <div class="mb-10">
+        <h3 class="text-xl font-black text-slate-800 tracking-tight mb-5 flex items-center gap-2">
+            <i class="fa-solid fa-cart-shopping text-blue-500"></i> تحليلات الطلبات والمبيعات
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <!-- Total Orders -->
+            <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-purple-200 group">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                </div>
+                <div class="min-w-0 text-right">
+                    <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-1">إجمالي الطلبات الكلية</p>
+                    <h3 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">{{ number_format($stats['total_orders']) }}</h3>
+                </div>
+            </div>
+
+            <!-- Pending Orders -->
+            <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-orange-200 group">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+                <div class="min-w-0 text-right">
+                    <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-1">طلبات بانتظار الموافقة</p>
+                    <h3 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">{{ number_format($stats['pending_orders']) }}</h3>
+                </div>
+            </div>
+
+            <!-- Delivered Orders -->
+            <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-emerald-200 group">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <div class="min-w-0 text-right">
+                    <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-1">الطلبات المكتملة (تم التوصيل)</p>
+                    <h3 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">{{ number_format($stats['delivered_orders']) }}</h3>
+                </div>
+            </div>
+
+            <!-- Total Order Value -->
+            <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-blue-200 group">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-money-bills"></i>
+                </div>
+                <div class="min-w-0 text-right">
+                    <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-1">حجم مبيعات الطلبات المكتملة</p>
+                    <div class="flex items-end gap-1">
+                        <h3 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">{{ number_format($stats['total_order_value']) }}</h3>
+                        <span class="text-[10px] text-gray-500 font-bold pb-1 block">ج.م</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Recent Orders -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+            <div class="p-4 border-b border-gray-50 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-bell text-orange-500 animate-pulse"></i> أحدث الطلبات
+                </h3>
+                <a href="{{ route('pharmacy.orders') }}" class="text-xs text-blue-600 hover:text-blue-700 font-bold">عرض الكل</a>
+            </div>
+            <div class="p-0 flex-1 overflow-x-auto">
+                <table class="w-full text-right text-xs">
+                    <tbody class="divide-y divide-gray-50">
+                        @forelse($recentOrders as $order)
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="p-3 font-bold text-slate-700">#ORD-{{ $order->id }}</td>
+                            <td class="p-3 text-emerald-600 font-black" dir="ltr">{{ number_format($order->grand_total, 2) }} ج.م</td>
+                            <td class="p-3">
+                                @if($order->status == 'pending')
+                                    <span class="bg-orange-50 text-orange-600 px-2 py-1 rounded text-[10px] font-bold">جديد</span>
+                                @elseif($order->status == 'delivered')
+                                    <span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[10px] font-bold">مكتمل</span>
+                                @else
+                                    <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold">{{ $order->status }}</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="3" class="p-6 text-center text-gray-400">لا توجد طلبات حديثة</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div style="overflow-x: auto;">
-            <table class="custom-table">
-                <thead>
-                    <tr>
-                        <th>رقم الطلب</th>
-                        <th>العميل</th>
-                        <th>طريقة الدفع</th>
-                        <th>الإجمالي</th>
-                        <th>الحالة</th>
-                        <th>الإجراء</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>#MED-58392</strong></td>
-                        <td>أحمد محمد</td>
-                        <td>عند الاستلام</td>
-                        <td>125.50 ج.م</td>
-                        <td><span class="badge badge-pending">قيد الانتظار</span></td>
-                        <td><a href="#" class="action-btn">عرض التفاصيل</a></td>
-                    </tr>
-                    <tr>
-                        <td><strong>#MED-58391</strong></td>
-                        <td>سارة محمود</td>
-                        <td>Paymob</td>
-                        <td>340.00 ج.م</td>
-                        <td><span class="badge badge-accepted">جاري التجهيز</span></td>
-                        <td><a href="#" class="action-btn">تحديث الحالة</a></td>
-                    </tr>
-                    <tr>
-                        <td><strong>#MED-58390</strong></td>
-                        <td>كريم مصطفى</td>
-                        <td>عند الاستلام</td>
-                        <td>85.00 ج.م</td>
-                        <td><span class="badge badge-delivered">تم التوصيل</span></td>
-                        <td><a href="#" class="action-btn">عرض التفاصيل</a></td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Recent Withdrawals -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+            <div class="p-4 border-b border-gray-50 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-money-bill-transfer text-[#00965e]"></i> سجل السحوبات
+                </h3>
+                <a href="{{ route('pharmacy.wallet') }}" class="text-xs text-blue-600 hover:text-blue-700 font-bold">المحفظة</a>
+            </div>
+            <div class="p-0 flex-1 overflow-x-auto">
+                <table class="w-full text-right text-xs">
+                    <tbody class="divide-y divide-gray-50">
+                        @forelse($recentWithdrawals as $withdrawal)
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="p-3 font-bold text-slate-700">{{ $withdrawal->payment_method }}</td>
+                            <td class="p-3 text-[#00965e] font-black" dir="ltr">{{ number_format($withdrawal->amount, 2) }} ج.م</td>
+                            <td class="p-3">
+                                @if($withdrawal->status == 'pending')
+                                    <span class="text-orange-500 font-bold text-[10px]"><i class="fa-solid fa-clock"></i> قيد المراجعة</span>
+                                @elseif($withdrawal->status == 'approved')
+                                    <span class="text-emerald-500 font-bold text-[10px]"><i class="fa-solid fa-check"></i> تم التحويل</span>
+                                @else
+                                    <span class="text-red-500 font-bold text-[10px]"><i class="fa-solid fa-times"></i> مرفوض</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="3" class="p-6 text-center text-gray-400">لم تقم بأي سحوبات بعد</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Latest Inventory -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+            <div class="p-4 border-b border-gray-50 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-pills text-blue-500"></i> أحدث الأدوية المضافة
+                </h3>
+                <a href="{{ route('pharmacy.medicines.index') }}" class="text-xs text-blue-600 hover:text-blue-700 font-bold">المخزن</a>
+            </div>
+            <div class="p-0 flex-1 overflow-x-auto">
+                <table class="w-full text-right text-xs">
+                    <tbody class="divide-y divide-gray-50">
+                        @forelse($recentInventory as $item)
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="p-3 font-bold text-slate-700 truncate max-w-[120px]" title="{{ $item->medicine->name ?? 'غير متوفر' }}">
+                                {{ $item->medicine->name ?? 'غير متوفر' }}
+                            </td>
+                            <td class="p-3 text-gray-500 font-semibold" dir="ltr">{{ number_format($item->price, 2) }} ج.م</td>
+                            <td class="p-3">
+                                @if($item->quantity > 0)
+                                    <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold">{{ $item->quantity }} عبوة</span>
+                                @else
+                                    <span class="bg-red-50 text-red-600 px-2 py-1 rounded text-[10px] font-bold">نفذت الكمية</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="3" class="p-6 text-center text-gray-400">لا يوجد أدوية في المخزن</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
