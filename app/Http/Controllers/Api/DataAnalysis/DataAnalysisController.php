@@ -323,6 +323,7 @@ class DataAnalysisController extends Controller
                         'City'               => $order->pharmacy->city ?? 'Unknown',
                         
                         'Status'             => ucfirst($order->status),
+                        'Cancel_Reason'      => $order->cancel_reason,
                         'Payment_Method'     => ucfirst($order->payment_method),
                         'Payment_Status'     => ucfirst($order->payment_status),
                         
