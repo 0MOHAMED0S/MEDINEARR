@@ -6,6 +6,27 @@
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <style>
+    @keyframes fadeUp {
+        0% { opacity: 0; transform: translateY(15px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up {
+        animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .modal-enter-active {
+        animation: modalScaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .modal-leave-active {
+        animation: modalScaleOut 0.1s ease-in forwards;
+    }
+    @keyframes modalScaleIn {
+        0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes modalScaleOut {
+        0% { opacity: 1; transform: scale(1) translateY(0); }
+        100% { opacity: 0; transform: scale(0.95) translateY(10px); }
+    }
     /* تخصيص شكل TomSelect ليطابق تصميم Tailwind */
     .ts-wrapper.single .ts-control {
         border-radius: 0.5rem;
@@ -92,7 +113,7 @@
     <!-- Premium KPI Analytics Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 no-print">
         <!-- Total Orders -->
-        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-purple-200 group">
+        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-purple-200 group opacity-0 animate-fade-up" style="animation-delay: 50ms;">
             <div class="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-cart-shopping"></i>
             </div>
@@ -103,7 +124,7 @@
         </div>
 
         <!-- Pending Orders -->
-        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-orange-200 group">
+        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-orange-200 group opacity-0 animate-fade-up" style="animation-delay: 100ms;">
             <div class="w-14 h-14 md:w-16 md:h-16 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-hourglass-half"></i>
             </div>
@@ -114,7 +135,7 @@
         </div>
 
         <!-- Processing Orders -->
-        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-blue-200 group">
+        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-blue-200 group opacity-0 animate-fade-up" style="animation-delay: 150ms;">
             <div class="w-14 h-14 md:w-16 md:h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-motorcycle"></i>
             </div>
@@ -125,7 +146,7 @@
         </div>
 
         <!-- Delivered Orders -->
-        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-emerald-200 group">
+        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-emerald-200 group opacity-0 animate-fade-up" style="animation-delay: 200ms;">
             <div class="w-14 h-14 md:w-16 md:h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-box-open"></i>
             </div>
@@ -136,7 +157,7 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6 no-print">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6 no-print opacity-0 animate-fade-up" style="animation-delay: 250ms;">
         <form action="{{ route('pharmacy.orders') ?? '#' }}" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{{ count($pharmacies) > 1 ? '8' : '7' }} gap-4">
 
             <div class="lg:col-span-2">
@@ -203,7 +224,7 @@
         </form>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden no-print">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden no-print opacity-0 animate-fade-up" style="animation-delay: 300ms;">
         <div class="overflow-x-auto">
             <table class="w-full text-right border-collapse">
                 <thead>
@@ -218,7 +239,7 @@
                 <tbody class="divide-y divide-gray-100">
 
                     @forelse ($orders as $order)
-                        <tr class="hover:bg-gray-50/50 transition-colors group">
+                        <tr class="hover:bg-[#00965e]/5 transition-colors duration-200 group opacity-0 animate-fade-up" style="animation-delay: {{ 300 + ($loop->index * 50) }}ms;">
                             <td class="py-3 px-4">
                                 <div class="flex flex-col">
                                     <span class="font-bold text-gray-800 text-sm">#{{ $order->order_reference }}</span>
@@ -289,7 +310,8 @@
                                         return [
                                             'qty' => $item->quantity,
                                             'name' => $item->medicine->name ?? 'دواء محذوف',
-                                            'price' => number_format($item->price, 2)
+                                            'price' => number_format($item->price, 2),
+                                            'total' => number_format($item->price * $item->quantity, 2)
                                         ];
                                     })->toJson();
                                     $paymentLabel = $order->payment_method == 'paymob' ? 'أونلاين' : 'كاش';
@@ -414,9 +436,9 @@
 
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white text-right shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-gray-100">
+            <div class="relative transform overflow-visible rounded-2xl bg-white text-right shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-gray-100">
 
-                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center rounded-t-2xl">
                     <h3 class="text-lg font-bold text-gray-800">تحديث حالة الطلب</h3>
                     <button onclick="closeStatusModal()" class="text-gray-400 hover:text-red-500 transition-colors">
                         <i class="fa-solid fa-xmark text-xl"></i>
@@ -430,16 +452,21 @@
                         <p class="text-sm text-gray-600 mb-4">جاري تحديث حالة الطلب رقم <span id="status-mdl-ref" class="font-bold text-[#00965e]"></span></p>
 
                         <label class="block text-sm font-semibold text-gray-700 mb-2">اختر الحالة الجديدة:</label>
-                        <select name="status" id="status-select" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#00965e]/20 focus:border-[#00965e] outline-none transition-all text-sm font-semibold">
+                        <select name="status" id="status-select" onchange="toggleCancelReason(this.value)" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#00965e]/20 focus:border-[#00965e] outline-none transition-all text-sm font-semibold text-gray-800 bg-white">
                             <option value="pending">قيد الانتظار</option>
                             <option value="accepted">تم القبول (جاري التجهيز)</option>
                             <option value="out_for_delivery">في الطريق (مع المندوب)</option>
                             <option value="delivered">مكتمل (تم التوصيل)</option>
                             <option value="cancelled">إلغاء الطلب</option>
                         </select>
+
+                        <div id="cancel-reason-container" class="mt-4 hidden transition-all duration-300">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">سبب الإلغاء (اختياري):</label>
+                            <textarea name="cancel_reason" id="cancel_reason" rows="3" class="w-full px-4 py-3 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all text-sm resize-none bg-red-50/30 text-gray-800" placeholder="اكتب سبب رفض أو إلغاء الطلب هنا ليتضح للعميل..."></textarea>
+                        </div>
                     </div>
 
-                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-end gap-3 rounded-b-2xl">
                         <button type="button" onclick="closeStatusModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">
                             إلغاء
                         </button>
@@ -454,6 +481,14 @@
 </div>
 
 <script>
+    function toggleCancelReason(val) {
+        const container = document.getElementById('cancel-reason-container');
+        if(val === 'cancelled') {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
     function openDetailsModal(ref, name, phone, address, total, payment, status, btnElement) {
         document.getElementById('mdl-ref').innerText = ref;
         document.getElementById('mdl-name').innerText = name;
@@ -470,9 +505,15 @@
             const items = JSON.parse(btnElement.getAttribute('data-items') || '[]');
             items.forEach(item => {
                 itemsList.innerHTML += `
-                    <li class="flex justify-between text-sm">
-                        <span class="text-gray-700"><span class="font-bold text-[#00965e]">${item.qty}x</span> ${item.name}</span>
-                        <span class="font-semibold text-gray-800">${item.price} ج.م</span>
+                    <li class="flex flex-col bg-white p-3 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md hover:border-[#00965e]/30">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="font-bold text-gray-800 text-sm w-2/3 leading-tight text-right">${item.name}</span>
+                            <span class="font-black text-[#00965e] text-sm">${item.total} <span class="text-[9px]">ج.م</span></span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs text-gray-500 font-medium">
+                            <span>السعر للوحدة: <span class="font-bold text-gray-700">${item.price}</span> ج.م</span>
+                            <span class="bg-gray-100 px-2 py-0.5 rounded-lg text-gray-700">الكمية: <span class="font-black text-[#00965e]">${item.qty}</span></span>
+                        </div>
                     </li>
                 `;
             });
@@ -497,14 +538,15 @@
 
         setTimeout(() => {
             modal.classList.add('hidden');
-        }, 200);
+        }, 100);
     }
 
-    function openStatusModal(orderId, ref, currentStatus) {
+    function openStatusModal(id, ref, currentStatus) {
         document.getElementById('status-mdl-ref').innerText = ref;
+        document.getElementById('updateStatusForm').action = `/pharmacy/orders/${id}/status`;
         document.getElementById('status-select').value = currentStatus;
-
-        document.getElementById('updateStatusForm').action = `/pharmacy/orders/${orderId}/status`;
+        
+        toggleCancelReason(currentStatus);
 
         const modal = document.getElementById('statusModal');
         const modalContent = modal.querySelector('.transform');
@@ -525,7 +567,7 @@
 
         setTimeout(() => {
             modal.classList.add('hidden');
-        }, 200);
+        }, 100);
     }
 
     function printOrder(ref, name, phone, address, total, payment, status) {

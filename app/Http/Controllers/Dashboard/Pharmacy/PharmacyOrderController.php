@@ -109,7 +109,8 @@ class PharmacyOrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|in:pending,accepted,preparing,out_for_delivery,delivered,cancelled'
+            'status' => 'required|in:pending,accepted,preparing,out_for_delivery,delivered,cancelled',
+            'cancel_reason' => 'nullable|string|max:1000'
         ]);
 
         try {
@@ -125,7 +126,8 @@ class PharmacyOrderController extends Controller
             DB::beginTransaction();
 
             $order->update([
-                'status' => $request->status
+                'status' => $request->status,
+                'cancel_reason' => $request->status === 'cancelled' ? $request->cancel_reason : null
             ]);
 
             // Update wallet if the order was just delivered
