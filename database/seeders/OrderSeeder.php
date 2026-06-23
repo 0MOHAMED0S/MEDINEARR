@@ -30,9 +30,9 @@ class OrderSeeder extends Seeder
         $paymentStatuses = ['pending', 'paid', 'failed'];
         $paymentMethods = ['cash', 'paymob'];
 
-        $this->command->info('Seeding 50 Orders...');
+        $this->command->info('Seeding 150 Orders...');
 
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = 0; $i < 150; $i++) {
             $user = $users->random();
             $pharmacy = $pharmacies->random();
 
