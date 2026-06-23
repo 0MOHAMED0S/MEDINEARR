@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
             PharmacySeeder::class,
             CouponSeeder::class,
             SearchHistorySeeder::class,
-            OrderSeeder::class
+            OrderSeeder::class,
+            WithdrawalRequestSeeder::class
         ]);
     }
 }
