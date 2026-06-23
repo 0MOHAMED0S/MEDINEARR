@@ -21,7 +21,8 @@ class DatabaseSeeder extends Seeder
             MedicineSeeder::class,
             PharmacySeeder::class,
             CouponSeeder::class,
-            SearchHistorySeeder::class
+            SearchHistorySeeder::class,
+            OrderSeeder::class
         ]);
     }
 }
