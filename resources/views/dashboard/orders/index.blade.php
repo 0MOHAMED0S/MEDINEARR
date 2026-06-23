@@ -6,6 +6,27 @@
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <style>
+    @keyframes fadeUp {
+        0% { opacity: 0; transform: translateY(15px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up {
+        animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .modal-enter-active {
+        animation: modalScaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .modal-leave-active {
+        animation: modalScaleOut 0.1s ease-in forwards;
+    }
+    @keyframes modalScaleIn {
+        0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes modalScaleOut {
+        0% { opacity: 1; transform: scale(1) translateY(0); }
+        100% { opacity: 0; transform: scale(0.95) translateY(10px); }
+    }
     /* تخصيص شكل TomSelect ليطابق تصميم Tailwind */
     .ts-wrapper.single .ts-control {
         border-radius: 0.5rem;
@@ -88,7 +109,7 @@
     <!-- Premium KPI Analytics Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 no-print">
         <!-- Total Orders -->
-        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-purple-200 group">
+        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-purple-200 group opacity-0 animate-fade-up" style="animation-delay: 50ms;">
             <div class="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-clipboard-list"></i>
             </div>
@@ -99,7 +120,7 @@
         </div>
 
         <!-- Pending Orders -->
-        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-orange-200 group">
+        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-orange-200 group opacity-0 animate-fade-up" style="animation-delay: 100ms;">
             <div class="w-14 h-14 md:w-16 md:h-16 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-hourglass-half"></i>
             </div>
@@ -121,7 +142,7 @@
         </div>
 
         <!-- Delivered Orders -->
-        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-emerald-200 group">
+        <div class="bg-white p-5 md:p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 md:gap-5 transition-all hover:shadow-md hover:border-emerald-200 group opacity-0 animate-fade-up" style="animation-delay: 200ms;">
             <div class="w-14 h-14 md:w-16 md:h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-box-open"></i>
             </div>
@@ -132,7 +153,7 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6 no-print">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6 no-print opacity-0 animate-fade-up" style="animation-delay: 250ms;">
         <form action="{{ route('orders.index') ?? '#' }}" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4">
 
             <div class="lg:col-span-2">
@@ -197,7 +218,7 @@
         </form>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden no-print">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden no-print opacity-0 animate-fade-up" style="animation-delay: 300ms;">
         <div class="overflow-x-auto">
             <table class="w-full text-right border-collapse">
                 <thead>
@@ -212,7 +233,7 @@
                 <tbody class="divide-y divide-gray-100">
 
                     @forelse ($orders as $order)
-                        <tr class="hover:bg-gray-50/50 transition-colors group">
+                        <tr class="hover:bg-[#00965e]/5 transition-colors duration-200 group opacity-0 animate-fade-up" style="animation-delay: {{ 300 + ($loop->index * 50) }}ms;">
                             <td class="py-3 px-4">
                                 <div class="flex flex-col">
                                     <span class="font-bold text-gray-800 text-sm">#{{ $order->order_reference }}</span>
@@ -284,7 +305,8 @@
                                         return [
                                             'qty' => $item->quantity,
                                             'name' => $item->medicine->name ?? 'دواء محذوف',
-                                            'price' => number_format($item->price, 2)
+                                            'price' => number_format($item->price, 2),
+                                            'total' => number_format($item->price * $item->quantity, 2)
                                         ];
                                     })->toJson();
                                     $paymentLabel = $order->payment_method == 'paymob' ? 'أونلاين' : 'كاش';
@@ -417,9 +439,15 @@
             const items = JSON.parse(btnElement.getAttribute('data-items') || '[]');
             items.forEach(item => {
                 itemsList.innerHTML += `
-                    <li class="flex justify-between text-sm">
-                        <span class="text-gray-700"><span class="font-bold text-[#00965e]">${item.qty}x</span> ${item.name}</span>
-                        <span class="font-semibold text-gray-800">${item.price} ج.م</span>
+                    <li class="flex flex-col bg-white p-3 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md hover:border-[#00965e]/30">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="font-bold text-gray-800 text-sm w-2/3 leading-tight text-right">${item.name}</span>
+                            <span class="font-black text-[#00965e] text-sm">${item.total} <span class="text-[9px]">ج.م</span></span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs text-gray-500 font-medium">
+                            <span>السعر للوحدة: <span class="font-bold text-gray-700">${item.price}</span> ج.م</span>
+                            <span class="bg-gray-100 px-2 py-0.5 rounded-lg text-gray-700">الكمية: <span class="font-black text-[#00965e]">${item.qty}</span></span>
+                        </div>
                     </li>
                 `;
             });
@@ -444,7 +472,7 @@
 
         setTimeout(() => {
             modal.classList.add('hidden');
-        }, 200);
+        }, 100);
     }
 
     function printOrder(ref, name, phone, address, total, payment, status) {
