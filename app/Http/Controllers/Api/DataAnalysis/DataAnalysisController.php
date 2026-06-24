@@ -347,4 +347,48 @@ class DataAnalysisController extends Controller
             return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
         }
     }
+    /**
+     * API: بيانات عناصر الطلبات (Order Items) لـ Power BI
+     *
+     * @return JsonResponse
+     */
+    public function orderItems(): JsonResponse
+    {
+        try {
+            $orderItems = \App\Models\OrderItem::with(['order.user', 'order.pharmacy', 'medicine.category'])
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'Item_ID'           => $item->id,
+                        'Order_ID'          => $item->order_id,
+                        'Order_Reference'   => $item->order ? $item->order->order_reference : null,
+                        'Order_Status'      => $item->order ? $item->order->status : null,
+                        
+                        'Medicine_ID'       => $item->medicine_id,
+                        'Medicine_Name'     => $item->medicine ? $item->medicine->name : 'Unknown',
+                        'Category_Name'     => ($item->medicine && $item->medicine->category) ? $item->medicine->category->name : 'Unknown',
+                        
+                        'Pharmacy_ID'       => $item->order ? $item->order->pharmacy_id : null,
+                        'Pharmacy_Name'     => ($item->order && $item->order->pharmacy) ? $item->order->pharmacy->pharmacy_name : 'Unknown',
+                        
+                        'User_ID'           => $item->order ? $item->order->user_id : null,
+                        'User_Name'         => ($item->order && $item->order->user) ? $item->order->user->name : 'Unknown',
+                        
+                        'Quantity'          => (int) $item->quantity,
+                        'Unit_Price'        => (float) $item->price,
+                        'Total_Price'       => (float) ($item->quantity * $item->price),
+
+                        // توحيد التواريخ
+                        'Created_At'        => $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : null,
+                        'Date'              => $item->created_at ? $item->created_at->format('Y-m-d') : null,
+                        'Month_Year'        => $item->created_at ? $item->created_at->format('Y-m') : null,
+                    ];
+                })->toArray();
+
+            return response()->json($orderItems, 200);
+        } catch (\Exception $e) {
+            Log::error('Power BI Order Items API Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Server Error', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

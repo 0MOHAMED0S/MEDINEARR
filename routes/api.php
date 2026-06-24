@@ -105,6 +105,7 @@ Route::prefix('data-analysis')
         Route::get('/searchHistory', [DataAnalysisController::class, 'searchHistory']);
         Route::get('/pharmacy-inventory', [DataAnalysisController::class, 'pharmacyInventory']);
         Route::get('/orders', [DataAnalysisController::class, 'orders']);
+        Route::get('/order-items', [DataAnalysisController::class, 'orderItems']);
     });
 
 // 3. Webhook Route for Paymob (يجب أن يكون بدون حماية ليتمكن Paymob من الوصول إليه)
