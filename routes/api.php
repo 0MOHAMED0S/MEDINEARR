@@ -20,6 +20,10 @@ use App\Http\Controllers\Api\Pharmacies\SaveMedicinesController;
 use App\Http\Controllers\Api\Pharmacies\SaveCartController;
 use Illuminate\Support\Facades\Route;
 
+use Illuminate\Support\Facades\Broadcast;
+
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
 // 1. Authentication Routes (مسارات تسجيل الدخول لا تحتاج لتوكن)
 Route::post('/auth/google/login', [GoogleApiController::class, 'loginWithGoogle']);
 Route::post('/auth/facebook/login', [FacebookApiController::class, 'loginWithFacebook']);
