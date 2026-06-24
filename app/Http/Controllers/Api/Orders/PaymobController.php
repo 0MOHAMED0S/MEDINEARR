@@ -44,6 +44,20 @@ class PaymobController extends Controller
                                 ->where('pharmacy_id', $order->pharmacy_id)
                                 ->delete();
                         }
+
+                        $pharmacyUser = \App\Models\User::where('role', 'pharmacy')
+                            ->whereHas('pharmacy', function ($q) use ($order) {
+                                $q->where('id', $order->pharmacy_id);
+                            })->first();
+
+                        if ($pharmacyUser) {
+                            $pharmacyUser->notify(new \App\Notifications\SystemNotification(
+                                'طلب جديد! 📦',
+                                "تم استلام طلب جديد (دفع إلكتروني) برقم #{$order->id} بقيمة {$order->grand_total} جنيه.",
+                                'success',
+                                '/pharmacy/dashboard' // Update to orders page when it exists
+                            ));
+                        }
                     }
 
                     Log::info("Order {$order->id} payment status updated to {$order->payment_status}");

@@ -149,6 +149,24 @@ class PharmacyOrderController extends Controller
 
             DB::commit();
 
+            if ($oldStatus !== $request->status && $order->user) {
+                $statusAr = [
+                    'pending' => 'قيد الانتظار',
+                    'accepted' => 'تم القبول',
+                    'preparing' => 'قيد التجهيز',
+                    'out_for_delivery' => 'في الطريق إليك',
+                    'delivered' => 'تم التوصيل',
+                    'cancelled' => 'تم الإلغاء'
+                ][$request->status] ?? $request->status;
+
+                $order->user->notify(new \App\Notifications\SystemNotification(
+                    'تحديث حالة الطلب 📦',
+                    "تم تحديث حالة طلبك #{$order->id} إلى: {$statusAr}",
+                    'info',
+                    null // Let mobile app handle routing
+                ));
+            }
+
             return back()->with('success', "تم تحديث حالة الطلب ({$order->order_reference}) بنجاح.");
         } catch (\Exception $e) {
             DB::rollBack();

@@ -42,7 +42,18 @@ class PharmacyApplicationController extends Controller
         $data['has_collaboration'] = $request->collab === 'yes';
         $data['status'] = 'under_review';
 
-        PharmacyApplication::create($data);
+        $app = PharmacyApplication::create($data);
+
+        // Notify Admins
+        $admins = \App\Models\User::where('role', 'admin')->get();
+        if ($admins->count() > 0) {
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SystemNotification(
+                'طلب صيدلية جديد 📄',
+                "تم تقديم طلب انضمام جديد من صيدلية: {$app->pharmacy_name}",
+                'info',
+                '/admin/pharmaciesApplications/' . $app->id // Or whatever the show route is
+            ));
+        }
 
         return back()->with('success', 'Application submitted successfully!');
     }

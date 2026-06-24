@@ -37,6 +37,14 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
+    // Notifications
+    Route::get('/notifications/page', [\App\Http\Controllers\NotificationController::class, 'adminPage'])->name('admin.notifications.page');
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/send', [\App\Http\Controllers\NotificationController::class, 'sendCustomNotification']);
+
     //categories routes
     Route::resource('categories', AdminCategoryController::class);
     Route::patch('/categories/{category}/toggle-status', [AdminCategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
@@ -101,11 +109,23 @@ Route::prefix('pharmacy')->name('pharmacy.')->middleware(['auth', 'role:pharmacy
         Route::get('/wallet', [\App\Http\Controllers\Dashboard\Pharmacy\PharmacyWalletController::class, 'index'])->name('wallet');
         Route::post('/wallet/withdraw', [\App\Http\Controllers\Dashboard\Pharmacy\PharmacyWalletController::class, 'requestWithdrawal'])->name('wallet.withdraw');
 
-Route::get('/chats', function () {
-    return view('pharmacy.chat.index');
-})->name('chats');
+        // Chat Routes
+        Route::get('/chats', function () {
+            return view('pharmacy.chat.index');
+        })->name('chats');
+        Route::get('/chats/sessions', [\App\Http\Controllers\Dashboard\Pharmacy\ChatController::class, 'getSessions']);
+        Route::get('/chats/{session}/messages', [\App\Http\Controllers\Dashboard\Pharmacy\ChatController::class, 'getMessages']);
+        Route::post('/chats/{session}/messages', [\App\Http\Controllers\Dashboard\Pharmacy\ChatController::class, 'sendMessage']);
+        Route::post('/chats/{session}/read', [\App\Http\Controllers\Dashboard\Pharmacy\ChatController::class, 'markAsRead']);
         // لوحة التحكم الأساسية
         Route::get('/dashboard', [PharmacyMainController::class, 'index'])->name('dashboard');
+
+        // Notifications
+        Route::get('/notifications/page', [\App\Http\Controllers\NotificationController::class, 'pharmacyPage'])->name('notifications.page');
+        Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
+        Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount']);
+        Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
+        Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
 
         // مسارات الأدوية والمخزون (الآن سيصبح اسمها تلقائياً: pharmacy.medicines.index)
         Route::resource('medicines', PharmacyInventoryController::class)->only(['index', 'store', 'update', 'destroy']);
