@@ -95,6 +95,17 @@ class PharmacyWalletController extends Controller
 
             DB::commit();
 
+            // Notify Admins
+            $admins = \App\Models\User::where('role', 'admin')->get();
+            if ($admins->count() > 0) {
+                \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SystemNotification(
+                    'طلب سحب رصيد 💰',
+                    "طلب سحب جديد بقيمة {$request->amount} ج.م من صيدلية {$pharmacy->pharmacy_name}.",
+                    'warning',
+                    '/admin/withdrawals'
+                ));
+            }
+
             return back()->with('success', 'تم تقديم طلب السحب بنجاح. سيتم مراجعة الطلب وتحويل المبلغ قريباً.');
 
         } catch (\Exception $e) {

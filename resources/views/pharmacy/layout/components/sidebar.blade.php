@@ -48,6 +48,11 @@
             $pharmacyIds = \App\Models\Pharmacy::where('user_id', auth()->id())->pluck('id')->toArray();
             $pendingOrders = \App\Models\Order::whereIn('pharmacy_id', $pharmacyIds)->where('status', 'pending')->count();
             $pendingWithdrawals = \App\Models\WithdrawalRequest::whereIn('pharmacy_id', $pharmacyIds)->where('status', 'pending')->count();
+            $unreadMessages = \App\Models\ChatMessage::where('sender_type', 'user')
+                ->where('is_read', false)
+                ->whereHas('session', function($q) use ($pharmacyIds) {
+                    $q->whereIn('pharmacy_id', $pharmacyIds);
+                })->count();
         @endphp
 
         <a href="{{ route('pharmacy.orders') }}"
@@ -70,12 +75,23 @@
             @endif
         </a>
 
-<a href="{{ route('pharmacy.chats') }}"
-    class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
-    {{ request()->routeIs('pharmacy.chats*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
-    <i class="fa-solid fa-comments w-5 text-center {{ request()->routeIs('pharmacy.chats*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
-    <span class="{{ request()->routeIs('pharmacy.chats*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">المحادثات</span>
-</a>
+        <a href="{{ route('pharmacy.chats') }}"
+            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+            {{ request()->routeIs('pharmacy.chats*') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-comments w-5 text-center {{ request()->routeIs('pharmacy.chats*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('pharmacy.chats*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">المحادثات</span>
+            @if($unreadMessages > 0)
+                <span class="mr-auto bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">{{ $unreadMessages }}</span>
+            @endif
+        </a>
+
+        <a href="{{ route('pharmacy.notifications.page') }}"
+            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+            {{ request()->routeIs('pharmacy.notifications.page') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-bell w-5 text-center {{ request()->routeIs('pharmacy.notifications.page') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('pharmacy.notifications.page') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الإشعارات</span>
+            <span class="mr-auto bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm hidden" id="sidebar-notif-count">0</span>
+        </a>
 
         <a href="{{ route('pharmacy.profile.index') }}"
             class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl

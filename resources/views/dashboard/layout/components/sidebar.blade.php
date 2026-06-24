@@ -137,6 +137,13 @@
             <i class="fa-solid fa-wallet w-5 text-center {{ request()->routeIs('admin.wallets.*') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
             <span class="{{ request()->routeIs('admin.wallets.*') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">مَحافظ الصيدليات</span>
         </a>
+        <a href="{{ route('admin.notifications.page') }}"
+            class="flex items-center gap-3 p-3.5 md:p-4 transition-all group rounded-xl md:rounded-2xl
+            {{ request()->routeIs('admin.notifications.page') ? 'bg-white/10 border-l-4 border-accent shadow-inner' : 'hover:bg-white/5' }}">
+            <i class="fa-solid fa-bell w-5 text-center {{ request()->routeIs('admin.notifications.page') ? 'text-accent' : 'text-white/40 group-hover:text-white' }} text-base md:text-lg"></i>
+            <span class="{{ request()->routeIs('admin.notifications.page') ? 'font-bold text-white' : 'text-white/70 group-hover:text-white' }} text-sm md:text-base">الإشعارات</span>
+            <span class="mr-auto bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm hidden" id="sidebar-notif-count">0</span>
+        </a>
 
         <hr class="border-white/10 my-2 mx-2">
 

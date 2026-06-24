@@ -180,6 +180,24 @@ class AdminPharmacyApplicationController extends Controller
             }
 
             DB::commit();
+
+            // Notify the applicant
+            $userToNotify = User::where('email', $application->email)->first() ?? User::find($application->user_id);
+            if ($userToNotify) {
+                $statusAr = $request->status === 'approved' ? 'قبول' : 'رفض';
+                $type = $request->status === 'approved' ? 'success' : 'error';
+                $messageBody = $request->status === 'approved' 
+                    ? "تهانينا! تم قبول طلب صيدليتك ({$application->pharmacy_name}) وتم تفعيل حسابك."
+                    : "نأسف، تم رفض طلب صيدليتك ({$application->pharmacy_name}). الملاحظات: {$application->admin_notes}";
+
+                $userToNotify->notify(new \App\Notifications\SystemNotification(
+                    "تحديث حالة الطلب ({$statusAr})",
+                    $messageBody,
+                    $type,
+                    '/pharmacy/dashboard'
+                ));
+            }
+
             $message = $request->status === 'approved' ? 'تم قبول الصيدلية وتفعيلها بنجاح.' : 'تم رفض طلب الصيدلية وحفظ ملاحظات الإدارة.';
             return back()->with('success', $message);
         } catch (\Throwable $e) {

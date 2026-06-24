@@ -353,6 +353,22 @@ class CheckoutController extends Controller
 
             DB::commit();
 
+            if ($request->payment_method === 'cash') {
+                $pharmacyUser = \App\Models\User::where('role', 'pharmacy')
+                    ->whereHas('pharmacy', function ($q) use ($order) {
+                        $q->where('id', $order->pharmacy_id);
+                    })->first();
+
+                if ($pharmacyUser) {
+                    $pharmacyUser->notify(new \App\Notifications\SystemNotification(
+                        'طلب جديد! 📦',
+                        "تم استلام طلب جديد (الدفع عند الاستلام) برقم #{$order->id} بقيمة {$order->grand_total} جنيه.",
+                        'success',
+                        '/pharmacy/dashboard' // Update to orders page when it exists
+                    ));
+                }
+            }
+
             if ($request->payment_method === 'paymob') {
                 $orderData = [
                     'amount'     => $grandTotal,

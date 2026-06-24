@@ -34,6 +34,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout-all', [SocialLogoutController::class, 'logoutAllDevices']);
     //location
     Route::post('/profile/location', [AuthController::class, 'updateLocation']);
+
+    // Chat Routes
+    Route::get('/chat/sessions', [\App\Http\Controllers\Api\ChatController::class, 'getSessions']);
+    Route::post('/chat/sessions', [\App\Http\Controllers\Api\ChatController::class, 'startSession']);
+    Route::get('/chat/{session}/messages', [\App\Http\Controllers\Api\ChatController::class, 'getMessages']);
+    Route::post('/chat/{session}/messages', [\App\Http\Controllers\Api\ChatController::class, 'sendMessage']);
+    Route::post('/chat/{session}/read', [\App\Http\Controllers\Api\ChatController::class, 'markAsRead']);
+
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
 });
 
 Route::prefix('pharmacy')->middleware(['auth:sanctum'])
