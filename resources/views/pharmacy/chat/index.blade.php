@@ -544,7 +544,69 @@
             }
             
             if(msg.body) {
-                contentHtml += `<div class="whitespace-pre-wrap">${msg.body}</div>`;
+                // Detect Google Maps URL
+                const googleMapsRegex = /(https?:\/\/(?:www\.)?(?:google\.com\/maps|maps\.app\.goo\.gl|maps\.google\.com)[^\s]+)/;
+                const queryRegex = /query=([0-9.\-]+,[0-9.\-]+)/;
+                const match = msg.body.match(googleMapsRegex);
+                
+                if (match) {
+                    const url = match[0];
+                    let latlngText = "الموقع الجغرافي";
+                    // Fallback beautiful map texture
+                    let bgImage = "https://i.pinimg.com/736x/8a/be/d5/8abed58c2f1f0e42ec1e89ce21896d85.jpg"; 
+                    
+                    const queryMatch = url.match(queryRegex);
+                    if(queryMatch) {
+                        latlngText = queryMatch[1];
+                        const coords = queryMatch[1].split(',');
+                        if (coords.length === 2) {
+                            // Yandex takes Longitude, Latitude for its static maps API
+                            bgImage = `https://static-maps.yandex.ru/1.x/?lang=en-US&ll=${coords[1]},${coords[0]}&z=14&l=map&size=400,200`;
+                        }
+                    }
+
+                    contentHtml += `
+                    <div class="relative w-64 rounded-[1.25rem] overflow-hidden my-1 group shadow-sm ring-1 ring-slate-900/5 hover:ring-rose-500/30 hover:shadow-md transition-all duration-300">
+                        <!-- Map Image Area -->
+                        <div class="h-32 bg-slate-100 relative overflow-hidden bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style="background-image: url('${bgImage}');">
+                            <div class="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors duration-300"></div>
+                            
+                            <!-- Animated Pin -->
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
+                                <i class="fa-solid fa-location-dot text-4xl text-rose-500 drop-shadow-[0_4px_4px_rgba(0,0,0,0.3)] group-hover:-translate-y-1.5 group-hover:scale-110 transition-all duration-300"></i>
+                                <div class="w-3 h-1 bg-black/30 rounded-[100%] mt-1 blur-[1.5px] group-hover:w-2 group-hover:opacity-40 transition-all duration-300"></div>
+                            </div>
+                            
+                            <!-- GPS Badge -->
+                            <div class="absolute bottom-2 left-2 z-10">
+                                <span class="text-white text-[9px] font-black tracking-wider bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm border border-white/10">
+                                    <i class="fa-solid fa-satellite-dish"></i> GPS
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Action Area -->
+                        <div class="bg-white p-3 flex items-center justify-between border-t border-slate-100 relative z-20">
+                            <div class="flex flex-col min-w-0 pr-1">
+                                <span class="text-slate-800 font-black text-sm truncate">موقع تمت مشاركته</span>
+                                <span class="text-slate-400 font-bold text-[10px] truncate mt-0.5" style="direction: ltr; text-align: left;">${latlngText}</span>
+                            </div>
+                            <a href="${url}" target="_blank" class="shrink-0 w-10 h-10 rounded-[0.85rem] bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all duration-300 shadow-sm shadow-rose-500/20">
+                                <i class="fa-solid fa-location-arrow text-lg"></i>
+                            </a>
+                        </div>
+                    </div>`;
+                    
+                    if (msg.body.trim() !== url) {
+                        const remainingText = msg.body.replace(url, '').trim();
+                        if(remainingText) {
+                            contentHtml += `<div class="whitespace-pre-wrap mt-2 text-sm text-inherit font-medium opacity-90">${remainingText}</div>`;
+                        }
+                    }
+                } else {
+                    // Regular text
+                    contentHtml += `<div class="whitespace-pre-wrap">${msg.body}</div>`;
+                }
             }
             
             const timeString = msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'}) : 'الآن';
