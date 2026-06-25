@@ -86,9 +86,13 @@ class ChatController extends Controller
 
         if ($request->hasFile('file')) {
             $file = $request->file('file');
+            $mimeType = $file->getMimeType();
             $extension = $file->getClientOriginalExtension();
-            if (in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+            
+            if (str_starts_with($mimeType, 'image/')) {
                 $type = 'image';
+            } elseif (str_starts_with($mimeType, 'audio/') || $extension === 'webm' || $extension === 'm4a' || $extension === 'mp3' || $extension === 'wav' || $extension === 'ogg') {
+                $type = 'voice';
             } else {
                 $type = 'file';
             }

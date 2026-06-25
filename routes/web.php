@@ -44,6 +44,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
     Route::post('/notifications/send', [\App\Http\Controllers\NotificationController::class, 'sendCustomNotification']);
+    Route::get('/notifications/sent', [\App\Http\Controllers\NotificationController::class, 'sentHistory']);
 
     //categories routes
     Route::resource('categories', AdminCategoryController::class);

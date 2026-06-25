@@ -111,8 +111,22 @@ class NotificationController extends Controller
                     null // no action url for custom notification
                 )
             );
+
+            \App\Models\AdminSentNotification::create([
+                'target' => $request->target,
+                'title' => $request->title,
+                'message' => $request->message,
+                'type' => $request->type,
+                'recipients_count' => $users->count()
+            ]);
         }
 
         return response()->json(['status' => 'success', 'message' => 'Notification sent successfully']);
+    }
+
+    public function sentHistory()
+    {
+        $history = \App\Models\AdminSentNotification::orderBy('created_at', 'desc')->paginate(15);
+        return response()->json($history);
     }
 }
