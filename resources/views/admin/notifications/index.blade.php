@@ -98,7 +98,13 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="flex border-b border-slate-200 mb-6">
+        <button onclick="switchTab('inbox')" id="tab-inbox" class="px-6 py-3 font-bold text-primary border-b-2 border-primary transition-colors flex items-center gap-2"><i class="fa-solid fa-inbox"></i> الإشعارات الواردة</button>
+        <button onclick="switchTab('sent')" id="tab-sent" class="px-6 py-3 font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-700 transition-colors flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left"></i> سجل الإرسال</button>
+    </div>
+
+    <!-- Inbox Section -->
+    <div id="inbox-section" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div id="page-notifications-list" class="divide-y divide-slate-50 min-h-[400px] relative">
             <div id="page-loading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
                 <i class="fa-solid fa-spinner fa-spin text-3xl text-primary opacity-50"></i>
@@ -113,8 +119,44 @@
         </div>
         
         <div class="p-4 border-t border-slate-50 bg-slate-50/50 flex justify-center hidden" id="pagination-container">
-            <!-- Pagination logic handled by Vue/React or simple load more in Vanilla JS -->
             <button id="load-more-btn" onclick="loadMoreNotifications()" class="px-6 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors text-sm shadow-sm hidden">
+                تحميل المزيد
+            </button>
+        </div>
+    </div>
+
+    <!-- Sent History Section -->
+    <div id="sent-section" class="hidden bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-2 md:p-6 overflow-x-auto min-h-[400px] relative">
+            <table class="w-full text-right border-collapse whitespace-nowrap">
+                <thead>
+                    <tr class="border-b border-slate-100 text-slate-500 text-sm">
+                        <th class="pb-3 font-bold px-4">العنوان</th>
+                        <th class="pb-3 font-bold px-4">المستهدفين</th>
+                        <th class="pb-3 font-bold px-4">عدد المستلمين</th>
+                        <th class="pb-3 font-bold px-4">النوع</th>
+                        <th class="pb-3 font-bold px-4">التاريخ والوقت</th>
+                    </tr>
+                </thead>
+                <tbody id="sent-history-list" class="divide-y divide-slate-50">
+                    <!-- Data injected here -->
+                </tbody>
+            </table>
+            
+            <div id="sent-loading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10 hidden">
+                <i class="fa-solid fa-spinner fa-spin text-3xl text-primary opacity-50"></i>
+            </div>
+            <div id="sent-empty-state" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-white z-0">
+                <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-regular fa-paper-plane text-4xl text-slate-300"></i>
+                </div>
+                <h3 class="text-lg font-black text-slate-800 mb-1">لا يوجد سجل!</h3>
+                <p class="text-sm text-slate-500 max-w-sm mx-auto">لم تقم بإرسال أي إشعار مخصص حتى الآن.</p>
+            </div>
+        </div>
+        
+        <div class="p-4 border-t border-slate-50 bg-slate-50/50 flex justify-center hidden" id="sent-pagination-container">
+            <button id="load-more-sent-btn" onclick="loadMoreSent()" class="px-6 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors text-sm shadow-sm hidden">
                 تحميل المزيد
             </button>
         </div>
@@ -125,9 +167,37 @@
     let currentPage = 1;
     let hasMorePages = false;
 
+    let sentPage = 1;
+    let hasMoreSentPages = false;
+    let sentHistoryLoaded = false;
+
     document.addEventListener('DOMContentLoaded', function() {
         loadPageNotifications(1);
     });
+
+    window.switchTab = function(tab) {
+        const inboxBtn = document.getElementById('tab-inbox');
+        const sentBtn = document.getElementById('tab-sent');
+        const inboxSection = document.getElementById('inbox-section');
+        const sentSection = document.getElementById('sent-section');
+
+        if(tab === 'inbox') {
+            inboxBtn.className = "px-6 py-3 font-bold text-primary border-b-2 border-primary transition-colors flex items-center gap-2";
+            sentBtn.className = "px-6 py-3 font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-700 transition-colors flex items-center gap-2";
+            inboxSection.classList.remove('hidden');
+            sentSection.classList.add('hidden');
+        } else {
+            sentBtn.className = "px-6 py-3 font-bold text-primary border-b-2 border-primary transition-colors flex items-center gap-2";
+            inboxBtn.className = "px-6 py-3 font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-700 transition-colors flex items-center gap-2";
+            sentSection.classList.remove('hidden');
+            inboxSection.classList.add('hidden');
+            
+            if(!sentHistoryLoaded) {
+                loadSentHistory(1);
+                sentHistoryLoaded = true;
+            }
+        }
+    };
 
     function loadPageNotifications(page) {
         document.getElementById('page-loading').classList.remove('hidden');
@@ -337,6 +407,12 @@
             `;
             document.body.insertAdjacentHTML('beforeend', toastHtml);
             
+            // Reload sent history if it's currently loaded
+            if (sentHistoryLoaded) {
+                document.getElementById('sent-history-list').innerHTML = '';
+                loadSentHistory(1);
+            }
+            
             // Remove toast after 5s
             setTimeout(() => {
                 const toasts = document.querySelectorAll('.animate-toast');
@@ -349,6 +425,92 @@
             btn.innerHTML = originalText;
             btn.disabled = false;
         });
+    }
+
+    // Sent History Functions
+    function loadSentHistory(page) {
+        document.getElementById('sent-loading').classList.remove('hidden');
+        sentPage = page;
+        
+        axios.get('/admin/notifications/sent?page=' + page).then(response => {
+            document.getElementById('sent-loading').classList.add('hidden');
+            const data = response.data;
+            const items = data.data;
+            hasMoreSentPages = data.next_page_url !== null;
+            
+            if (page === 1 && items.length === 0) {
+                document.getElementById('sent-empty-state').classList.remove('hidden');
+            } else {
+                document.getElementById('sent-empty-state').classList.add('hidden');
+                items.forEach(item => appendSentItem(item));
+            }
+
+            const loadMoreBtn = document.getElementById('load-more-sent-btn');
+            const paginationContainer = document.getElementById('sent-pagination-container');
+            
+            if (hasMoreSentPages) {
+                paginationContainer.classList.remove('hidden');
+                loadMoreBtn.classList.remove('hidden');
+            } else {
+                if (page > 1) {
+                    loadMoreBtn.classList.add('hidden');
+                } else {
+                    paginationContainer.classList.add('hidden');
+                }
+            }
+        }).catch(err => {
+            console.error(err);
+            document.getElementById('sent-loading').classList.add('hidden');
+        });
+    }
+
+    function loadMoreSent() {
+        if(hasMoreSentPages) {
+            loadSentHistory(sentPage + 1);
+        }
+    }
+
+    function appendSentItem(item) {
+        const list = document.getElementById('sent-history-list');
+        
+        // Translating targets
+        let targetText = 'الجميع';
+        if(item.target === 'users') targetText = 'المستخدمين';
+        else if(item.target === 'pharmacies') targetText = 'الصيدليات';
+        
+        // Type Badge
+        let typeBadge = '';
+        if(item.type === 'success') typeBadge = '<span class="px-2 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">نجاح</span>';
+        else if(item.type === 'warning') typeBadge = '<span class="px-2 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-600 border border-amber-100">تحذير</span>';
+        else if(item.type === 'error') typeBadge = '<span class="px-2 py-1 text-xs font-bold rounded-lg bg-rose-50 text-rose-600 border border-rose-100">خطأ</span>';
+        else typeBadge = '<span class="px-2 py-1 text-xs font-bold rounded-lg bg-blue-50 text-blue-600 border border-blue-100">معلومة</span>';
+
+        const dateObj = new Date(item.created_at);
+        const dateStr = dateObj.toLocaleDateString('ar-EG');
+        const timeStr = dateObj.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+
+        const html = `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="p-4 align-top max-w-[200px]">
+                    <div class="font-bold text-slate-800 text-sm truncate" title="${item.title}">${item.title}</div>
+                    <div class="text-xs text-slate-500 truncate mt-1" title="${item.message}">${item.message}</div>
+                </td>
+                <td class="p-4 align-top">
+                    <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-md">${targetText}</span>
+                </td>
+                <td class="p-4 align-top text-slate-700 font-bold text-sm">
+                    ${item.recipients_count} مستلم
+                </td>
+                <td class="p-4 align-top">
+                    ${typeBadge}
+                </td>
+                <td class="p-4 align-top">
+                    <div class="text-sm font-bold text-slate-700">${dateStr}</div>
+                    <div class="text-xs font-medium text-slate-400 mt-0.5">${timeStr}</div>
+                </td>
+            </tr>
+        `;
+        list.insertAdjacentHTML('beforeend', html);
     }
 </script>
 @endsection

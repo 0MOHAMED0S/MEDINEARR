@@ -88,14 +88,28 @@
                     <span id="file-name-text"></span>
                     <button type="button" class="ml-2 text-red-400 hover:text-red-600" onclick="clearFile()"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <form id="chat-form" class="flex gap-3 items-end">
-                    <input type="file" id="chat-file" class="hidden" accept="image/*,.pdf,.doc,.docx">
+                <form id="chat-form" class="flex gap-2 items-end relative">
+                    <input type="file" id="chat-file" class="hidden" accept="image/*,.pdf,.doc,.docx,audio/*">
                     
                     <button type="button" onclick="document.getElementById('chat-file').click()" class="shrink-0 w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 text-lg flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-slate-200/50">
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
+
+                    <button type="button" id="record-btn" class="shrink-0 w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 hover:bg-rose-100 hover:text-rose-600 text-lg flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-rose-200/50">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
                     
-                    <div class="flex-1 relative">
+                    <div class="flex-1 relative flex items-end">
+                        <div id="recording-indicator" class="hidden absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex items-center justify-between px-4 rounded-[1.25rem] border border-rose-200">
+                            <div class="flex items-center gap-3">
+                                <div class="w-3 h-3 bg-rose-500 rounded-full animate-pulse"></div>
+                                <span class="text-rose-600 font-bold tracking-widest text-sm" id="recording-time">00:00</span>
+                            </div>
+                            <button type="button" id="cancel-record-btn" class="text-slate-400 hover:text-rose-500 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-rose-50">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+
                         <textarea id="chat-input" rows="1" placeholder="اكتب رسالتك..." class="w-full bg-slate-50 border border-slate-200 rounded-[1.25rem] px-5 py-3.5 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50 transition-all text-slate-700 shadow-sm resize-none custom-scrollbar leading-relaxed" style="min-height: 52px; max-height: 120px;"></textarea>
                     </div>
                     
@@ -154,6 +168,19 @@
         let currentSubscription = null;
         let totalUnread = 0;
 
+        // Audio Recording Variables
+        const recordBtn = document.getElementById('record-btn');
+        const recordingIndicator = document.getElementById('recording-indicator');
+        const cancelRecordBtn = document.getElementById('cancel-record-btn');
+        const recordingTimeText = document.getElementById('recording-time');
+        
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let isRecordingCancelled = false;
+        let recordInterval;
+        let recordSeconds = 0;
+
         function updateTotalUnreadBadge() {
             const badge = document.getElementById('total-unread-badge');
             if (totalUnread > 0) {
@@ -181,6 +208,82 @@
             chatFile.value = '';
             fileNamePreview.classList.add('hidden');
         };
+
+        // Voice Recording Logic
+        recordBtn.addEventListener('click', async () => {
+            if(!activeSessionId) return;
+
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    isRecordingCancelled = false;
+                    
+                    mediaRecorder.addEventListener("dataavailable", event => {
+                        audioChunks.push(event.data);
+                    });
+
+                    mediaRecorder.addEventListener("stop", () => {
+                        stream.getTracks().forEach(track => track.stop());
+                        
+                        if (!isRecordingCancelled) {
+                            const pendingAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            const file = new File([pendingAudioBlob], "voice_record.webm", { type: 'audio/webm' });
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(file);
+                            chatFile.files = dataTransfer.files;
+                            
+                            chatForm.dispatchEvent(new Event('submit'));
+                        }
+                        resetRecordUI();
+                    });
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    
+                    recordBtn.classList.replace('bg-rose-50', 'bg-rose-500');
+                    recordBtn.classList.replace('text-rose-500', 'text-white');
+                    recordBtn.innerHTML = '<i class="fa-solid fa-stop"></i>';
+                    recordingIndicator.classList.remove('hidden');
+                    chatInput.classList.add('opacity-0', 'pointer-events-none');
+                    
+                    recordSeconds = 0;
+                    recordingTimeText.textContent = "00:00";
+                    recordInterval = setInterval(() => {
+                        recordSeconds++;
+                        const mins = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
+                        const secs = String(recordSeconds % 60).padStart(2, '0');
+                        recordingTimeText.textContent = `${mins}:${secs}`;
+                    }, 1000);
+
+                } catch (err) {
+                    console.error("Microphone error:", err);
+                    alert('تعذر الوصول للمايكروفون. يرجى التأكد من الصلاحيات.');
+                }
+            } else {
+                // Stop and send
+                isRecording = false;
+                mediaRecorder.stop();
+            }
+        });
+
+        cancelRecordBtn.addEventListener('click', () => {
+            if(isRecording) {
+                isRecording = false;
+                isRecordingCancelled = true;
+                mediaRecorder.stop();
+            }
+        });
+
+        function resetRecordUI() {
+            clearInterval(recordInterval);
+            recordBtn.classList.replace('bg-rose-500', 'bg-rose-50');
+            recordBtn.classList.replace('text-white', 'text-rose-500');
+            recordBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+            recordingIndicator.classList.add('hidden');
+            chatInput.classList.remove('opacity-0', 'pointer-events-none');
+        }
 
         // Fetch Sessions
         axios.get('/pharmacy/chats/sessions').then(response => {
@@ -386,8 +489,9 @@
             appendMessage({
                 id: tempId,
                 sender_type: 'pharmacy',
-                body: file ? 'جاري الإرسال...' : messageText,
-                type: file ? 'text' : 'text', // Show as text initially
+                body: file && file.name === "voice_record.webm" ? null : (file ? 'جاري الإرسال...' : messageText),
+                type: file && file.name === "voice_record.webm" ? 'voice' : (file ? 'text' : 'text'),
+                file_path: file && file.name === "voice_record.webm" ? URL.createObjectURL(file) : null,
                 is_optimistic: true
             }, true);
             
@@ -429,7 +533,10 @@
             
             let contentHtml = '';
             if(msg.type === 'image' && msg.file_path) {
-                contentHtml = `<div class="mb-2 overflow-hidden rounded-xl bg-white/10 ring-1 ring-black/5"><img src="/storage/${msg.file_path}" class="max-w-full h-auto max-h-64 object-cover hover:scale-105 transition-transform duration-300" alt="صورة"></div>`;
+                contentHtml = `<div class="mb-2 overflow-hidden rounded-xl bg-white/10 ring-1 ring-black/5"><img src="${msg.is_optimistic ? msg.file_path : '/storage/'+msg.file_path}" class="max-w-full h-auto max-h-64 object-cover hover:scale-105 transition-transform duration-300" alt="صورة"></div>`;
+            } else if (msg.type === 'voice' && msg.file_path) {
+                const srcUrl = msg.is_optimistic ? msg.file_path : `/storage/${msg.file_path}`;
+                contentHtml = `<div class="mb-2"><audio controls class="max-w-[200px] md:max-w-[250px] h-10" style="outline: none;"><source src="${srcUrl}" type="audio/webm"><source src="${srcUrl}" type="audio/mpeg">متصفحك لا يدعم تشغيل الصوت.</audio></div>`;
             } else if (msg.type === 'file' && msg.file_path) {
                 const isPdf = msg.file_path.toLowerCase().endsWith('.pdf');
                 const icon = isPdf ? 'fa-file-pdf text-red-400' : 'fa-file-lines text-blue-400';
