@@ -62,6 +62,32 @@ class NotificationController extends Controller
     }
 
     /**
+     * Delete a specific notification.
+     */
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        
+        $notification = $user->notifications()->where('id', $id)->first();
+        
+        if ($notification) {
+            $notification->delete();
+            return response()->json(['status' => 'success', 'message' => 'Notification deleted successfully']);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Notification not found'], 404);
+    }
+
+    /**
+     * Delete all notifications.
+     */
+    public function destroyAll()
+    {
+        Auth::user()->notifications()->delete();
+        return response()->json(['status' => 'success', 'message' => 'All notifications deleted successfully']);
+    }
+
+    /**
      * Return the Pharmacy Notifications blade view.
      */
     public function pharmacyPage()
