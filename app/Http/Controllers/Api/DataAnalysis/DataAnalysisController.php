@@ -256,6 +256,7 @@ class DataAnalysisController extends Controller
      *
      * @return JsonResponse
      */
+    
 public function searchHistory(): JsonResponse
     {
         try {
@@ -269,24 +270,25 @@ public function searchHistory(): JsonResponse
                         ? ($item->medicine->name ?? null)
                         : ($item->search_query ?? null);
 
-                    // معالجة مصفوفة الصيدليات: إذا كانت فارغة نعيد null بدلاً من كلمة 'None'
-                    // هذا يمنع اختلاط أنواع البيانات (نصوص مع أرقام) في عمود Power BI
+                    // معالجة مصفوفة الصيدليات: إذا كانت فارغة نعيد '0' بدلاً من null
                     $pharmacyIds = !empty($item->returned_pharmacy_ids) && is_array($item->returned_pharmacy_ids)
                         ? implode(', ', $item->returned_pharmacy_ids)
-                        : null;
+                        : '0';
 
                     return [
                         'ID'                    => $item->id,
-                        'User_ID'               => $item->user_id ?? null, // أزلنا 'Guest' ليتم حسابه كـ Null في الإحصائيات
+                        // إذا كنت تريد أيضاً إرجاع 0 للمستخدمين غير المسجلين بدلاً من null، استخدم هذا:
+                        'User_ID'               => $item->user_id ?? 0,
                         'User_Name'             => $item->user->name ?? 'Guest',
                         'Search_Type'           => $item->search_type ? ucfirst($item->search_type) : null,
                         'Search_Term'           => $searchTerm,
-                        'Medicine_ID'           => $item->medicine_id,
+
+                        // إرجاع 0 بدلاً من null إذا لم يكن هناك دواء
+                        'Medicine_ID'           => $item->medicine_id ?? 0,
 
                         'Latitude'              => $item->lat ? (float) $item->lat : null,
                         'Longitude'             => $item->lng ? (float) $item->lng : null,
 
-                        // سيتم إرسال 0 كما هو تماماً لعمليات البحث الفاشلة
                         'Results_Count'         => (int) $item->results_count,
                         'Returned_Pharmacy_IDs' => $pharmacyIds,
 
