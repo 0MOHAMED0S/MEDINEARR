@@ -94,7 +94,7 @@ class PharmacyController extends Controller
      * @return JsonResponse
      */
 
-public function getInventory($id): \Illuminate\Http\JsonResponse
+    public function getInventory($id): \Illuminate\Http\JsonResponse
     {
         try {
             // ✨ 1. جلب بيانات المستخدم والأدوية المحفوظة مبكراً لتجنب بطء الأداء (N+1 Problem) ✨
@@ -146,8 +146,8 @@ public function getInventory($id): \Illuminate\Http\JsonResponse
                     $dLng = deg2rad($lng2 - $lng1);
 
                     $a = sin($dLat / 2) * sin($dLat / 2) +
-                         cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-                         sin($dLng / 2) * sin($dLng / 2);
+                        cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+                        sin($dLng / 2) * sin($dLng / 2);
 
                     $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
                     $rawDistance = $earthRadius * $c;
@@ -239,7 +239,6 @@ public function getInventory($id): \Illuminate\Http\JsonResponse
                 'message' => $message,
                 'data'    => $responseData
             ], 200);
-
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('API Pharmacy Inventory Error (ID: ' . $id . '): ' . $e->getMessage());
 
@@ -250,5 +249,4 @@ public function getInventory($id): \Illuminate\Http\JsonResponse
             ], 500);
         }
     }
-
 }
