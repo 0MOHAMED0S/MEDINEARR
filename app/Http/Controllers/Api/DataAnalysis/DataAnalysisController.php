@@ -256,40 +256,39 @@ class DataAnalysisController extends Controller
      *
      * @return JsonResponse
      */
-public function searchHistory(): JsonResponse
+    public function searchHistory(): JsonResponse
     {
         try {
-            // جلب كل السجلات بلا أي فلاتر لتشمل الحالات الناجحة والفاشلة
+            // نجلب السجل مع اسم المستخدم واسم الدواء لكي تكون البيانات مقروءة بوضوح في Power BI
             $history = SearchHistory::with(['user:id,name', 'medicine:id,name'])
                 ->get()
                 ->map(function ($item) {
 
-                    // تجنب استخدام نصوص مثل 'Unknown Medicine' واستخدم null ليفهم Power BI أنه لا يوجد دواء
+                    // ✨ حقل ذكي: استخراج "عما كان يبحث؟" سواء صيدلية أو دواء ليتم وضعه في عمود واحد
                     $searchTerm = $item->search_type === 'medicine'
-                        ? ($item->medicine->name ?? null)
-                        : ($item->search_query ?? null);
+                        ? ($item->medicine->name ?? 'Unknown Medicine')
+                        : ($item->search_query ?? 'No Query');
 
-                    // معالجة مصفوفة الصيدليات: إذا كانت فارغة نعيد null بدلاً من كلمة 'None'
-                    // هذا يمنع اختلاط أنواع البيانات (نصوص مع أرقام) في عمود Power BI
-                    $pharmacyIds = !empty($item->returned_pharmacy_ids) && is_array($item->returned_pharmacy_ids)
+                    // تحويل مصفوفة الصيدليات إلى نص (Comma-separated) ليسهل قراءته في الجداول
+                    $pharmacyIds = is_array($item->returned_pharmacy_ids) && count($item->returned_pharmacy_ids) > 0
                         ? implode(', ', $item->returned_pharmacy_ids)
-                        : null;
+                        : 'None';
 
                     return [
                         'ID'                    => $item->id,
-                        'User_ID'               => $item->user_id ?? null, // أزلنا 'Guest' ليتم حسابه كـ Null في الإحصائيات
-                        'User_Name'             => $item->user->name ?? 'Guest',
-                        'Search_Type'           => $item->search_type ? ucfirst($item->search_type) : null,
-                        'Search_Term'           => $searchTerm,
+                        'User_ID'               => $item->user_id ?? 'Guest',
+                        'User_Name'             => $item->user->name ?? 'Guest User',
+                        'Search_Type'           => ucfirst($item->search_type), // Pharmacy أو Medicine
+                        'Search_Term'           => $searchTerm, // الكلمة المكتوبة أو اسم الدواء
                         'Medicine_ID'           => $item->medicine_id,
 
                         'Latitude'              => $item->lat ? (float) $item->lat : null,
                         'Longitude'             => $item->lng ? (float) $item->lng : null,
 
-                        // سيتم إرسال 0 كما هو تماماً لعمليات البحث الفاشلة
                         'Results_Count'         => (int) $item->results_count,
-                        'Returned_Pharmacy_IDs' => $pharmacyIds,
+                        'Returned_Pharmacy_IDs' => $pharmacyIds, // مثال: "12, 45, 8"
 
+                        // توحيد التواريخ
                         'Created_At'            => $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : null,
                         'Date'                  => $item->created_at ? $item->created_at->format('Y-m-d') : null,
                         'Month_Year'            => $item->created_at ? $item->created_at->format('Y-m') : null,
