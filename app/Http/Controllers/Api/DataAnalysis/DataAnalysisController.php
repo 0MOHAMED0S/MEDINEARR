@@ -256,39 +256,40 @@ class DataAnalysisController extends Controller
      *
      * @return JsonResponse
      */
-    public function searchHistory(): JsonResponse
+public function searchHistory(): JsonResponse
     {
         try {
-            // نجلب السجل مع اسم المستخدم واسم الدواء لكي تكون البيانات مقروءة بوضوح في Power BI
+            // جلب كل السجلات بلا أي فلاتر لتشمل الحالات الناجحة والفاشلة
             $history = SearchHistory::with(['user:id,name', 'medicine:id,name'])
                 ->get()
                 ->map(function ($item) {
 
-                    // ✨ حقل ذكي: استخراج "عما كان يبحث؟" سواء صيدلية أو دواء ليتم وضعه في عمود واحد
+                    // تجنب استخدام نصوص مثل 'Unknown Medicine' واستخدم null ليفهم Power BI أنه لا يوجد دواء
                     $searchTerm = $item->search_type === 'medicine'
-                        ? ($item->medicine->name ?? 'Unknown Medicine')
-                        : ($item->search_query ?? 'No Query');
+                        ? ($item->medicine->name ?? null)
+                        : ($item->search_query ?? null);
 
-                    // تحويل مصفوفة الصيدليات إلى نص (Comma-separated) ليسهل قراءته في الجداول
-                    $pharmacyIds = is_array($item->returned_pharmacy_ids) && count($item->returned_pharmacy_ids) > 0
+                    // معالجة مصفوفة الصيدليات: إذا كانت فارغة نعيد null بدلاً من كلمة 'None'
+                    // هذا يمنع اختلاط أنواع البيانات (نصوص مع أرقام) في عمود Power BI
+                    $pharmacyIds = !empty($item->returned_pharmacy_ids) && is_array($item->returned_pharmacy_ids)
                         ? implode(', ', $item->returned_pharmacy_ids)
-                        : 'None';
+                        : null;
 
                     return [
                         'ID'                    => $item->id,
-                        'User_ID'               => $item->user_id ?? 'Guest',
-                        'User_Name'             => $item->user->name ?? 'Guest User',
-                        'Search_Type'           => ucfirst($item->search_type), // Pharmacy أو Medicine
-                        'Search_Term'           => $searchTerm, // الكلمة المكتوبة أو اسم الدواء
+                        'User_ID'               => $item->user_id ?? null, // أزلنا 'Guest' ليتم حسابه كـ Null في الإحصائيات
+                        'User_Name'             => $item->user->name ?? 'Guest',
+                        'Search_Type'           => $item->search_type ? ucfirst($item->search_type) : null,
+                        'Search_Term'           => $searchTerm,
                         'Medicine_ID'           => $item->medicine_id,
 
                         'Latitude'              => $item->lat ? (float) $item->lat : null,
                         'Longitude'             => $item->lng ? (float) $item->lng : null,
 
+                        // سيتم إرسال 0 كما هو تماماً لعمليات البحث الفاشلة
                         'Results_Count'         => (int) $item->results_count,
-                        'Returned_Pharmacy_IDs' => $pharmacyIds, // مثال: "12, 45, 8"
+                        'Returned_Pharmacy_IDs' => $pharmacyIds,
 
-                        // توحيد التواريخ
                         'Created_At'            => $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : null,
                         'Date'                  => $item->created_at ? $item->created_at->format('Y-m-d') : null,
                         'Month_Year'            => $item->created_at ? $item->created_at->format('Y-m') : null,
@@ -321,19 +322,19 @@ class DataAnalysisController extends Controller
                         'Pharmacy_ID'        => $order->pharmacy_id,
                         'Pharmacy_Name'      => $order->pharmacy->pharmacy_name ?? 'Unknown',
                         'City'               => $order->pharmacy->city ?? 'Unknown',
-                        
+
                         'Status'             => ucfirst($order->status),
                         'Cancel_Reason'      => $order->cancel_reason,
                         'Payment_Method'     => ucfirst($order->payment_method),
                         'Payment_Status'     => ucfirst($order->payment_status),
-                        
+
                         // المبالغ المالية
                         'Subtotal'           => (float) $order->subtotal,
                         'Delivery_Fee'       => (float) $order->delivery_fee,
                         'Grand_Total'        => (float) $order->grand_total,
-                        
+
                         'Items_Count'        => $order->items->count(),
-                        
+
                         // توحيد التواريخ
                         'Created_At'         => $order->created_at ? $order->created_at->format('Y-m-d H:i:s') : null,
                         'Date'               => $order->created_at ? $order->created_at->format('Y-m-d') : null,
@@ -363,17 +364,17 @@ class DataAnalysisController extends Controller
                         'Order_ID'          => $item->order_id,
                         'Order_Reference'   => $item->order ? $item->order->order_reference : null,
                         'Order_Status'      => $item->order ? $item->order->status : null,
-                        
+
                         'Medicine_ID'       => $item->medicine_id,
                         'Medicine_Name'     => $item->medicine ? $item->medicine->name : 'Unknown',
                         'Category_Name'     => ($item->medicine && $item->medicine->category) ? $item->medicine->category->name : 'Unknown',
-                        
+
                         'Pharmacy_ID'       => $item->order ? $item->order->pharmacy_id : null,
                         'Pharmacy_Name'     => ($item->order && $item->order->pharmacy) ? $item->order->pharmacy->pharmacy_name : 'Unknown',
-                        
+
                         'User_ID'           => $item->order ? $item->order->user_id : null,
                         'User_Name'         => ($item->order && $item->order->user) ? $item->order->user->name : 'Unknown',
-                        
+
                         'Quantity'          => (int) $item->quantity,
                         'Unit_Price'        => (float) $item->price,
                         'Total_Price'       => (float) ($item->quantity * $item->price),

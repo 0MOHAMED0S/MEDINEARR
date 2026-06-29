@@ -11,12 +11,6 @@ use Illuminate\Support\Facades\Log;
 class CategoryController extends Controller
 {
 
-//get all categories for user to show them in the home page
-
-    /**
-     * Display a listing of the resource.
-     * try and catch
-     */
     public function index(Request $request)
     {
         try {
@@ -51,13 +45,9 @@ class CategoryController extends Controller
         }
     }
 
-    /**
-     * ✨ جلب جميع الأدوية التابعة لقسم معين ✨
-     */
     public function getCategoryMedicines(Request $request, $id)
     {
         try {
-            // 1. التحقق من وجود القسم وأنه مفعل
             $category = Category::where('status', 1)->find($id);
 
             if (!$category) {
@@ -70,9 +60,8 @@ class CategoryController extends Controller
 
             $perPage = min($request->input('per_page', 10), 50);
 
-            // 2. جلب الأدوية المفعلة المرتبطة بهذا القسم
             $medicines = Medicine::where('category_id', $id)
-                ->where('status', 1) // الأدوية المفعلة فقط
+                ->where('status', 1)
                 ->latest()
                 ->paginate($perPage)
                 ->through(function ($medicine) {
@@ -85,12 +74,10 @@ class CategoryController extends Controller
                     ];
                 });
 
-            // 3. تجهيز الرسالة
             $message = $medicines->isEmpty()
                 ? 'No medicines found in this category yet.'
                 : 'Category medicines retrieved successfully.';
 
-            // 4. إرجاع الاستجابة (بها بيانات القسم بالإضافة للأدوية)
             return response()->json([
                 'success' => true,
                 'message' => $message,
@@ -101,7 +88,7 @@ class CategoryController extends Controller
                         'description' => $category->description,
                         'image'       => $category->image ? (str_starts_with($category->image, 'http') ? $category->image : asset('storage/' . $category->image)) : null,
                     ],
-                    'medicines' => $medicines // سيتم إرجاعها كـ Pagination Object
+                    'medicines' => $medicines
                 ]
             ], 200);
         } catch (\Exception $e) {
@@ -115,17 +102,12 @@ class CategoryController extends Controller
         }
     }
 
-    /**
-     * جلب تفاصيل دواء معين مع قائمة الصيدليات المتاح بها (Product Details)
-     * مع دعم الـ Pagination للصيدليات
-     */
     public function getMedicineDetails(Request $request, $id)
     {
         try {
-            $user = auth()->guard('sanctum')->user(); // استخدم 'api' لو كنت تستخدم JWT
+            $user = auth()->guard('sanctum')->user();
 
-            // 1. جلب بيانات الدواء الأساسية مع القسم التابع له
-            $medicine =Medicine::with('category:id,name')
+            $medicine = Medicine::with('category:id,name')
                 ->where('status', 1)
                 ->find($id);
 
@@ -137,49 +119,41 @@ class CategoryController extends Controller
                 ], 404);
             }
 
-            // 2. معالجة مسار صورة الدواء
             $medImage = null;
             if (!empty($medicine->image)) {
                 $medImage = str_starts_with($medicine->image, 'http') ? $medicine->image : asset('storage/' . $medicine->image);
             }
 
-            // 3. إعداد متغيرات الموقع الجغرافي وحجم الصفحة (Pagination)
             $lat = $user ? $user->latitude : null;
             $lng = $user ? $user->longitude : null;
             $radius = 6371;
-            $perPage = (int) $request->input('per_page', 5); // ✨ تحديد عدد الصيدليات في الصفحة ✨
+            $perPage = (int) $request->input('per_page', 5);
 
             $haversineRaw = "( $radius * acos( cos(radians(?)) * cos(radians(lat)) * cos(radians(lng) - radians(?)) + sin(radians(?)) * sin(radians(lat)) ) )";
             $bindings = [$lat, $lng, $lat];
 
-            // 4. جلب الصيدليات المتاح بها هذا الدواء
             $pharmaciesQuery = \App\Models\Pharmacy::where('is_active', true)
                 ->whereHas('medicines', function ($query) use ($id) {
                     $query->where('pharmacy_medicines.medicine_id', $id)
-                          ->where('pharmacy_medicines.status', '!=', 'hidden');
+                        ->where('pharmacy_medicines.status', '!=', 'hidden');
                 })
                 ->with(['medicines' => function ($query) use ($id) {
                     $query->where('medicines.id', $id);
                 }]);
 
-            // ترتيب الصيدليات حسب الأقرب إذا كان موقع المستخدم متاحاً
             if ($lat && $lng) {
                 $pharmaciesQuery->whereNotNull('lat')
-                                ->whereNotNull('lng')
-                                ->selectRaw("pharmacies.*, $haversineRaw AS distance", $bindings)
-                                ->orderBy('distance', 'asc');
+                    ->whereNotNull('lng')
+                    ->selectRaw("pharmacies.*, $haversineRaw AS distance", $bindings)
+                    ->orderBy('distance', 'asc');
             } else {
                 $pharmaciesQuery->select('pharmacies.*');
             }
 
-            // ✨ 5. تطبيق الـ Pagination بدلاً من get() ✨
             $availablePharmacies = $pharmaciesQuery->paginate($perPage)->withQueryString();
-
-            // ✨ 6. تنظيف بيانات الصيدليات داخل الـ Pagination Object ✨
             $availablePharmacies->getCollection()->transform(function ($pharmacy) {
                 $pivotData = $pharmacy->medicines->first()?->pivot;
 
-                // تنسيق المسافة
                 $distanceValue = null;
                 $distanceText = null;
                 if (isset($pharmacy->distance)) {
@@ -189,7 +163,6 @@ class CategoryController extends Controller
                         : $distanceValue . ' km';
                 }
 
-                // معالجة صورة الصيدلية
                 $pharmImage = null;
                 if (!empty($pharmacy->image)) {
                     $pharmImage = str_starts_with($pharmacy->image, 'http') ? $pharmacy->image : asset('storage/' . $pharmacy->image);
@@ -208,7 +181,6 @@ class CategoryController extends Controller
                     'distance'      => $distanceValue,
                     'distance_text' => $distanceText,
 
-                    // بيانات المخزون والسعر الخاصة بهذه الصيدلية
                     'stock_info'    => [
                         'price'    => $pivotData ? (float) $pivotData->price : null,
                         'quantity' => $pivotData ? (int) $pivotData->quantity : 0,
@@ -247,7 +219,6 @@ class CategoryController extends Controller
                     'available_pharmacies' => $availablePharmacies
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             Log::error('API Get Medicine Details Error: ' . $e->getMessage());
             return response()->json([

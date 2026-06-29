@@ -14,7 +14,7 @@ class AdminAuthController extends Controller
     {
         return view('dashboard.login');
     }
-public function login(Request $request)
+    public function login(Request $request)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email', 'exists:users,email'],
@@ -61,14 +61,13 @@ public function login(Request $request)
             return redirect()->back()
                 ->withInput($request->only('email'))
                 ->with('error', 'كلمة المرور غير صحيحة، حاول مرة أخرى.');
-
         } catch (Exception $e) {
             return redirect()->back()
                 ->withInput($request->only('email'))
                 ->with('error', 'حدث خطأ فني غير متوقع، يرجى المحاولة لاحقاً.');
         }
     }
-    
+
     public function logout(Request $request)
     {
         Auth::logout();

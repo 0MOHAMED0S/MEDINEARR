@@ -59,6 +59,18 @@ class SaveCartController extends Controller
                 ], 404);
             }
 
+            // ✨ Stock Validation: Ensure requested quantity is available
+            $availableStock = $stock->quantity ?? 0;
+            if ($requestedQuantity > $availableStock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Sorry, only {$availableStock} items are available in stock at this pharmacy.",
+                    'data'    => [
+                        'available_stock' => $availableStock
+                    ]
+                ], 400);
+            }
+
             // Get or create cart
             $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
