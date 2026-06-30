@@ -57,7 +57,7 @@ class CheckoutController extends Controller
             }
 
             // جلب عناصر السلة الخاصة بالصيدلية المطلوبة فقط
-            $cartItems = CartItem::with('medicine:id,name')->where('cart_id', $cart->id)
+            $cartItems = CartItem::where('cart_id', $cart->id)
                 ->where('pharmacy_id', $request->pharmacy_id)
                 ->get();
 
@@ -69,33 +69,10 @@ class CheckoutController extends Controller
                 ], 400);
             }
 
-            // حساب الإجمالي والتحقق من المخزون
+            // حساب الإجمالي
             $subTotal = 0;
-            $outOfStockItems = [];
-
             foreach ($cartItems as $item) {
-                $stockRecord = \App\Models\PharmacyMedicine::where('pharmacy_id', $request->pharmacy_id)
-                    ->where('medicine_id', $item->medicine_id)
-                    ->first();
-
-                $availableStock = $stockRecord ? $stockRecord->quantity : 0;
-
-                if ($item->quantity > $availableStock) {
-                    $medicineName = $item->medicine ? $item->medicine->name : 'Item ID ' . $item->medicine_id;
-                    $outOfStockItems[] = "{$medicineName} (Requested: {$item->quantity}, Available: {$availableStock})";
-                }
-
                 $subTotal += ($item->price * $item->quantity);
-            }
-
-            if (!empty($outOfStockItems)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Some items in your cart exceed available stock.',
-                    'data'    => [
-                        'out_of_stock_items' => $outOfStockItems
-                    ]
-                ], 400);
             }
 
             // يمكنك إضافة ثوابت للتوصيل والضرائب هنا (مثال)
@@ -162,7 +139,7 @@ class CheckoutController extends Controller
 
             // 2. التحقق من السلة والإجمالي (نفس خطوة الـ Summary)
             $cart = Cart::where('user_id', $user->id)->first();
-            $cartItems = $cart ? CartItem::with('medicine:id,name')->where('cart_id', $cart->id)->where('pharmacy_id', $request->pharmacy_id)->get() : collect();
+            $cartItems = $cart ? CartItem::where('cart_id', $cart->id)->where('pharmacy_id', $request->pharmacy_id)->get() : collect();
 
             if ($cartItems->isEmpty()) {
                 return response()->json([
@@ -172,33 +149,9 @@ class CheckoutController extends Controller
                 ], 400);
             }
 
-            $subTotal = 0;
-            $outOfStockItems = [];
-
-            foreach ($cartItems as $item) {
-                $stockRecord = \App\Models\PharmacyMedicine::where('pharmacy_id', $request->pharmacy_id)
-                    ->where('medicine_id', $item->medicine_id)
-                    ->first();
-
-                $availableStock = $stockRecord ? $stockRecord->quantity : 0;
-
-                if ($item->quantity > $availableStock) {
-                    $medicineName = $item->medicine ? $item->medicine->name : 'Item ID ' . $item->medicine_id;
-                    $outOfStockItems[] = "{$medicineName} (Requested: {$item->quantity}, Available: {$availableStock})";
-                }
-
-                $subTotal += ($item->price * $item->quantity);
-            }
-
-            if (!empty($outOfStockItems)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Some items in your cart exceed available stock.',
-                    'data'    => [
-                        'out_of_stock_items' => $outOfStockItems
-                    ]
-                ], 400);
-            }
+            $subTotal = $cartItems->sum(function ($item) {
+                return $item->price * $item->quantity;
+            });
 
             // 3. التحقق من الكوبون (Coupon Logic)
             $coupon = Coupon::where('code', $request->code)->first();
@@ -318,7 +271,7 @@ class CheckoutController extends Controller
                 return response()->json(['success' => false, 'message' => 'Your cart is empty.', 'data' => null], 404);
             }
 
-            $cartItems = CartItem::with('medicine:id,name')->where('cart_id', $cart->id)
+            $cartItems = CartItem::where('cart_id', $cart->id)
                 ->where('pharmacy_id', $request->pharmacy_id)
                 ->get();
 
@@ -327,31 +280,8 @@ class CheckoutController extends Controller
             }
 
             $subTotal = 0;
-            $outOfStockItems = [];
-
             foreach ($cartItems as $item) {
-                $stockRecord = \App\Models\PharmacyMedicine::where('pharmacy_id', $request->pharmacy_id)
-                    ->where('medicine_id', $item->medicine_id)
-                    ->first();
-
-                $availableStock = $stockRecord ? $stockRecord->quantity : 0;
-
-                if ($item->quantity > $availableStock) {
-                    $medicineName = $item->medicine ? $item->medicine->name : 'Item ID ' . $item->medicine_id;
-                    $outOfStockItems[] = "{$medicineName} (Requested: {$item->quantity}, Available: {$availableStock})";
-                }
-
                 $subTotal += ($item->price * $item->quantity);
-            }
-
-            if (!empty($outOfStockItems)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Some items in your cart exceed available stock.',
-                    'data'    => [
-                        'out_of_stock_items' => $outOfStockItems
-                    ]
-                ], 400);
             }
 
             $discountAmount = 0;

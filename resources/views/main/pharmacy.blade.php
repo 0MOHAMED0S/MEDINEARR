@@ -909,7 +909,7 @@
                                     <div
                                         class="relative w-full h-[250px] sm:h-[350px] md:h-[450px] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border-2 sm:border-4 border-white shadow-inner z-10 map-styled">
                                         <div id="pharmacy-map"
-                                            class="w-full h-full z-0 transition-transform duration-[2s] group-hover:scale-[1.02]">
+                                            class="w-full h-full z-0 transition-transform duration-[2s]">
                                         </div>
                                         <div
                                             class="hidden sm:flex absolute top-4 md:top-6 rtl:left-4 ltr:right-4 rtl:md:left-6 ltr:md:right-6 z-20 bg-white/95 backdrop-blur-md px-4 md:px-6 py-3 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-50 flex-col gap-2 text-sm font-bold font-mono text-gray-600 pointer-events-none group-hover:-translate-y-1 transition-transform">
@@ -1535,7 +1535,12 @@
                     setTimeout(() => {
                         map.flyTo([oldLat, oldLng], 16);
                         if (marker) map.removeLayer(marker);
-                        marker = L.marker([oldLat, oldLng]).addTo(map);
+                        marker = L.marker([oldLat, oldLng], {draggable: true}).addTo(map);
+                        
+                        marker.on('dragend', function(event) {
+                            const position = marker.getLatLng();
+                            updateCoordinates(position.lat.toFixed(6), position.lng.toFixed(6));
+                        });
                     }, 1000);
                 }
             }
@@ -1586,7 +1591,13 @@
                 if (marker) {
                     map.removeLayer(marker);
                 }
-                marker = L.marker(e.latlng).addTo(map);
+                marker = L.marker(e.latlng, {draggable: true}).addTo(map);
+                
+                marker.on('dragend', function(event) {
+                    const position = marker.getLatLng();
+                    updateCoordinates(position.lat.toFixed(6), position.lng.toFixed(6));
+                });
+
                 updateCoordinates(e.latlng.lat.toFixed(6), e.latlng.lng.toFixed(6));
                 map.flyTo(e.latlng, map.getZoom(), {
                     duration: 0.5
@@ -1608,7 +1619,13 @@
                     if (marker) {
                         map.removeLayer(marker);
                     }
-                    marker = L.marker([lat, lng]).addTo(map);
+                    marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+                    
+                    marker.on('dragend', function(event) {
+                        const position = marker.getLatLng();
+                        updateCoordinates(position.lat.toFixed(6), position.lng.toFixed(6));
+                    });
+
                     updateCoordinates(lat.toFixed(6), lng.toFixed(6));
                 }, function(error) {
                     const title = currentLang === 'ar' ? 'عذراً' : 'Error';
