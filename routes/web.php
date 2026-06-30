@@ -23,6 +23,8 @@ Route::get('/', function () {
     return view('welcome');
 })->name('login');
 
+Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'send'])->name('contact.send');
+
 Route::prefix('admin')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('admin.login')->middleware('guest');
     Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');

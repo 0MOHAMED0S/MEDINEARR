@@ -533,7 +533,8 @@
             
             let contentHtml = '';
             if(msg.type === 'image' && msg.file_path) {
-                contentHtml = `<div class="mb-2 overflow-hidden rounded-xl bg-white/10 ring-1 ring-black/5"><img src="${msg.is_optimistic ? msg.file_path : '/storage/'+msg.file_path}" class="max-w-full h-auto max-h-64 object-cover hover:scale-105 transition-transform duration-300" alt="صورة"></div>`;
+                const imgSrc = msg.is_optimistic ? msg.file_path : '/storage/'+msg.file_path;
+                contentHtml = `<div class="mb-2 overflow-hidden rounded-xl bg-white/10 ring-1 ring-black/5"><a href="${imgSrc}" target="_blank"><img src="${imgSrc}" class="max-w-full h-auto max-h-64 object-cover hover:scale-105 transition-transform duration-300" alt="صورة"></a></div>`;
             } else if (msg.type === 'voice' && msg.file_path) {
                 const srcUrl = msg.is_optimistic ? msg.file_path : `/storage/${msg.file_path}`;
                 contentHtml = `<div class="mb-2"><audio controls class="max-w-[200px] md:max-w-[250px] h-10" style="outline: none;"><source src="${srcUrl}" type="audio/webm"><source src="${srcUrl}" type="audio/mpeg">متصفحك لا يدعم تشغيل الصوت.</audio></div>`;

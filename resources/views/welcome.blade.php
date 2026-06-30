@@ -1973,19 +1973,19 @@
                     <div
                         class="w-full lg:w-2/3 bg-white p-6 sm:p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100 reveal reveal-left relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-full h-2 bg-gradient-custom"></div>
-                        <form
-                            onsubmit="event.preventDefault(); alert(currentLang==='ar'?'تم إرسال رسالتك بنجاح!':'Message sent successfully!');">
+                        <form action="{{ route('contact.send') }}" method="POST">
+                            @csrf
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
                                 <div>
                                     <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2"
                                         data-i18n="lblContactName">الاسم بالكامل *</label>
-                                    <input type="text" required
+                                    <input type="text" name="name" required
                                         class="form-input bg-gray-50/50 focus:bg-white text-sm md:text-base">
                                 </div>
                                 <div>
                                     <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2"
                                         data-i18n="lblContactEmail">البريد الإلكتروني *</label>
-                                    <input type="email" required
+                                    <input type="email" name="email" required
                                         class="form-input bg-gray-50/50 focus:bg-white text-sm md:text-base"
                                         dir="ltr">
                                 </div>
@@ -1993,7 +1993,7 @@
                             <div class="mb-6 md:mb-8">
                                 <label class="block text-xs md:text-sm font-bold text-gray-700 mb-1.5 md:mb-2"
                                     data-i18n="lblContactMsg">الرسالة أو الاستفسار *</label>
-                                <textarea required class="form-textarea bg-gray-50/50 focus:bg-white h-24 md:h-32 resize-none text-sm md:text-base"></textarea>
+                                <textarea name="message" required class="form-textarea bg-gray-50/50 focus:bg-white h-24 md:h-32 resize-none text-sm md:text-base"></textarea>
                             </div>
                             <button type="submit"
                                 class="bg-gradient-custom hover:opacity-90 text-white px-8 md:px-10 py-3.5 md:py-4 rounded-xl font-bold text-sm md:text-base transition-all w-full sm:w-auto shadow-[0_10px_20px_rgba(13,148,136,0.3)] hover:-translate-y-1 flex items-center justify-center gap-3 mx-auto sm:mx-0">
