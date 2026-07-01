@@ -17,7 +17,7 @@ class ContactController extends Controller
         ]);
 
         try {
-            Mail::to('info@medinear-eg.com')->send(new ContactMessage($validated));
+            Mail::to('info@medinear-eg.com')->sync(new ContactMessage($validated));
             
             return redirect()->back()->with('success', 'تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.');
         } catch (\Exception $e) {

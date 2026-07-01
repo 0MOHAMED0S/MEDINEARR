@@ -384,7 +384,7 @@
         }
 
         function openDeleteModal(id) {
-            document.getElementById('confirmForm').action = `{{ url('admin/coupons') }}/${id}`;
+            document.getElementById('deleteForm').action = `{{ url('admin/coupons') }}/${id}`;
             toggleModal('deleteModal');
         }
 
