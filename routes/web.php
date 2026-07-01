@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\Admin\AdminPharmacyController;
 use App\Http\Controllers\Dashboard\Admin\AdminProfileController;
 use App\Http\Controllers\Dashboard\Admin\AdminUsersController;
 use App\Http\Controllers\Dashboard\Admin\AdminOrderController;
+use App\Http\Controllers\Dashboard\Admin\AdminContactMessageController;
 use App\Http\Controllers\Dashboard\Admin\PharmacyApplicationController;
 use App\Http\Controllers\Dashboard\Pharmacy\GoogleController;
 use App\Http\Controllers\Dashboard\Pharmacy\PharmacyInventoryController;
@@ -92,6 +93,13 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('withdrawals', [\App\Http\Controllers\Dashboard\Admin\AdminWithdrawalController::class, 'index'])->name('admin.withdrawals.index');
     Route::patch('withdrawals/{withdrawal}/approve', [\App\Http\Controllers\Dashboard\Admin\AdminWithdrawalController::class, 'approve'])->name('admin.withdrawals.approve');
     Route::patch('withdrawals/{withdrawal}/reject', [\App\Http\Controllers\Dashboard\Admin\AdminWithdrawalController::class, 'reject'])->name('admin.withdrawals.reject');
+
+    // Contact Messages
+    Route::get('contact-messages', [AdminContactMessageController::class, 'index'])->name('admin.contact_messages.index');
+    Route::get('contact-messages/{id}', [AdminContactMessageController::class, 'show'])->name('admin.contact_messages.show');
+    Route::post('contact-messages/{id}/read', [AdminContactMessageController::class, 'markAsRead'])->name('admin.contact_messages.read');
+    Route::post('contact-messages-read-all', [AdminContactMessageController::class, 'markAllAsRead'])->name('admin.contact_messages.read_all');
+    Route::delete('contact-messages/{id}', [AdminContactMessageController::class, 'destroy'])->name('admin.contact_messages.destroy');
 });
 
 
