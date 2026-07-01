@@ -17,6 +17,9 @@ class ContactController extends Controller
         ]);
 
         try {
+            // Save to database
+            \App\Models\ContactMessage::create($validated);
+
             Mail::to('info@medinear-eg.com')->queue(new ContactMessage($validated));
             
             return redirect()->back()->with('success', 'تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.');
