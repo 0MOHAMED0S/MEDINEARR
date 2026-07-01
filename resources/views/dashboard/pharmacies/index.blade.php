@@ -284,7 +284,7 @@
                                         @if(request('search') || request('status') || request('big') || request('location'))
                                             <i class="fa-solid fa-magnifying-glass text-4xl mb-4 text-gray-200"></i>
                                             <p class="font-bold text-lg text-slate-600">لا توجد نتائج مطابقة لبحثك</p>
-                                            <a href="{{ route('admin.pharmacies.index') }}" class="mt-4 text-sm text-primary hover:underline">إلغاء جميع الفلاتر</a>
+                                            <a href="{{ route('pharmacies.index') }}" class="mt-4 text-sm text-primary hover:underline">إلغاء جميع الفلاتر</a>
                                         @else
                                             <i class="fa-solid fa-store-slash text-4xl mb-4 text-gray-200"></i>
                                             <p class="font-bold text-lg text-slate-600">لا توجد صيدليات معتمدة بعد</p>

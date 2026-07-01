@@ -245,7 +245,7 @@
                                         @if(request('search') || request('status') || request('location'))
                                             <i class="fa-solid fa-magnifying-glass text-4xl mb-4 text-gray-200"></i>
                                             <p class="font-bold text-lg text-slate-600">لا توجد نتائج مطابقة لبحثك</p>
-                                            <a href="{{ route('admin.pharmaciesApplications.index') }}" class="mt-4 text-sm text-primary hover:underline">إلغاء جميع الفلاتر</a>
+                                            <a href="{{ route('pharmaciesApplications.index') }}" class="mt-4 text-sm text-primary hover:underline">إلغاء جميع الفلاتر</a>
                                         @else
                                             <i class="fa-solid fa-inbox text-4xl mb-4 text-gray-200"></i>
                                             <p class="font-bold text-lg text-slate-600">لا توجد طلبات صيدليات بعد</p>
