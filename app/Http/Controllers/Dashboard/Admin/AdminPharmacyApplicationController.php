@@ -181,7 +181,10 @@ class AdminPharmacyApplicationController extends Controller
 
             DB::commit();
 
-            // Notify the applicant
+            // Notify the applicant via Email (Background Queue)
+            \Illuminate\Support\Facades\Mail::to($application->email)->queue(new \App\Mail\PharmacyApplicationStatusMail($application));
+
+            // Notify the applicant via in-app notification
             $userToNotify = User::where('email', $application->email)->first() ?? User::find($application->user_id);
             if ($userToNotify) {
                 $statusAr = $request->status === 'approved' ? 'قبول' : 'رفض';
