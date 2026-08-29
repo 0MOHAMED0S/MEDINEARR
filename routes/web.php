@@ -24,6 +24,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('login');
 
+
 Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'send'])->name('contact.send');
 
 Route::prefix('admin')->group(function () {
